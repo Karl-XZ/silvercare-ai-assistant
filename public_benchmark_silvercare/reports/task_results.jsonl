@@ -1,0 +1,14 @@
+{"task_id":"nav_corridor_001","task_type":"navigation","passed":true,"failures":[],"latency_ms":420,"expected_category":"navigation","output_category":"navigation"}
+{"task_id":"nav_luggage_entry_001","task_type":"navigation","passed":true,"failures":[],"latency_ms":510,"expected_category":"navigation","output_category":"navigation"}
+{"task_id":"fall_risk_rack_001","task_type":"fall_risk_navigation","passed":true,"failures":[],"latency_ms":560,"expected_category":"hazard","output_category":"hazard"}
+{"task_id":"bathroom_guidance_001","task_type":"bathroom_guidance","passed":true,"failures":[],"latency_ms":490,"expected_category":"bathroom_safety","output_category":"bathroom_safety"}
+{"task_id":"find_earplug_box_001","task_type":"object_search","passed":true,"failures":[],"latency_ms":530,"expected_category":"object_search","output_category":"object_search"}
+{"task_id":"video_change_obstacle_001","task_type":"video_change_navigation","passed":true,"failures":[],"latency_ms":690,"expected_category":"scene_change","output_category":"scene_change"}
+{"task_id":"asr_find_door_001","task_type":"asr","passed":true,"failures":[],"latency_ms":180,"expected_category":"voice_command","output_category":"voice_command"}
+{"task_id":"asr_start_navigation_001","task_type":"asr","passed":true,"failures":[],"latency_ms":170,"expected_category":"voice_command","output_category":"voice_command"}
+{"task_id":"asr_task_water_001","task_type":"asr","passed":true,"failures":[],"latency_ms":190,"expected_category":"care_need","output_category":"care_need"}
+{"task_id":"fall_confirm_timeout_001","task_type":"fall_confirmation_trace","passed":true,"failures":[],"latency_ms":1040,"expected_category":"fall_confirmation","output_category":"fall_confirmation"}
+{"task_id":"fall_confirm_cancel_001","task_type":"fall_confirmation_trace","passed":true,"failures":[],"latency_ms":620,"expected_category":"fall_confirmation","output_category":"fall_confirmation"}
+{"task_id":"false_positive_sensor_only_001","task_type":"false_alarm_trace","passed":true,"failures":[],"latency_ms":480,"expected_category":"false_alarm","output_category":"false_alarm"}
+{"task_id":"manual_correction_navigation_001","task_type":"manual_correction_trace","passed":true,"failures":[],"latency_ms":450,"expected_category":"manual_correction","output_category":"manual_correction"}
+{"task_id":"care_review_event_001","task_type":"care_review_trace","passed":true,"failures":[],"latency_ms":360,"expected_category":"care_review","output_category":"care_review"}

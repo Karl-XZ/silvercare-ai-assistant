@@ -1,0 +1,90 @@
+plugins {
+    id "com.android.application"
+    id "org.jetbrains.kotlin.android"
+}
+
+def localProps = new Properties()
+def localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { stream -> localProps.load(stream) }
+}
+
+def defaultDashScopeApiKey = localProps.getProperty(
+    "DASHSCOPE_API_KEY",
+    System.getenv("DASHSCOPE_API_KEY") ?: ""
+)
+def escapedDashScopeApiKey = defaultDashScopeApiKey
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
+
+android {
+    namespace "com.silvercare.aiassistant"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.silvercare.aiassistant"
+        minSdk 23
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+        buildConfigField "String", "DEFAULT_DASHSCOPE_API_KEY", "\"${escapedDashScopeApiKey}\""
+
+        ndk {
+            abiFilters "arm64-v8a", "x86_64"
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++17 -fexceptions -frtti"
+                arguments "-DANDROID_STL=c++_shared"
+            }
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    testOptions {
+        unitTests.all { test ->
+            if (System.getProperty("silvercare.liveDashScope") == "true") {
+                test.systemProperty "silvercare.liveDashScope", "true"
+                test.systemProperty "DASHSCOPE_API_KEY", defaultDashScopeApiKey
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    externalNativeBuild {
+        cmake {
+            path file("src/main/cpp/CMakeLists.txt")
+            version "3.22.1"
+        }
+    }
+
+    packaging {
+        jniLibs {
+            pickFirsts += ["**/libc++_shared.so"]
+        }
+    }
+}
+
+dependencies {
+    implementation project(":mnn_tts")
+    implementation "androidx.core:core:1.13.1"
+    implementation "androidx.webkit:webkit:1.12.1"
+    implementation "com.alphacephei:vosk-android:0.3.75"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
+
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "org.hamcrest:hamcrest:2.2"
+    testImplementation "org.json:json:20240303"
+}

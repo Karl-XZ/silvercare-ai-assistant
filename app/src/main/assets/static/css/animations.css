@@ -1,0 +1,94 @@
+/* 银龄智护 Android UI - Motion */
+
+.scan-reticle::before {
+    content: "";
+    position: absolute;
+    left: 12%;
+    right: 12%;
+    top: 50%;
+    height: 2px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, transparent, currentColor, transparent);
+    opacity: 0;
+    transform: translateY(-50%);
+}
+
+body.active .scan-reticle::before {
+    opacity: 0.72;
+    animation: scan-sweep 2.4s var(--ease-standard) infinite;
+}
+
+body.active .status-dot.active {
+    animation: status-pulse 1.8s var(--ease-standard) infinite;
+}
+
+.task-sheet.visible {
+    animation: sheet-rise 220ms var(--ease-standard);
+}
+
+.main-feedback.visible {
+    animation: feedback-pop 180ms var(--ease-standard);
+}
+
+.command-button.is-recording svg {
+    animation: mic-listening 850ms var(--ease-standard) infinite;
+}
+
+@keyframes scan-sweep {
+    0% {
+        transform: translateY(-94px);
+        opacity: 0;
+    }
+    18% {
+        opacity: 0.72;
+    }
+    82% {
+        opacity: 0.72;
+    }
+    100% {
+        transform: translateY(94px);
+        opacity: 0;
+    }
+}
+
+@keyframes status-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(24, 224, 167, 0.26);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(24, 224, 167, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(24, 224, 167, 0);
+    }
+}
+
+@keyframes sheet-rise {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes feedback-pop {
+    from {
+        transform: scale(0.96);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes mic-listening {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-2px);
+    }
+}

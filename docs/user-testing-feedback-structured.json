@@ -1,0 +1,126 @@
+{
+  "study_name": "银龄智护两周用户测试",
+  "duration": "两周",
+  "participant_count": 5,
+  "age_range": {
+    "min": 69,
+    "max": 81
+  },
+  "participants": [
+    {
+      "id": "U01",
+      "gender": "女",
+      "age": 72,
+      "profile": ["轻度白内障", "独居"],
+      "main_scenarios": ["夜间上厕所", "室内巡路"],
+      "positive_feedback": ["行动型语音提示有帮助", "询问前方能否通行较方便"],
+      "pain_points": ["播报略慢", "长时间手持手机较累"],
+      "recommended_changes": ["缩短提示语", "降低首句延迟", "支持挂脖或支架模式"]
+    },
+    {
+      "id": "U02",
+      "gender": "男",
+      "age": 78,
+      "profile": ["视力较差", "与配偶同住"],
+      "main_scenarios": ["找眼镜盒", "找药盒", "找耳塞"],
+      "positive_feedback": ["减少呼叫家人的次数", "桌面杂乱时有帮助", "电线和插排提醒有价值"],
+      "pain_points": ["小物体识别不稳定", "低对比目标回答含糊"],
+      "recommended_changes": ["增加小物体置信度提示", "引导靠近、补光或换角度"]
+    },
+    {
+      "id": "U03",
+      "gender": "女",
+      "age": 69,
+      "profile": ["膝盖不好", "子女不常在家"],
+      "main_scenarios": ["跌倒确认", "报警模拟"],
+      "positive_feedback": ["先确认再报警降低误报焦虑", "手机掉落不会立刻惊扰家属"],
+      "pain_points": ["确认声音不够大", "取消报警按钮和语音指令不够明显"],
+      "recommended_changes": ["紧急提示强制高音量", "增加震动", "固定取消报警口令", "超大取消按钮"]
+    },
+    {
+      "id": "U04",
+      "gender": "男",
+      "age": 75,
+      "profile": ["糖尿病", "日常需要用药提醒"],
+      "main_scenarios": ["用药记录", "家属查看记录"],
+      "positive_feedback": ["管理端记录减少事后沟通成本", "风险和用药记录有家庭协同价值"],
+      "pain_points": ["担心照片、身体情况、用药记录上传和可见范围"],
+      "recommended_changes": ["隐私中心", "本地优先开关", "权限分级", "记录保留期限说明"]
+    },
+    {
+      "id": "U05",
+      "gender": "女",
+      "age": 81,
+      "profile": ["低视力", "行动较慢"],
+      "main_scenarios": ["语音主导使用", "慢速交流"],
+      "positive_feedback": ["不用看小字", "提示像家人提醒", "适合作为辅助工具"],
+      "pain_points": ["说话慢时被提前截断", "方言识别不好", "设置页复杂"],
+      "recommended_changes": ["慢速说话模式", "方言 ASR 选项", "家属代设", "老人极简首页"]
+    }
+  ],
+  "themes": [
+    {
+      "theme": "语音优先有价值",
+      "participant_count": 5,
+      "evidence": "所有用户反馈均围绕听提示、说话询问、免看屏使用展开"
+    },
+    {
+      "theme": "行动型引导优于画面描述",
+      "participant_count": 3,
+      "evidence": "用户明确认可先停下、扶着门框、脚尖先探一下等表达"
+    },
+    {
+      "theme": "跌倒确认流程降低误报焦虑",
+      "participant_count": 1,
+      "evidence": "用户认可先询问和倒计时，不会因手机掉落立刻报警"
+    },
+    {
+      "theme": "隐私透明度需要加强",
+      "participant_count": 1,
+      "evidence": "用户明确关心家庭照片、身体情况、用药记录的上传和可见范围"
+    },
+    {
+      "theme": "设置复杂度需要降低",
+      "participant_count": 1,
+      "evidence": "低视力用户认为设置页复杂，更适合由家属先设置"
+    }
+  ],
+  "priority_backlog": [
+    {
+      "priority": "P0",
+      "item": "紧急跌倒确认语音增强",
+      "evidence_participants": ["U03"]
+    },
+    {
+      "priority": "P0",
+      "item": "语音播报和自动刷新节奏优化",
+      "evidence_participants": ["U01", "U05"]
+    },
+    {
+      "priority": "P0",
+      "item": "老人日常模式与家属设置模式分离",
+      "evidence_participants": ["U05"]
+    },
+    {
+      "priority": "P0",
+      "item": "隐私中心",
+      "evidence_participants": ["U04"]
+    },
+    {
+      "priority": "P1",
+      "item": "小物体找物增强",
+      "evidence_participants": ["U02"]
+    },
+    {
+      "priority": "P1",
+      "item": "慢速语音和方言适配",
+      "evidence_participants": ["U05"]
+    },
+    {
+      "priority": "P1",
+      "item": "硬件使用负担降低",
+      "evidence_participants": ["U01"]
+    }
+  ]
+}
+

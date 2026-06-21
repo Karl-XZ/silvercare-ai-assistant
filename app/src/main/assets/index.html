@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="description" content="面向老年人、长护对象、照护者、家庭成员和居家照护与家庭看护场景的多模态居家长护辅助与跌倒风险预警系统" />
+    <title>银龄智护</title>
+
+    <link rel="stylesheet" href="static/css/main.css" />
+    <link rel="manifest" href="static/manifest.json" />
+    <meta name="theme-color" content="#05070a" />
+    <link rel="apple-touch-icon" href="static/images/icon-512.png" />
+  </head>
+
+  <body>
+    <div id="a11y-announcer" class="sr-only" aria-live="assertive"></div>
+    <div id="console-log" role="log" aria-label="调试控制台" aria-hidden="true"></div>
+
+    <section
+      id="modelDownloadPanel"
+      class="model-download-panel"
+      role="status"
+      aria-live="polite"
+      aria-hidden="true"
+    >
+      <div class="model-download-head">
+        <span id="modelDownloadTitle">模型下载</span>
+        <strong id="modelDownloadPercent">0%</strong>
+      </div>
+      <div class="model-download-track" aria-hidden="true">
+        <div id="modelDownloadBar" class="model-download-bar"></div>
+      </div>
+      <div class="model-download-meta">
+        <span id="modelDownloadText">准备下载</span>
+        <span id="modelDownloadBytes">-- / --</span>
+      </div>
+    </section>
+
+    <video
+      id="cam"
+      autoplay
+      playsinline
+      muted
+      aria-label="摄像头画面"
+      role="img"
+    ></video>
+
+    <main class="app-shell" aria-label="银龄智护 导航界面">
+      <header class="top-app-bar" role="banner">
+        <div class="brand-lockup" aria-label="银龄智护">
+          <div class="brand-mark" aria-hidden="true">
+            <img src="static/images/icon-512.png" alt="" />
+          </div>
+          <div>
+            <div class="brand-name">银龄智护</div>
+            <div id="runtimeSubtitle" class="brand-subtitle">银龄智护端侧智能照护版 · 端侧离线模式</div>
+          </div>
+        </div>
+
+        <div class="top-actions">
+          <div id="statusPill" class="status-pill" role="status" aria-live="polite">
+            <div id="statusDot" class="status-dot"></div>
+            <span id="statusText" class="status-text">就绪</span>
+          </div>
+          <button
+            id="managementCommand"
+            class="icon-button"
+            type="button"
+            aria-label="打开长护管理端"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 19V5" />
+              <path d="M4 19h16" />
+              <path d="M8 16v-5" />
+              <path d="M12 16V8" />
+              <path d="M16 16v-8" />
+              <path d="M20 16v-3" />
+            </svg>
+          </button>
+          <button
+            id="settingsCommand"
+            class="icon-button"
+            type="button"
+            data-action="settings"
+            aria-label="打开 AI 运行方案和设置"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z" />
+              <path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.05.05a2.1 2.1 0 1 1-2.97 2.97l-.05-.05A1.8 1.8 0 0 0 14.8 19.6a1.8 1.8 0 0 0-1.08 1.65V21.4a2.1 2.1 0 0 1-4.2 0v-.08A1.8 1.8 0 0 0 8.4 19.6a1.8 1.8 0 0 0-1.98.36l-.05.05A2.1 2.1 0 1 1 3.4 17.04l.05-.05A1.8 1.8 0 0 0 3.8 15a1.8 1.8 0 0 0-1.65-1.08H2a2.1 2.1 0 0 1 0-4.2h.08A1.8 1.8 0 0 0 3.8 8.6a1.8 1.8 0 0 0-.36-1.98l-.05-.05A2.1 2.1 0 1 1 6.36 3.6l.05.05A1.8 1.8 0 0 0 8.4 4a1.8 1.8 0 0 0 1.08-1.65V2.2a2.1 2.1 0 0 1 4.2 0v.08A1.8 1.8 0 0 0 14.8 4a1.8 1.8 0 0 0 1.98-.36l.05-.05a2.1 2.1 0 1 1 2.97 2.97l-.05.05A1.8 1.8 0 0 0 19.4 8.6a1.8 1.8 0 0 0 1.65 1.08h.15a2.1 2.1 0 0 1 0 4.2h-.08A1.8 1.8 0 0 0 19.4 15Z" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <section class="camera-stage" aria-label="实时视觉区域">
+        <div class="scan-reticle" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+
+        <div class="primary-readout">
+          <div id="searchBanner" class="search-banner" role="status" aria-live="assertive">
+            搜索中...
+          </div>
+          <div id="mainFeedback" class="main-feedback" role="alert"></div>
+        </div>
+
+        <div
+          id="captionPanel"
+          class="caption-panel"
+          role="log"
+          aria-live="polite"
+          aria-label="语音字幕"
+        >
+          <div class="caption-row user">
+            <span class="caption-speaker">我说</span>
+            <span id="userCaption" class="caption-text">长按提问后，识别文字会显示在这里</span>
+          </div>
+          <div class="caption-row ai">
+            <span class="caption-speaker">AI 回复</span>
+            <span id="aiCaption" class="caption-text">AI 回复会显示在这里</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="quick-metrics" aria-label="导航状态">
+        <div class="metric-tile">
+          <span class="metric-label">距离</span>
+          <strong id="distVal" class="metric-value">--</strong>
+        </div>
+        <div class="metric-tile">
+          <span class="metric-label">方向</span>
+          <strong id="dirVal" class="metric-value">--</strong>
+        </div>
+        <div class="metric-tile">
+          <span class="metric-label">延迟</span>
+          <strong id="latVal" class="metric-value">--</strong>
+        </div>
+      </section>
+
+      <aside id="task-hud" class="task-sheet" role="complementary" aria-label="当前任务步骤">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="task-header">交互式引导</div>
+        <div id="taskList" role="list"></div>
+        <div
+          id="taskFeedback"
+          class="task-feedback"
+          role="status"
+          aria-live="polite"
+        ></div>
+      </aside>
+
+      <footer class="bottom-command-bar" role="contentinfo">
+        <button
+          id="toggleCommand"
+          class="command-button"
+          type="button"
+          data-action="toggle"
+          aria-label="启动或停止导航"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3v7" />
+            <path d="M7.05 6.05A8 8 0 1 0 17 6.05" />
+          </svg>
+          <span>启动导航</span>
+        </button>
+        <button
+          id="inquiryCommand"
+          class="command-button primary"
+          type="button"
+          data-action="inquiry"
+          aria-label="按住提问，松开发送"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
+            <path d="M19 11a7 7 0 0 1-14 0" />
+            <path d="M12 18v3" />
+          </svg>
+          <span>长按提问</span>
+        </button>
+        <button
+          id="detailsCommand"
+          class="command-button"
+          type="button"
+          data-action="details"
+          aria-label="显示或隐藏 AI 详情"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h16" />
+            <path d="M7 12h10" />
+            <path d="M10 17h4" />
+          </svg>
+          <span>查看详情</span>
+        </button>
+      </footer>
+    </main>
+
+    <section
+      id="intelligence-layer"
+      class="intel-sheet"
+      role="region"
+      aria-label="AI 详细信息"
+      aria-hidden="true"
+    >
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-title">AI 详情</div>
+          <div class="sheet-subtitle">推理与识别对象</div>
+        </div>
+        <button
+          id="closeIntelButton"
+          class="sheet-close-button"
+          type="button"
+          aria-label="关闭 AI 详情"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+      </div>
+      <article class="app-panel area-reasoning">
+        <header class="panel-header">
+          <h2>AI 推理</h2>
+          <span id="compassVal" class="accent-text">0°</span>
+        </header>
+        <div id="thinkingBox" class="reasoning-text" role="log">正在初始化...</div>
+        <div id="socialCue" class="context-cue cue-info" role="status"></div>
+        <div id="envCue" class="context-cue cue-warning" role="status"></div>
+      </article>
+
+      <article class="app-panel area-objects">
+        <header class="panel-header">
+          <h2>识别对象</h2>
+          <span id="objCount" class="badge">0</span>
+        </header>
+        <div id="objList" class="obj-list" role="list"></div>
+      </article>
+    </section>
+
+    <section
+      id="fallAlert"
+      class="fall-alert"
+      role="dialog"
+      aria-labelledby="fallTitle"
+      aria-describedby="fallMessage"
+      aria-hidden="true"
+    >
+      <div class="fall-card">
+        <div class="fall-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3 2.8 19a1.4 1.4 0 0 0 1.2 2h16a1.4 1.4 0 0 0 1.2-2L12 3Z" />
+            <path d="M12 8v5" />
+            <path d="M12 17h.01" />
+          </svg>
+        </div>
+        <h2 id="fallTitle">疑似摔倒</h2>
+        <p id="fallMessage">摔倒报警触发，请问您摔倒了吗？若没有摔倒，请点击“我没事”。</p>
+        <div class="fall-countdown">
+          <strong id="fallCountdown">10</strong>
+          <span id="fallCountdownLabel">秒后发送报警</span>
+        </div>
+        <div class="fall-actions">
+          <button id="fallSafeButton" class="fall-button safe" type="button">我没事</button>
+          <button id="fallAlarmButton" class="fall-button alarm" type="button">立即发送报警</button>
+        </div>
+      </div>
+    </section>
+
+    <section
+      id="careDashboard"
+      class="care-dashboard"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="careDashboardTitle"
+      aria-hidden="true"
+    >
+      <div class="care-shell">
+        <aside class="care-sidebar" aria-label="长护管理导航">
+          <div class="care-brand">
+            <div class="care-brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 21s-7-4.3-7-10.4A4.6 4.6 0 0 1 12 6a4.6 4.6 0 0 1 7 4.6C19 16.7 12 21 12 21Z" />
+                <path d="M9 11.5h6" />
+                <path d="M12 8.5v6" />
+              </svg>
+            </div>
+            <div>
+              <strong>银龄智护</strong>
+              <span>银龄智护管理端</span>
+            </div>
+          </div>
+          <nav class="care-nav" aria-label="管理端模块">
+            <button class="care-nav-item active" type="button" data-section="overview">
+              <span>总览</span>
+              <b>实时</b>
+            </button>
+            <button class="care-nav-item" type="button" data-section="riskQueue">
+              <span>风险队列</span>
+              <b id="careNavRiskCount">0</b>
+            </button>
+            <button class="care-nav-item" type="button" data-section="residentPanel">
+              <span>长护对象</span>
+              <b id="careNavResidentCount">0</b>
+            </button>
+            <button class="care-nav-item" type="button" data-section="reportPanel">
+              <span>日报</span>
+              <b>AI</b>
+            </button>
+            <button class="care-nav-item" type="button" data-section="insuranceAgentPanel">
+              <span>照护助手</span>
+              <b>Agent</b>
+            </button>
+          </nav>
+          <div class="care-sidebar-note">
+            <span>比赛演示数据</span>
+            <strong>脱敏 · 本地优先</strong>
+          </div>
+        </aside>
+
+        <main class="care-main" aria-label="长护管理端内容">
+          <header class="care-header">
+            <div>
+              <p class="care-eyebrow">居家照护数据分析</p>
+              <h1 id="careDashboardTitle">适老化居家长护服务管理端</h1>
+              <p class="care-header-copy">汇总老人端风险预警、照护任务、跌倒事件和 AI 日报，用于家庭成员、照护员、长护服务机构和居家照护与家庭看护场景。</p>
+            </div>
+            <div class="care-header-actions">
+              <button id="careExportReportButton" class="care-button ghost" type="button">导出日报</button>
+              <button id="careCloseButton" class="care-button primary" type="button">返回老人端</button>
+            </div>
+          </header>
+
+          <div class="care-filter-row" aria-label="时间范围">
+            <button class="care-period active" type="button" data-period="today">今日</button>
+            <button class="care-period" type="button" data-period="week">7 日</button>
+            <button class="care-period" type="button" data-period="month">30 日</button>
+          </div>
+
+          <section id="overview" class="care-section" aria-label="长护服务总览">
+            <div id="careMetricGrid" class="care-metric-grid"></div>
+          </section>
+
+          <section class="care-analytics-grid" aria-label="风险与服务分析">
+            <article class="care-panel care-chart-panel">
+              <div class="care-panel-header">
+                <div>
+                  <h2>风险趋势</h2>
+                  <p>跌倒、环境障碍、未响应事件</p>
+                </div>
+                <span id="careTrendDelta" class="care-trend-pill">+0%</span>
+              </div>
+              <div class="care-line-chart" aria-label="近 7 日风险趋势图">
+                <svg id="careTrendSvg" viewBox="0 0 520 210" role="img" aria-label="风险趋势折线图">
+                  <defs>
+                    <linearGradient id="careTrendFill" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.24" />
+                      <stop offset="100%" stop-color="#2563eb" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path id="careTrendArea" d="" fill="url(#careTrendFill)"></path>
+                  <polyline id="careTrendLine" points="" fill="none"></polyline>
+                  <g id="careTrendPoints"></g>
+                </svg>
+                <div id="careChartLabels" class="care-chart-labels"></div>
+              </div>
+            </article>
+
+            <article class="care-panel">
+              <div class="care-panel-header">
+                <div>
+                  <h2>服务闭环</h2>
+                  <p>提醒、确认、响应、复核</p>
+                </div>
+              </div>
+              <div id="careProgressList" class="care-progress-list"></div>
+            </article>
+          </section>
+
+          <section class="care-work-grid" aria-label="管理工作区">
+            <article id="riskQueue" class="care-panel">
+              <div class="care-panel-header">
+                <div>
+                  <h2>风险队列</h2>
+                  <p>需要照护者确认的事件</p>
+                </div>
+                <button id="careAddDemoEventButton" class="care-text-button" type="button">添加演示事件</button>
+              </div>
+              <div id="careRiskList" class="care-risk-list"></div>
+            </article>
+
+            <article id="residentPanel" class="care-panel">
+              <div class="care-panel-header">
+                <div>
+                  <h2>长护对象</h2>
+                  <p>风险分级与今日状态</p>
+                </div>
+              </div>
+              <div id="careResidentList" class="care-resident-list"></div>
+            </article>
+          </section>
+
+          <section id="reportPanel" class="care-report-grid" aria-label="日报与服务记录">
+            <article class="care-panel">
+              <div class="care-panel-header">
+                <div>
+                  <h2>AI 照护日报</h2>
+                  <p>用于家属沟通和长护服务留痕</p>
+                </div>
+                <button id="careGenerateReportButton" class="care-text-button" type="button">重新生成</button>
+              </div>
+              <div id="careReportText" class="care-report-text" aria-live="polite"></div>
+            </article>
+
+            <article class="care-panel">
+              <div class="care-panel-header">
+                <div>
+                  <h2>今日任务</h2>
+                  <p>用药、饮水、活动和复核</p>
+                </div>
+              </div>
+              <div id="careTaskList" class="care-task-list"></div>
+            </article>
+          </section>
+
+          <section id="insuranceAgentPanel" class="care-agent-grid" aria-label="照护数据智能助手">
+            <article class="care-panel care-agent-context">
+              <div class="care-panel-header">
+                <div>
+                  <h2>照护数据智能助手</h2>
+                  <p>根据长护等级、服务额度、用药记录和风险事件主动给出建议</p>
+                </div>
+                <span class="care-agent-state">主动提醒</span>
+              </div>
+              <div id="insuranceAgentProfile" class="care-agent-profile"></div>
+              <div id="insuranceAgentInsights" class="care-agent-insights"></div>
+            </article>
+
+            <article class="care-panel care-agent-chat-panel">
+              <div class="care-panel-header">
+                <div>
+                  <h2>对话与记录</h2>
+                  <p>可询问建议，也可直接记录用药、症状和服务复核</p>
+                </div>
+              </div>
+              <div id="insuranceAgentMessages" class="care-agent-messages" aria-live="polite"></div>
+              <div class="care-agent-chips" aria-label="常用问题">
+                <button type="button" data-agent-prompt="今天还要注意什么？">今日建议</button>
+                <button type="button" data-agent-prompt="帮我记录已经吃过降压药">记录用药</button>
+                <button type="button" data-agent-prompt="最近额度还够不够？">额度情况</button>
+                <button type="button" data-agent-prompt="夜间起身风险怎么处理？">风险处理</button>
+              </div>
+              <div class="care-agent-input-row">
+                <input id="insuranceAgentInput" type="text" value="帮我记录今天头晕一次，已提醒照护者复核" aria-label="输入照护数据助手问题" />
+                <button id="insuranceAgentSendButton" class="care-button primary" type="button">发送</button>
+              </div>
+            </article>
+          </section>
+        </main>
+      </div>
+    </section>
+
+    <script src="static/js/audio.js"></script>
+    <script type="module" src="static/js/main.js"></script>
+  </body>
+</html>

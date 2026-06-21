@@ -1,0 +1,175 @@
+/* 银龄智护 Android UI - Layout */
+
+#cam {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.24;
+    filter: grayscale(0.2) contrast(1.05);
+    transform: scale(1.01);
+    transition: opacity 300ms var(--ease-standard), filter 300ms var(--ease-standard);
+    z-index: 1;
+}
+
+body.active #cam {
+    opacity: 1;
+    filter: grayscale(0) contrast(1);
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, rgba(5, 7, 10, 0.72) 0%, rgba(5, 7, 10, 0.1) 34%, rgba(5, 7, 10, 0.78) 100%),
+        radial-gradient(circle at 50% 48%, rgba(24, 224, 167, 0.12), transparent 42%);
+}
+
+.app-shell {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: grid;
+    grid-template-rows: auto 1fr auto auto;
+    padding:
+        calc(env(safe-area-inset-top, 0px) + 20px)
+        16px
+        max(16px, env(safe-area-inset-bottom));
+    gap: var(--space-4);
+    pointer-events: none;
+}
+
+.top-app-bar {
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    pointer-events: auto;
+}
+
+.camera-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: 0;
+    align-content: center;
+}
+
+.primary-readout {
+    position: relative;
+    width: min(100%, 420px);
+    min-height: 96px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+}
+
+.quick-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+}
+
+.bottom-command-bar {
+    min-height: 76px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+    pointer-events: auto;
+}
+
+.task-sheet {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(104px + env(safe-area-inset-bottom));
+    z-index: 18;
+    max-height: 34dvh;
+    display: none;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--outline);
+    border-radius: var(--radius-xl);
+    background: var(--surface-glass);
+    box-shadow: var(--shadow-sheet);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    pointer-events: auto;
+}
+
+.task-sheet.visible {
+    display: flex;
+}
+
+.intel-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    max-height: 78dvh;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    padding: 10px 12px max(16px, env(safe-area-inset-bottom));
+    border-radius: 24px 24px 0 0;
+    background: var(--surface);
+    box-shadow: var(--shadow-sheet);
+    opacity: 0;
+    transform: translateY(24px);
+    pointer-events: none;
+    transition: opacity 220ms var(--ease-standard), transform 220ms var(--ease-standard);
+}
+
+.intel-sheet.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.area-reasoning,
+.area-objects {
+    max-height: 31dvh;
+}
+
+@media (min-width: 720px) and (orientation: landscape) {
+    .app-shell {
+        grid-template-columns: minmax(280px, 360px) 1fr minmax(260px, 320px);
+        grid-template-rows: auto 1fr auto;
+        grid-template-areas:
+            "top top top"
+            "metrics stage commands"
+            "metrics stage commands";
+    }
+
+    .top-app-bar { grid-area: top; }
+    .camera-stage { grid-area: stage; }
+    .quick-metrics {
+        grid-area: metrics;
+        grid-template-columns: 1fr;
+        align-content: end;
+    }
+    .bottom-command-bar {
+        grid-area: commands;
+        grid-template-columns: 1fr;
+        align-content: end;
+    }
+
+    .intel-sheet {
+        left: auto;
+        top: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: min(380px, 42vw);
+        max-height: none;
+        border-radius: var(--radius-xl);
+    }
+}

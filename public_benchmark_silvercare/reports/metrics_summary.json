@@ -1,0 +1,65 @@
+{
+  "benchmark_version": "0.1.0",
+  "evaluated_output": "dataset/baselines/rule_based_baseline.jsonl",
+  "total_tasks": 14,
+  "passed_tasks": 14,
+  "task_success_rate": 1,
+  "avg_response_ms": 477.857,
+  "false_alarm_rate": 0,
+  "screen_free_completion_rate": 1,
+  "caregiver_reviewable_rate": 1,
+  "asr_transcript_pass_rate": 1,
+  "manual_correction_acceptance_rate": 1,
+  "by_task_type": {
+    "navigation": {
+      "total": 2,
+      "passed": 2,
+      "success_rate": 1
+    },
+    "fall_risk_navigation": {
+      "total": 1,
+      "passed": 1,
+      "success_rate": 1
+    },
+    "bathroom_guidance": {
+      "total": 1,
+      "passed": 1,
+      "success_rate": 1
+    },
+    "object_search": {
+      "total": 1,
+      "passed": 1,
+      "success_rate": 1
+    },
+    "video_change_navigation": {
+      "total": 1,
+      "passed": 1,
+      "success_rate": 1
+    },
+    "asr": {
+      "total": 3,
+      "passed": 3,
+      "success_rate": 1
+    },
+    "fall_confirmation_trace": {
+      "total": 2,
+      "passed": 2,
+      "success_rate": 1
+    },
+    "false_alarm_trace": {
+      "total": 1,
+      "passed": 1,
+      "success_rate": 1
+    },
+    "manual_correction_trace": {
+      "total": 1,
+      "passed": 1,
+      "success_rate": 1
+    },
+    "care_review_trace": {
+      "total": 1,
+      "passed": 1,
+      "success_rate": 1
+    }
+  }
+}

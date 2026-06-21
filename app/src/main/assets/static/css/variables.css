@@ -1,0 +1,45 @@
+/* 银龄智护 Android UI - Design Tokens */
+
+:root {
+    --bg: #05070a;
+    --scrim: rgba(5, 7, 10, 0.62);
+    --scrim-strong: rgba(5, 7, 10, 0.78);
+    --surface: #101318;
+    --surface-elevated: #171b22;
+    --surface-soft: rgba(23, 27, 34, 0.86);
+    --surface-glass: rgba(16, 19, 24, 0.82);
+    --outline: rgba(228, 232, 240, 0.14);
+    --outline-strong: rgba(228, 232, 240, 0.24);
+
+    --text-main: #f7f9fc;
+    --text-sec: #c5ccd8;
+    --text-mute: #8f98a8;
+    --text-inverse: #06110e;
+
+    --accent-primary: #18e0a7;
+    --accent-primary-pressed: #12b98a;
+    --accent-secondary: #47c2ff;
+    --critical: #ff5a65;
+    --warning: #f6b84b;
+    --safe: #18e0a7;
+    --info: #47c2ff;
+
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 22px;
+    --radius-pill: 999px;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+
+    --shadow-sheet: 0 -18px 48px rgba(0, 0, 0, 0.45);
+    --shadow-control: 0 10px 30px rgba(0, 0, 0, 0.28);
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+}

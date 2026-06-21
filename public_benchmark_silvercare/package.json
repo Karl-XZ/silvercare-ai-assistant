@@ -1,0 +1,15 @@
+{
+  "name": "silvercare-public-benchmark",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Public benchmark for elderly long-term care assistance, navigation, object finding, fall confirmation, voice interaction, and caregiver review.",
+  "type": "module",
+  "scripts": {
+    "benchmark:baseline": "node scripts/run_rule_baseline.mjs",
+    "benchmark:evaluate": "node scripts/evaluate_outputs.mjs dataset/baselines/rule_based_baseline.jsonl",
+    "benchmark:report": "node scripts/build_report.mjs",
+    "benchmark:check": "node scripts/check_anonymization.mjs",
+    "benchmark": "npm run benchmark:baseline && npm run benchmark:evaluate && npm run benchmark:report && npm run benchmark:check"
+  }
+}
+
