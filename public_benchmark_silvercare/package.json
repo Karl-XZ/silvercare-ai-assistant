@@ -2,7 +2,7 @@
   "name": "silvercare-public-benchmark",
   "version": "0.1.0",
   "private": true,
-  "description": "Public benchmark for elderly long-term care assistance, navigation, object finding, fall confirmation, voice interaction, and caregiver review.",
+  "description": "Public benchmark for elderly elderly home care assistance, navigation, object finding, fall confirmation, voice interaction, and caregiver review.",
   "type": "module",
   "scripts": {
     "benchmark:baseline": "node scripts/run_rule_baseline.mjs",

@@ -41,7 +41,7 @@ test('care management events persist and update summary counts', () => {
   assert.equal(loaded.events[0].title, '卫生间地面湿滑预警');
 });
 
-test('navigation result can become a long-term-care management risk event', () => {
+test('navigation result can become a care management risk event', () => {
   const event = buildNavigationCareEvent({
     priority: 'high',
     distance: 0.8,
@@ -62,7 +62,7 @@ test('fall alarm payload becomes high-risk management event', () => {
     evidence: { sensor: { maxAcc: 32.5 }, visual: { strongChange: true } }
   });
 
-  assert.equal(event.title, '疑似跌倒模拟报警');
+  assert.equal(event.title, '疑似跌倒报警');
   assert.equal(event.severity, 'high');
   assert.equal(event.evidence.sensor.maxAcc, 32.5);
 });

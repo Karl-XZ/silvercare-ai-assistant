@@ -1,0 +1,11 @@
+{
+  "name": "silvercare-ai-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:js": "node tools/check-js.mjs",
+    "test:js": "node --test app/src/test/js/*.test.mjs",
+    "benchmark": "npm --prefix public_benchmark_silvercare run benchmark"
+  }
+}

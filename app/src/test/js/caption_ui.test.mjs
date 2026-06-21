@@ -119,5 +119,5 @@ test('fall alert asks for confirmation through speech even outside normal status
 
   assert.equal(elements.get('fallCountdown').textContent, '10');
   assert.equal(elements.get('fallAlert')['aria-hidden'], 'false');
-  assert.equal(spoken[0], '检测到疑似摔倒。如果你没有摔倒，请点击我没事。10 秒后将模拟报警。');
+  assert.equal(spoken[0], '摔倒报警触发，请问您摔倒了吗？');
 });

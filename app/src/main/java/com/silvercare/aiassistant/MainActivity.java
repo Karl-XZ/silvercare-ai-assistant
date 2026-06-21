@@ -2000,7 +2000,7 @@ public class MainActivity extends Activity
             Bundle params = new Bundle();
             params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
             notifyWebTtsState(true);
-            int result = tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "long-term-care-" + System.nanoTime());
+            int result = tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "silvercare-" + System.nanoTime());
             DiagnosticLogger.eventPairs(
                 "tts_system_submit",
                 "elapsed_ms", DiagnosticLogger.elapsed(started),
@@ -2401,7 +2401,7 @@ public class MainActivity extends Activity
             ensureSpeechAudible();
             Bundle params = new Bundle();
             params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
-            tts.speak(copy.get(i), queueMode, params, "long-term-care-pending-" + i);
+            tts.speak(copy.get(i), queueMode, params, "silvercare-pending-" + i);
         }
     }
 

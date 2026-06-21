@@ -1,6 +1,6 @@
 /**
  * 银龄智护 management dashboard.
- * Provides a lightweight long-term-care management view inside the Android WebView.
+ * Provides a lightweight silvercare management view inside the Android WebView.
  */
 
 import {
@@ -109,12 +109,12 @@ export const CARE_MANAGEMENT_DATA = {
         { id: 't3', name: '活动训练', resident: '王阿姨', time: '15:30', status: 'pending' },
         { id: 't4', name: '夜间起身复核', resident: '赵叔叔', time: '21:00', status: 'pending' }
     ],
-    insuranceProfile: {
+    careProfile: {
         resident: '李伯伯',
         longTermCareLevel: '长护三级',
         chronicConditions: ['高血压', '轻度认知下降', '夜间起身频繁'],
-        monthlyCareQuota: 2400,
-        usedCareQuota: 1680,
+        monthlyCareBudget: 2400,
+        usedCareBudget: 1680,
         medicationAdherence: 82,
         remainingVisits: 5,
         recentClaims: [
@@ -221,15 +221,15 @@ export function buildDailyReport(data = CARE_MANAGEMENT_DATA, periodKey = 'today
     ].join('\n');
 }
 
-export function buildInsuranceAgentContext(profile = CARE_MANAGEMENT_DATA.insuranceProfile) {
-    const quotaLeft = Math.max(0, Number(profile.monthlyCareQuota || 0) - Number(profile.usedCareQuota || 0));
-    const quotaRatio = profile.monthlyCareQuota ? Math.round((quotaLeft / profile.monthlyCareQuota) * 100) : 0;
+export function buildCareAgentContext(profile = CARE_MANAGEMENT_DATA.careProfile) {
+    const budgetLeft = Math.max(0, Number(profile.monthlyCareBudget || 0) - Number(profile.usedCareBudget || 0));
+    const budgetRatio = profile.monthlyCareBudget ? Math.round((budgetLeft / profile.monthlyCareBudget) * 100) : 0;
     return {
         resident: profile.resident,
         longTermCareLevel: profile.longTermCareLevel,
         chronicConditions: profile.chronicConditions || [],
-        quotaLeft,
-        quotaRatio,
+        budgetLeft,
+        budgetRatio,
         medicationAdherence: Number(profile.medicationAdherence || 0),
         remainingVisits: Number(profile.remainingVisits || 0),
         riskIndicators: profile.riskIndicators || [],
@@ -238,9 +238,9 @@ export function buildInsuranceAgentContext(profile = CARE_MANAGEMENT_DATA.insura
     };
 }
 
-export function buildInsuranceAgentReply(data = CARE_MANAGEMENT_DATA, message = '') {
-    const profile = data.insuranceProfile || CARE_MANAGEMENT_DATA.insuranceProfile;
-    const context = buildInsuranceAgentContext(profile);
+export function buildCareAgentReply(data = CARE_MANAGEMENT_DATA, message = '') {
+    const profile = data.careProfile || CARE_MANAGEMENT_DATA.careProfile;
+    const context = buildCareAgentContext(profile);
     const text = String(message || '').trim();
     const normalized = text.toLowerCase();
     const openMissedTasks = (data.tasks || []).filter((task) => task.status === 'missed');
@@ -259,10 +259,10 @@ export function buildInsuranceAgentReply(data = CARE_MANAGEMENT_DATA, message = 
         };
     }
 
-    if (/费用|药费|护理费|开销|剩余|够不够/.test(text) || normalized.includes('quota')) {
+    if (/费用|药费|护理费|开销|剩余|够不够/.test(text) || normalized.includes('budget')) {
         return {
-            intent: 'quota_advice',
-            speech: `${context.resident}本月长护服务额度剩余 ${context.quotaLeft} 元，约占 ${context.quotaRatio}%。建议优先安排高风险复核、上门照护和康复训练，普通服务可排到下周。`
+            intent: 'budget_advice',
+            speech: `${context.resident}本月长护服务额度剩余 ${context.budgetLeft} 元，约占 ${context.budgetRatio}%。建议优先安排高风险复核、上门照护和康复训练，普通服务可排到下周。`
         };
     }
 
@@ -284,26 +284,26 @@ export function buildInsuranceAgentReply(data = CARE_MANAGEMENT_DATA, message = 
 
     return {
         intent: 'daily_advice',
-        speech: `${context.resident}今日重点是复核早间用药、处理 ${openRisks.length} 条待复核风险，并合理使用剩余 ${context.quotaLeft} 元长护服务额度。建议先处理用药未确认，再安排夜间起身风险排查。`
+        speech: `${context.resident}今日重点是复核早间用药、处理 ${openRisks.length} 条待复核风险，并合理使用剩余 ${context.budgetLeft} 元长护服务额度。建议先处理用药未确认，再安排夜间起身风险排查。`
     };
 }
 
-export function applyInsuranceAgentAction(data = CARE_MANAGEMENT_DATA, reply, now = new Date()) {
+export function applyCareAgentAction(data = CARE_MANAGEMENT_DATA, reply, now = new Date()) {
     const next = cloneCareData(data);
-    if (!next.insuranceProfile) next.insuranceProfile = cloneCareData(CARE_MANAGEMENT_DATA.insuranceProfile);
-    if (!Array.isArray(next.insuranceProfile.records)) next.insuranceProfile.records = [];
+    if (!next.careProfile) next.careProfile = cloneCareData(CARE_MANAGEMENT_DATA.careProfile);
+    if (!Array.isArray(next.careProfile.records)) next.careProfile.records = [];
     const action = reply?.action;
     if (action?.type !== 'append_record') return next;
 
     const time = now.toTimeString().slice(0, 5);
-    next.insuranceProfile.records.unshift({
+    next.careProfile.records.unshift({
         time,
         type: action.recordType || '记录',
         text: action.text || reply.speech || '新增对话记录'
     });
     next.events.unshift({
         id: `agent-${now.getTime()}`,
-        resident: next.insuranceProfile.resident,
+        resident: next.careProfile.resident,
         title: `照护助手记录：${action.recordType || '记录'}`,
         detail: action.text || reply.speech || '新增对话记录',
         severity: action.recordType === '症状' ? 'medium' : 'low',
@@ -460,9 +460,9 @@ function renderTasks(root, tasks) {
     `).join(''));
 }
 
-function renderInsuranceAgentProfile(root, profile) {
+function renderCareAgentProfile(root, profile) {
     if (!root || !profile) return;
-    const context = buildInsuranceAgentContext(profile);
+    const context = buildCareAgentContext(profile);
     setHtml(root, `
         <div class="care-agent-profile-card">
             <span>长护对象</span>
@@ -470,7 +470,7 @@ function renderInsuranceAgentProfile(root, profile) {
         </div>
         <div class="care-agent-profile-card">
             <span>本月剩余额度</span>
-            <strong>${escapeHtml(context.quotaLeft)} 元 · ${escapeHtml(context.quotaRatio)}%</strong>
+            <strong>${escapeHtml(context.budgetLeft)} 元 · ${escapeHtml(context.budgetRatio)}%</strong>
         </div>
         <div class="care-agent-profile-card">
             <span>用药确认率</span>
@@ -483,9 +483,9 @@ function renderInsuranceAgentProfile(root, profile) {
     `);
 }
 
-function renderInsuranceAgentInsights(root, profile) {
+function renderCareAgentInsights(root, profile) {
     if (!root || !profile) return;
-    const context = buildInsuranceAgentContext(profile);
+    const context = buildCareAgentContext(profile);
     const reminders = context.proactiveReminders.length ? context.proactiveReminders : ['今日暂无主动提醒。'];
     const records = context.records.slice(0, 3);
     setHtml(root, `
@@ -500,7 +500,7 @@ function renderInsuranceAgentInsights(root, profile) {
     `);
 }
 
-function renderInsuranceAgentMessages(root, messages = []) {
+function renderCareAgentMessages(root, messages = []) {
     if (!root) return;
     setHtml(root, messages.map((message) => `
         <div class="care-agent-message ${escapeHtml(message.role)}">
@@ -516,7 +516,7 @@ function downloadReport(text) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = `long-term-care-care-report-${new Date().toISOString().slice(0, 10)}.md`;
+    anchor.download = `silvercare-care-report-${new Date().toISOString().slice(0, 10)}.md`;
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
@@ -560,17 +560,17 @@ export function setupManagementDashboard(doc = document) {
         addDemoEventButton: doc.getElementById('careAddDemoEventButton'),
         navRiskCount: doc.getElementById('careNavRiskCount'),
         navResidentCount: doc.getElementById('careNavResidentCount'),
-        insuranceAgentProfile: doc.getElementById('insuranceAgentProfile'),
-        insuranceAgentInsights: doc.getElementById('insuranceAgentInsights'),
-        insuranceAgentMessages: doc.getElementById('insuranceAgentMessages'),
-        insuranceAgentInput: doc.getElementById('insuranceAgentInput'),
-        insuranceAgentSendButton: doc.getElementById('insuranceAgentSendButton')
+        careAgentProfile: doc.getElementById('careAgentProfile'),
+        careAgentInsights: doc.getElementById('careAgentInsights'),
+        careAgentMessages: doc.getElementById('careAgentMessages'),
+        careAgentInput: doc.getElementById('careAgentInput'),
+        careAgentSendButton: doc.getElementById('careAgentSendButton')
     };
 
     let agentMessages = [
         {
             role: 'assistant',
-            text: buildInsuranceAgentReply(data, '今天还要注意什么？').speech
+            text: buildCareAgentReply(data, '今天还要注意什么？').speech
         }
     ];
 
@@ -586,21 +586,21 @@ export function setupManagementDashboard(doc = document) {
         setText(elements.reportText, currentReport);
         setText(elements.navRiskCount, String(summary.openEvents));
         setText(elements.navResidentCount, String(summary.residents));
-        renderInsuranceAgentProfile(elements.insuranceAgentProfile, data.insuranceProfile);
-        renderInsuranceAgentInsights(elements.insuranceAgentInsights, data.insuranceProfile);
-        renderInsuranceAgentMessages(elements.insuranceAgentMessages, agentMessages);
+        renderCareAgentProfile(elements.careAgentProfile, data.careProfile);
+        renderCareAgentInsights(elements.careAgentInsights, data.careProfile);
+        renderCareAgentMessages(elements.careAgentMessages, agentMessages);
     }
 
     function sendAgentMessage(message) {
         const clean = String(message || '').trim();
         if (!clean) return;
-        const reply = buildInsuranceAgentReply(data, clean);
+        const reply = buildCareAgentReply(data, clean);
         agentMessages = [
             ...agentMessages,
             { role: 'user', text: clean },
             { role: 'assistant', text: reply.speech }
         ].slice(-8);
-        data = applyInsuranceAgentAction(data, reply);
+        data = applyCareAgentAction(data, reply);
         saveCareManagementData(data);
         render();
         speak(reply.speech);
@@ -665,19 +665,19 @@ export function setupManagementDashboard(doc = document) {
         speak('照护日报已导出。');
     });
     elements.addDemoEventButton?.addEventListener('click', addDemoEvent);
-    elements.insuranceAgentSendButton?.addEventListener('click', () => {
-        const value = elements.insuranceAgentInput?.value || '';
+    elements.careAgentSendButton?.addEventListener('click', () => {
+        const value = elements.careAgentInput?.value || '';
         sendAgentMessage(value);
     });
-    elements.insuranceAgentInput?.addEventListener('keydown', (event) => {
+    elements.careAgentInput?.addEventListener('keydown', (event) => {
         if (event.key !== 'Enter') return;
         event.preventDefault();
-        sendAgentMessage(elements.insuranceAgentInput.value);
+        sendAgentMessage(elements.careAgentInput.value);
     });
 
     doc.querySelectorAll('[data-agent-prompt]').forEach((button) => {
         button.addEventListener('click', () => {
-            if (elements.insuranceAgentInput) elements.insuranceAgentInput.value = button.dataset.agentPrompt || '';
+            if (elements.careAgentInput) elements.careAgentInput.value = button.dataset.agentPrompt || '';
             sendAgentMessage(button.dataset.agentPrompt);
         });
     });

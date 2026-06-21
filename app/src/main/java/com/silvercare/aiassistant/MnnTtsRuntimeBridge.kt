@@ -64,7 +64,7 @@ internal class MnnTtsRuntimeBridge : LocalTtsRuntimeBridge, Closeable {
                 throw IllegalStateException("本地 MNN TTS 未生成有效音频。")
             }
             val sampleRate = readSampleRate(modelDir)
-            val output = File(outputDir, "long-term-care-local-tts-${System.nanoTime()}.wav")
+            val output = File(outputDir, "silvercare-local-tts-${System.nanoTime()}.wav")
             writeWav(output, audio, sampleRate)
             if (!output.isFile || output.length() <= WAV_HEADER_BYTES) {
                 throw IllegalStateException("本地 MNN TTS 未生成有效 WAV 音频。")

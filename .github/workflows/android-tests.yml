@@ -21,6 +21,14 @@ jobs:
         with:
           node-version: "22"
 
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android native toolchain
+        run: sdkmanager "cmake;3.22.1" "ndk;27.2.12479018"
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
+
       - name: JS syntax and unit tests
         run: |
           npm run check:js

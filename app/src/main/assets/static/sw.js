@@ -1,4 +1,4 @@
-const CACHE_NAME = 'long-term-care-dashscope-zh-v1';
+const CACHE_NAME = 'silvercare-dashscope-zh-v1';
 const urlsToCache = [
   '/',
   '/static/css/main.css',

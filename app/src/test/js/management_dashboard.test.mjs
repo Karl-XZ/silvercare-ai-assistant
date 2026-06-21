@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 
 import {
   CARE_MANAGEMENT_DATA,
-  applyInsuranceAgentAction,
-  buildInsuranceAgentContext,
-  buildInsuranceAgentReply,
+  applyCareAgentAction,
+  buildCareAgentContext,
+  buildCareAgentReply,
   buildDailyReport,
   calculateCareSummary,
   markRiskEventHandled
 } from '../../main/assets/static/js/management.js';
 
-test('care dashboard summary exposes long-term-care management metrics', () => {
+test('care dashboard summary exposes silvercare management metrics', () => {
   const summary = calculateCareSummary(CARE_MANAGEMENT_DATA, 'today');
 
   assert.equal(summary.residents, 16);
@@ -41,23 +41,23 @@ test('daily report includes risk queue and missed care tasks', () => {
   assert.match(report, /夜间起身频繁对象/);
 });
 
-test('insurance data agent summarizes quota and care risks', () => {
-  const context = buildInsuranceAgentContext(CARE_MANAGEMENT_DATA.insuranceProfile);
-  const reply = buildInsuranceAgentReply(CARE_MANAGEMENT_DATA, '最近额度还够不够？');
+test('care data agent summarizes care budget and risks', () => {
+  const context = buildCareAgentContext(CARE_MANAGEMENT_DATA.careProfile);
+  const reply = buildCareAgentReply(CARE_MANAGEMENT_DATA, '最近额度还够不够？');
 
-  assert.equal(context.quotaLeft, 720);
+  assert.equal(context.budgetLeft, 720);
   assert.equal(context.medicationAdherence, 82);
   assert.match(reply.speech, /剩余 720 元/);
-  assert.equal(reply.intent, 'quota_advice');
+  assert.equal(reply.intent, 'budget_advice');
 });
 
-test('insurance data agent records user data as a care event', () => {
-  const reply = buildInsuranceAgentReply(CARE_MANAGEMENT_DATA, '帮我记录今天头晕一次，已提醒照护者复核');
-  const next = applyInsuranceAgentAction(CARE_MANAGEMENT_DATA, reply, new Date('2026-05-23T10:30:00'));
+test('care data agent records user data as a care event', () => {
+  const reply = buildCareAgentReply(CARE_MANAGEMENT_DATA, '帮我记录今天头晕一次，已提醒照护者复核');
+  const next = applyCareAgentAction(CARE_MANAGEMENT_DATA, reply, new Date('2026-05-23T10:30:00'));
 
   assert.equal(reply.intent, 'record');
-  assert.equal(next.insuranceProfile.records[0].type, '症状');
-  assert.match(next.insuranceProfile.records[0].text, /头晕/);
+  assert.equal(next.careProfile.records[0].type, '症状');
+  assert.match(next.careProfile.records[0].text, /头晕/);
   assert.equal(next.events[0].title, '照护助手记录：症状');
   assert.equal(next.events[0].severity, 'medium');
 });
