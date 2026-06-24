@@ -1320,7 +1320,7 @@ public class MainActivity extends Activity
 
         new AlertDialog.Builder(this)
             .setTitle("DashScope API Key")
-            .setMessage("Key 只保存在本机 Android 设置中，不会写入 APK。")
+            .setMessage("优先使用本机保存的 Key；未填写时使用当前安装包默认配置。")
             .setView(input)
             .setPositiveButton("保存", (dialog, which) -> {
                 preferences.edit().putString(KEY_API_KEY, input.getText().toString().trim()).apply();
