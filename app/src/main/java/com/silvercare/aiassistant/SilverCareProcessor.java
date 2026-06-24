@@ -146,9 +146,8 @@ final class SilverCareProcessor {
         result.put("intent", intent);
         String speech = result.optString("speech", "我没有听清。");
         if ("micro_nav".equals(intent) && !containsGuidanceKeyword(transcript)) {
-            result = fallbackIntent("info", "如果需要精确引导，请说：引导我靠近目标。当前我不会自动开启精确引导。")
-                .put("thinking", "用户没有说出“引导”，已阻止自动进入精确引导");
-            intent = "info";
+            result = downgradeMicroNavToGoal(transcript, result);
+            intent = "search";
             speech = result.optString("speech", speech);
         }
         if ("search".equals(intent) && isOfflineRuntime() && isNavigationSafetyQuestion(transcript)) {
@@ -157,14 +156,22 @@ final class SilverCareProcessor {
             intent = "nav_check";
             speech = result.optString("speech", speech);
         }
-        if ("search".equals(intent) && isOfflineRuntime() && !isSearchIntentRequest(transcript)) {
+        if ("search".equals(intent)
+            && isOfflineRuntime()
+            && !isSearchIntentRequest(transcript)
+            && isObjectSearchGoal(resultSearchGoal(result))) {
             result = fallbackIntent("info", offlineCapabilitySpeech(transcript, speech))
                 .put("thinking", "本地 LLM 返回找物，但用户原话没有找物意图，已校正为普通问答。");
             intent = "info";
             speech = result.optString("speech", speech);
         }
         if ("search".equals(intent) && isOfflineRuntime()) {
-            result = normalizeOfflineSearchIntent(transcript, result);
+            if (isObjectSearchGoal(resultSearchGoal(result))) {
+                result = normalizeOfflineSearchIntent(transcript, result);
+            } else if (result.optString("speech", "").trim().isEmpty()) {
+                String goal = resultSearchGoal(result);
+                result.put("speech", goal.isEmpty() ? "正在查看前方通行情况。" : "好的，正在查看" + goal + "。");
+            }
             intent = normalizeIntent(result.optString("intent", "info"));
             result.put("intent", intent);
             speech = result.optString("speech", speech);
@@ -381,6 +388,39 @@ final class SilverCareProcessor {
             )
         );
         return result;
+    }
+
+    private static String resultSearchGoal(JSONObject result) {
+        if (result == null) return "";
+        return cleanTarget(result.optString("search_target", result.optString("goal", result.optString("target", ""))));
+    }
+
+    private JSONObject downgradeMicroNavToGoal(String transcript, JSONObject result) throws Exception {
+        String target = cleanTarget(result.optString("target", result.optString("search_target", "")));
+        if (target.isEmpty() || "null".equalsIgnoreCase(target)) {
+            target = extractNavigationGoal(transcript);
+        }
+        if (target.isEmpty()) {
+            target = extractSearchTarget(transcript);
+        }
+        if (target.isEmpty()) {
+            target = cleanTarget(transcript);
+        }
+        if (target.isEmpty()) {
+            target = "前方目标";
+        }
+        String speech = isObjectSearchGoal(target)
+            ? "好的，正在寻找" + target + "。"
+            : "好的，正在查看" + target + "。";
+        return fallbackIntent("search", speech)
+            .put("search_target", target)
+            .put(
+                "thinking",
+                appendThinking(
+                    result.optString("thinking", ""),
+                    "用户没有说“引导”，模型返回的精确引导已降级为普通目标系统处理。"
+                )
+            );
     }
 
     private String resolveOfflineSearchTargetWithAi(String transcript, String rawTarget) {
@@ -693,6 +733,9 @@ final class SilverCareProcessor {
     private static boolean isObjectSearchGoal(String goal) {
         String value = cleanTarget(goal);
         if (value.isEmpty()) return false;
+        if (containsAny(value, "按钮", "开关", "把手", "水龙头", "遥控器", "钥匙", "药盒", "耳塞", "杯子", "碗")) {
+            return true;
+        }
         if (containsAny(
             value,
             "通过",
@@ -777,6 +820,26 @@ final class SilverCareProcessor {
             return extractMemoryObject(text);
         }
         return "";
+    }
+
+    private static String extractNavigationGoal(String text) {
+        String value = extractAfter(
+            text,
+            "帮我通过",
+            "我要通过",
+            "通过",
+            "帮我穿过",
+            "穿过",
+            "帮我进入",
+            "进入",
+            "帮我走到",
+            "走到",
+            "帮我去",
+            "带我去",
+            "前往",
+            "到达"
+        );
+        return value;
     }
 
     private static String extractAfter(String text, String... prefixes) {
@@ -1036,7 +1099,9 @@ final class SilverCareProcessor {
             if (!goal.isEmpty()) {
                 mode = "nav";
                 currentGoal = goal;
-                return "好的，正在寻找" + goal + "。";
+                return isObjectSearchGoal(goal)
+                    ? "好的，正在寻找" + goal + "。"
+                    : "好的，正在查看" + goal + "。";
             }
         } else if ("stop".equals(intent)) {
             mode = "nav";

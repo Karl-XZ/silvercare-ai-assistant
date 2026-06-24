@@ -451,7 +451,7 @@ public class SilverCareProcessorTest {
     }
 
     @Test
-    public void microNavigationRequiresExplicitGuidanceKeyword() {
+    public void microNavigationWithoutGuidanceKeywordFallsBackToGoalMode() {
         TestFakes.AiClient ai = new TestFakes.AiClient();
         ai.transcript = "帮我按电梯的上行按钮";
         ai.visionResponses.add("""
@@ -462,6 +462,7 @@ public class SilverCareProcessorTest {
               "speech":"正在引导你靠近上行按钮。"
             }
             """);
+        addNavigationResponse(ai, "电梯上行按钮", "电梯上行按钮在左前方，请靠近后再说引导。");
         TestFakes.Sink sink = new TestFakes.Sink();
         SilverCareProcessor processor = new SilverCareProcessor(
             ai,
@@ -475,7 +476,45 @@ public class SilverCareProcessorTest {
         JSONObject speak = sink.firstOfType("speak");
         assertThat(inquiry, notNullValue());
         assertThat(inquiry.optString("mode"), equalTo("nav"));
-        assertThat(speak.optString("text"), containsString("请说：引导我靠近目标"));
+        assertThat(inquiry.optString("intent"), equalTo("search"));
+        assertThat(inquiry.optString("current_goal"), equalTo("电梯上行按钮"));
+        assertThat(speak.optString("text"), equalTo("好的，正在寻找电梯上行按钮。"));
+        assertThat(speak.optString("text"), not(containsString("请说：引导我靠近目标")));
+        assertThat(ai.lastVisionPrompt, containsString("找物目标：电梯上行按钮"));
+    }
+
+    @Test
+    public void corridorRequestMisclassifiedAsMicroNavFallsBackToNavigationGoal() {
+        TestFakes.AiClient ai = new TestFakes.AiClient();
+        ai.transcript = "我要通过前方走廊";
+        ai.visionResponses.add("""
+            {
+              "thinking":"模型误判为精确引导",
+              "intent":"micro_nav",
+              "target":"前方走廊",
+              "speech":"正在引导你靠近前方走廊。"
+            }
+            """);
+        addNavigationResponse(ai, "走廊", "前方走廊基本通畅，请靠右慢慢直走。");
+        TestFakes.Sink sink = new TestFakes.Sink();
+        SilverCareProcessor processor = new SilverCareProcessor(
+            ai,
+            new MemoryStore(new TestFakes.Preferences()),
+            sink
+        );
+
+        processor.processInquiry("data:image/png;base64,test", "data:audio/webm;base64,test");
+
+        JSONObject inquiry = sink.firstOfType("inquiry_result");
+        JSONObject speak = sink.firstOfType("speak");
+        assertThat(inquiry, notNullValue());
+        assertThat(inquiry.optString("mode"), equalTo("nav"));
+        assertThat(inquiry.optString("intent"), equalTo("search"));
+        assertThat(inquiry.optString("current_goal"), equalTo("前方走廊"));
+        assertThat(speak.optString("text"), equalTo("好的，正在查看前方走廊。"));
+        assertThat(speak.optString("text"), not(containsString("请说：引导我靠近目标")));
+        assertThat(ai.lastVisionPrompt, containsString("导航目标：前方走廊"));
+        assertThat(ai.lastVisionPrompt, not(containsString("我还没有看到目标，请缓慢向左或向右转动手机，然后再次刷新。")));
     }
 
     @Test
