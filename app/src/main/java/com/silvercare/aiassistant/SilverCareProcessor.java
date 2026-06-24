@@ -107,7 +107,10 @@ final class SilverCareProcessor {
             return;
         }
 
-        JSONObject result = preferDeterministicFirst ? applyTranscriptFallback(transcript, null) : null;
+        JSONObject result = deterministicCareRecord(transcript);
+        if (result == null && preferDeterministicFirst) {
+            result = applyTranscriptFallback(transcript, null);
+        }
         if (result == null) {
             String prompt = inquiryPrompt(transcript);
             String routeModel = isOfflineRuntime() ? client.settings().textModel() : client.settings().visionModel();
@@ -270,6 +273,9 @@ final class SilverCareProcessor {
         JSONObject control = deterministicTaskControl(text);
         if (control != null) return control;
 
+        JSONObject careRecord = deterministicCareRecord(text);
+        if (careRecord != null) return careRecord;
+
         String remembered = memoryStore.findObjectLocation(extractMemoryObject(text));
         if (!remembered.isEmpty() && isWhereQuestion(text)) {
             return fallbackIntent("info", remembered)
@@ -291,6 +297,9 @@ final class SilverCareProcessor {
                         );
                     }
                 }
+            }
+            if ("care_record".equals(intent)) {
+                fillCareRecordFields(modelResult, text);
             }
             return modelResult;
         }
@@ -464,6 +473,92 @@ final class SilverCareProcessor {
         return null;
     }
 
+    private JSONObject deterministicCareRecord(String text) throws Exception {
+        if (!isCareRecordCommand(text)) return null;
+        String recordType = careRecordType(text);
+        String recordText = cleanCareRecordText(text);
+        String speech = "已记录：" + recordText + "。已加入" + recordType + "记录，照护端可复核。";
+        return fallbackIntent("care_record", speech)
+            .put("record_type", recordType)
+            .put("record_text", recordText)
+            .put("care_event_title", "照护助手记录：" + recordType)
+            .put("care_event_detail", recordText)
+            .put("care_event_severity", "medium")
+            .put("thinking", "确定性识别照护记录指令");
+    }
+
+    private static boolean isCareRecordCommand(String text) {
+        String value = text == null ? "" : text.trim();
+        if (value.isEmpty()) return false;
+        if (isSearchIntentRequest(value) || isNavigationSafetyQuestion(value) || isCapabilityQuestion(value)) return false;
+        boolean explicitRecord = containsAny(value, "记录", "记一下", "记下", "帮我记", "补记", "打卡");
+        boolean medicationAction = containsAny(value, "已吃", "吃了", "吃过", "服了", "服用", "用过", "刚吃", "刚服")
+            && containsAny(value, "药", "降压", "降糖", "胰岛素", "药片", "药丸", "胶囊");
+        boolean symptomRecord = containsAny(value, "头晕", "头疼", "疼", "不舒服", "胸闷", "心慌", "血压", "血糖", "摔倒", "跌倒")
+            && containsAny(value, "记录", "记一下", "今天", "刚才", "我");
+        return explicitRecord || medicationAction || symptomRecord;
+    }
+
+    private static String careRecordType(String text) {
+        String value = text == null ? "" : text;
+        if (containsAny(value, "药", "降压", "降糖", "胰岛素", "药片", "药丸", "胶囊", "服用", "用药")) {
+            return "用药";
+        }
+        if (containsAny(value, "头晕", "头疼", "疼", "不舒服", "胸闷", "心慌", "血压", "血糖")) {
+            return "症状";
+        }
+        if (containsAny(value, "摔倒", "跌倒", "报警")) {
+            return "风险";
+        }
+        return "照护";
+    }
+
+    private static String cleanCareRecordText(String text) {
+        String value = extractAfter(text, "帮我记录一下", "帮我记录", "请记录一下", "请记录", "记录一下", "记录", "记一下", "记下", "帮我记一下", "帮我记");
+        if (value.isEmpty()) value = text == null ? "" : text.trim();
+        value = value
+            .replace("我已经", "")
+            .replace("已经", "")
+            .replace("我刚才", "")
+            .replace("刚才", "")
+            .replace("我", "")
+            .replace("了了", "了")
+            .replace("。", "")
+            .replace("，", "")
+            .replace(",", "")
+            .replace("！", "")
+            .replace("?", "")
+            .replace("？", "")
+            .trim();
+        if (value.endsWith("了")) value = value.substring(0, value.length() - 1).trim();
+        return value.isEmpty() ? "新增照护记录" : value;
+    }
+
+    private static void fillCareRecordFields(JSONObject result, String transcript) throws Exception {
+        String recordText = result.optString("record_text", "").trim();
+        if (recordText.isEmpty()) {
+            recordText = cleanCareRecordText(transcript);
+            result.put("record_text", recordText);
+        }
+        String recordType = result.optString("record_type", "").trim();
+        if (recordType.isEmpty()) {
+            recordType = careRecordType(recordText + transcript);
+            result.put("record_type", recordType);
+        }
+        if (!result.has("care_event_title")) {
+            result.put("care_event_title", "照护助手记录：" + recordType);
+        }
+        if (!result.has("care_event_detail")) {
+            result.put("care_event_detail", recordText);
+        }
+        if (!result.has("care_event_severity")) {
+            result.put("care_event_severity", "medium");
+        }
+        if (result.optString("speech", "").trim().isEmpty()) {
+            result.put("speech", "已记录：" + recordText + "。已加入" + recordType + "记录，照护端可复核。");
+        }
+    }
+
     private JSONObject fallbackIntent(String intent, String speech) throws Exception {
         return new JSONObject()
             .put("thinking", "")
@@ -523,6 +618,7 @@ final class SilverCareProcessor {
             case "task_previous":
             case "task_repeat":
             case "task_status":
+            case "care_record":
             case "stop":
             case "info":
                 return lower;
@@ -531,7 +627,7 @@ final class SilverCareProcessor {
         }
         if (code.length() > 1) {
             String first = code.substring(0, 1).toUpperCase(java.util.Locale.US);
-            if ("SNMLPDKBRUXI".contains(first)) {
+            if ("SNMLPDKBRUXCI".contains(first)) {
                 code = first;
             }
         }
@@ -546,6 +642,7 @@ final class SilverCareProcessor {
             case "B" -> "task_previous";
             case "R" -> "task_repeat";
             case "U" -> "task_status";
+            case "C" -> "care_record";
             case "X" -> "stop";
             case "I" -> "info";
             default -> "info";
@@ -916,12 +1013,31 @@ final class SilverCareProcessor {
                 memoryStore.addLocation(name, desc);
                 return "已将当前位置标记为" + name + "。";
             }
+        } else if ("care_record".equals(intent)) {
+            return handleCareRecord(result);
         } else if ("task".equals(intent)) {
             return generateTaskPlan(result.optString("task_name", ""));
         } else if (intent.startsWith("task_")) {
             return handleTaskControl(intent);
         }
         return null;
+    }
+
+    private String handleCareRecord(JSONObject result) throws Exception {
+        fillCareRecordFields(result, result.optString("record_text", ""));
+        String recordType = result.optString("record_type", "照护");
+        String recordText = result.optString("record_text", "新增照护记录");
+        String speech = result.optString("speech", "已记录：" + recordText + "。已加入" + recordType + "记录，照护端可复核。");
+        sink.send(new JSONObject()
+            .put("type", "care_record")
+            .put("record_type", recordType)
+            .put("record_text", recordText)
+            .put("title", result.optString("care_event_title", "照护助手记录：" + recordType))
+            .put("detail", result.optString("care_event_detail", recordText))
+            .put("severity", result.optString("care_event_severity", "medium"))
+            .put("source", "老人端语音记录")
+            .put("speech", speech));
+        return speech;
     }
 
     private String generateTaskPlan(String taskName) throws Exception {
@@ -1123,6 +1239,12 @@ final class SilverCareProcessor {
             Known locations: %s
 
             Analyze hazards, navigable space, people, social intent, object states, text, and affordances.
+            If Current task starts with "正在寻找：" and the requested target is not clearly visible in the image:
+            - Do not infer, hallucinate, or guess the target position from surrounding objects.
+            - Set target_detected to false, confidence_score to 0, distance to 0, direction to "unknown".
+            - speech must tell the user: "我还没有看到目标，请缓慢向左或向右转动手机，然后再次刷新。"
+            - scene_description may summarize what is visible, but must not claim the target was found.
+            If the target is visible, give body-relative, tactile guidance to approach or touch it.
             If immediate danger is within 0.5m, start speech with "停下".
             The user is blind or has low vision, often an older adult. Speech must be actionable without seeing the screen:
             - Use body-relative directions: 正前方、左前方、右手边、脚边、腰部高度.
@@ -1237,6 +1359,7 @@ final class SilverCareProcessor {
             micro_nav: press/find/manipulate a small target. Set target.
             search: find or locate an object. Set search_target.
             tag: remember current place. Set tag_name and scene_description.
+            care_record: record medication, symptom, care status, or health event. Set record_type and record_text.
             task: complex physical process. Set task_name.
             task_skip, task_previous, task_repeat, task_done, task_status: control active task.
             stop: cancel current search/task.
@@ -1252,6 +1375,7 @@ final class SilverCareProcessor {
             - For a find/search command, always set search_target to the object named by the user, even if the object is not visible yet.
             - History is authoritative for "where is my object" questions.
             - If the user asks where a remembered object is, use intent "info" and answer from History.
+            - If the user asks to record medicine taken, symptoms, blood pressure, blood sugar, or care status, use intent "care_record".
             - Task control overrides micro navigation. If Task state says a task is active and the user says this step is done/completed, use intent "task_done".
             - Use intent "micro_nav" ONLY when the user explicitly says the keyword "引导".
             - If the user asks to press, touch, align with, or manipulate a small object but does not say "引导", use intent "info" and explain that precision guidance starts only after saying "引导我靠近...".
@@ -1259,18 +1383,19 @@ final class SilverCareProcessor {
             - The user is blind or low-vision. All speech must use body-relative, tactile, step-by-step language. Do not rely on color-only or vague visual references.
 
             Output fields:
-            thinking, intent, search_target, target, tag_name, task_name, scene_description, speech.
+            thinking, intent, search_target, target, tag_name, task_name, scene_description, record_type, record_text, speech.
 
             Reference examples:
             {"thinking":"用户要找门","intent":"search","search_target":"门","target":null,"tag_name":null,"task_name":null,"scene_description":null,"speech":"正在寻找门。"}
             {"thinking":"用户要按按钮","intent":"micro_nav","search_target":null,"target":"上行按钮","tag_name":null,"task_name":null,"scene_description":null,"speech":"正在引导你靠近上行按钮。"}
             {"thinking":"用户要记住地点","intent":"tag","search_target":null,"target":null,"tag_name":"办公室门口","task_name":null,"scene_description":"办公室门口","speech":"已记住办公室门口。"}
             {"thinking":"用户要任务指导","intent":"task","search_target":null,"target":null,"tag_name":null,"task_name":"倒一杯水","scene_description":null,"speech":"我来指导你倒水。"}
+            {"thinking":"用户要记录用药","intent":"care_record","search_target":null,"target":null,"tag_name":null,"task_name":null,"scene_description":null,"record_type":"用药","record_text":"吃了降压药","speech":"已记录：吃了降压药。已加入用药记录，照护端可复核。"}
             {"thinking":"用户询问记忆中的物体位置","intent":"info","search_target":null,"target":null,"tag_name":null,"task_name":null,"scene_description":null,"speech":"水杯在厨房水槽左侧。"}
             {"thinking":"用户确认当前任务步骤完成","intent":"task_done","search_target":null,"target":null,"tag_name":null,"task_name":null,"scene_description":null,"speech":"这一步已完成。"}
 
             Output JSON:
-            {"thinking":"中文推理","intent":"一个具体枚举值","search_target":null,"target":null,"tag_name":null,"task_name":null,"scene_description":null,"speech":"中文回答"}
+            {"thinking":"中文推理","intent":"一个具体枚举值","search_target":null,"target":null,"tag_name":null,"task_name":null,"scene_description":null,"record_type":null,"record_text":null,"speech":"中文回答"}
             """.formatted(transcript, memoryStore.historyContext(), taskStateText());
     }
 

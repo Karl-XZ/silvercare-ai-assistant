@@ -11,132 +11,71 @@ import {
 } from './care_store.js';
 
 export const CARE_MANAGEMENT_DATA = {
-    generatedAt: '2026-05-23 14:30',
+    generatedAt: '',
     periods: {
         today: {
             label: '今日',
-            residents: 16,
-            taskCompletion: 92,
-            responseSeconds: 42,
-            serviceClosedLoop: 88,
-            trend: [2, 3, 2, 4, 3, 5, 6],
+            residents: 1,
+            taskCompletion: 0,
+            responseSeconds: 0,
+            serviceClosedLoop: 0,
+            trend: [0, 0, 0, 0, 0, 0, 0],
             trendLabels: ['周日', '周一', '周二', '周三', '周四', '周五', '今日'],
             progress: [
-                { label: '照护提醒确认', value: 92 },
-                { label: '风险事件已复核', value: 76 },
-                { label: '跌倒预警闭环', value: 84 },
-                { label: '日报生成覆盖', value: 100 }
+                { label: '真实事件闭环', value: 0 },
+                { label: '中高风险复核', value: 0 },
+                { label: '跌倒报警闭环', value: 0 },
+                { label: '照护记录留存', value: 0 }
             ]
         },
         week: {
             label: '7 日',
-            residents: 16,
-            taskCompletion: 89,
-            responseSeconds: 55,
-            serviceClosedLoop: 82,
-            trend: [14, 18, 13, 20, 16, 19, 23],
+            residents: 1,
+            taskCompletion: 0,
+            responseSeconds: 0,
+            serviceClosedLoop: 0,
+            trend: [0, 0, 0, 0, 0, 0, 0],
             trendLabels: ['周日', '周一', '周二', '周三', '周四', '周五', '今日'],
             progress: [
-                { label: '照护提醒确认', value: 89 },
-                { label: '风险事件已复核', value: 81 },
-                { label: '跌倒预警闭环', value: 78 },
-                { label: '日报生成覆盖', value: 96 }
+                { label: '真实事件闭环', value: 0 },
+                { label: '中高风险复核', value: 0 },
+                { label: '跌倒报警闭环', value: 0 },
+                { label: '照护记录留存', value: 0 }
             ]
         },
         month: {
             label: '30 日',
-            residents: 16,
-            taskCompletion: 86,
-            responseSeconds: 63,
-            serviceClosedLoop: 79,
-            trend: [58, 64, 71, 69, 76, 82, 88],
+            residents: 1,
+            taskCompletion: 0,
+            responseSeconds: 0,
+            serviceClosedLoop: 0,
+            trend: [0, 0, 0, 0, 0, 0, 0],
             trendLabels: ['第1周', '第2周', '第3周', '第4周', '第5周', '第6周', '本周'],
             progress: [
-                { label: '照护提醒确认', value: 86 },
-                { label: '风险事件已复核', value: 78 },
-                { label: '跌倒预警闭环', value: 75 },
-                { label: '日报生成覆盖', value: 93 }
+                { label: '真实事件闭环', value: 0 },
+                { label: '中高风险复核', value: 0 },
+                { label: '跌倒报警闭环', value: 0 },
+                { label: '照护记录留存', value: 0 }
             ]
         }
     },
     residents: [
-        { id: 'r1', name: '王阿姨', level: '长护二级', risk: 'high', status: '夜间起身频繁', tasks: '5/6', location: '卧室' },
-        { id: 'r2', name: '李伯伯', level: '长护三级', risk: 'medium', status: '用药一次未确认', tasks: '4/5', location: '客厅' },
-        { id: 'r3', name: '陈奶奶', level: '长护一级', risk: 'low', status: '状态稳定', tasks: '6/6', location: '厨房' },
-        { id: 'r4', name: '赵叔叔', level: '长护二级', risk: 'medium', status: '卫生间弱光提醒', tasks: '5/6', location: '卫生间' }
+        { id: 'current-user', name: '当前长护对象', level: '未填写', risk: 'low', status: '等待老人端真实数据', tasks: '0/0', location: '居家环境' }
     ],
-    events: [
-        {
-            id: 'e1',
-            resident: '王阿姨',
-            title: '疑似跌倒已询问',
-            detail: '传感器冲击 + 过去数秒画面剧烈变化，10 秒内已收到“我没事”确认。',
-            severity: 'high',
-            time: '09:42',
-            status: 'open'
-        },
-        {
-            id: 'e2',
-            resident: '李伯伯',
-            title: '用药提醒未确认',
-            detail: '08:30 降压药提醒未收到语音或点击确认，建议照护者电话复核。',
-            severity: 'medium',
-            time: '08:45',
-            status: 'open'
-        },
-        {
-            id: 'e3',
-            resident: '赵叔叔',
-            title: '卫生间弱光行走',
-            detail: '识别到低照度和地面湿区风险，App 已播报“扶住墙面，慢慢前进”。',
-            severity: 'medium',
-            time: '07:18',
-            status: 'handled'
-        },
-        {
-            id: 'e4',
-            resident: '陈奶奶',
-            title: '饮水任务已完成',
-            detail: '老人语音确认已饮水，系统记录为低风险正常事件。',
-            severity: 'low',
-            time: '10:10',
-            status: 'handled'
-        }
-    ],
-    tasks: [
-        { id: 't1', name: '早间用药', resident: '李伯伯', time: '08:30', status: 'missed' },
-        { id: 't2', name: '饮水提醒', resident: '陈奶奶', time: '10:00', status: 'done' },
-        { id: 't3', name: '活动训练', resident: '王阿姨', time: '15:30', status: 'pending' },
-        { id: 't4', name: '夜间起身复核', resident: '赵叔叔', time: '21:00', status: 'pending' }
-    ],
+    events: [],
+    tasks: [],
     careProfile: {
-        resident: '李伯伯',
-        longTermCareLevel: '长护三级',
-        chronicConditions: ['高血压', '轻度认知下降', '夜间起身频繁'],
-        monthlyCareBudget: 2400,
-        usedCareBudget: 1680,
-        medicationAdherence: 82,
-        remainingVisits: 5,
-        recentClaims: [
-            { name: '居家照护上门服务', amount: 420, date: '今日' },
-            { name: '慢病复诊与用药指导', amount: 126, date: '昨日' },
-            { name: '康复训练服务', amount: 280, date: '本周' }
-        ],
-        riskIndicators: [
-            '早间用药未确认',
-            '夜间起身频繁',
-            '卫生间门槛与湿滑风险',
-            '本月长护服务额度剩余 720 元'
-        ],
-        proactiveReminders: [
-            '08:30 降压药未确认，建议照护者电话复核。',
-            '本月长护服务额度剩余 720 元，可优先安排 2 次上门照护和 1 次康复训练。',
-            '夜间起身频繁，建议检查床边照明、拖鞋位置和卫生间通道障碍。'
-        ],
-        records: [
-            { time: '08:45', type: '用药', text: '早间用药未确认，已进入复核队列。' },
-            { time: '09:12', type: '服务', text: '长护服务额度已使用 1680 元，剩余额度 720 元。' }
-        ]
+        resident: '当前长护对象',
+        longTermCareLevel: '未填写',
+        chronicConditions: [],
+        monthlyCareBudget: 0,
+        usedCareBudget: 0,
+        medicationAdherence: 0,
+        remainingVisits: 0,
+        recentClaims: [],
+        riskIndicators: [],
+        proactiveReminders: [],
+        records: []
     }
 };
 
@@ -175,24 +114,45 @@ function escapeHtml(value) {
 export function calculateCareSummary(data = CARE_MANAGEMENT_DATA, periodKey = 'today') {
     const period = data.periods?.[periodKey] || data.periods?.today || {};
     const events = Array.isArray(data.events) ? data.events : [];
+    const tasks = Array.isArray(data.tasks) ? data.tasks : [];
     const openEvents = events.filter((event) => event.status !== 'handled');
     const highRiskOpen = openEvents.filter((event) => event.severity === 'high').length;
     const mediumRiskOpen = openEvents.filter((event) => event.severity === 'medium').length;
     const handledEvents = events.filter((event) => event.status === 'handled').length;
+    const doneTasks = tasks.filter((task) => task.status === 'done').length;
+    const taskCompletion = tasks.length ? Math.round((doneTasks / tasks.length) * 100) : 0;
+    const serviceClosedLoop = events.length ? Math.round((handledEvents / events.length) * 100) : 0;
+    const highAndMediumOpen = highRiskOpen + mediumRiskOpen;
+    const highAndMediumTotal = events.filter((event) => ['high', 'medium'].includes(event.severity)).length;
+    const highAndMediumHandled = events.filter((event) => ['high', 'medium'].includes(event.severity) && event.status === 'handled').length;
+    const highAndMediumClosedLoop = highAndMediumTotal ? Math.round((highAndMediumHandled / highAndMediumTotal) * 100) : 0;
+    const fallEvents = events.filter((event) => event.severity === 'high' || String(event.type || '').includes('fall'));
+    const fallHandled = fallEvents.filter((event) => event.status === 'handled').length;
+    const fallClosedLoop = fallEvents.length ? Math.round((fallHandled / fallEvents.length) * 100) : 0;
+    const records = Array.isArray(data.careProfile?.records) ? data.careProfile.records : [];
+    const recordRetention = records.length ? 100 : 0;
+    const trend = Array.isArray(period.trend) && period.trend.length ? [...period.trend] : [0, 0, 0, 0, 0, 0, 0];
+    trend[trend.length - 1] = events.length;
 
     return {
         periodLabel: period.label || '今日',
-        residents: Number(period.residents || data.residents?.length || 0),
-        taskCompletion: Number(period.taskCompletion || 0),
+        residents: Number(data.residents?.length || period.residents || 0),
+        taskCompletion,
         responseSeconds: Number(period.responseSeconds || 0),
-        serviceClosedLoop: Number(period.serviceClosedLoop || 0),
+        serviceClosedLoop,
         openEvents: openEvents.length,
         highRiskOpen,
         mediumRiskOpen,
         handledEvents,
-        trend: Array.isArray(period.trend) ? period.trend : [],
+        trend,
         trendLabels: Array.isArray(period.trendLabels) ? period.trendLabels : [],
-        progress: Array.isArray(period.progress) ? period.progress : []
+        progress: [
+            { label: '真实事件闭环', value: serviceClosedLoop },
+            { label: '中高风险复核', value: highAndMediumClosedLoop },
+            { label: '跌倒报警闭环', value: fallClosedLoop },
+            { label: '照护记录留存', value: recordRetention || (records.length ? 100 : 0) }
+        ],
+        highAndMediumOpen
     };
 }
 
@@ -211,13 +171,25 @@ export function buildDailyReport(data = CARE_MANAGEMENT_DATA, periodKey = 'today
     const missedTasks = data.tasks
         .filter((task) => task.status === 'missed')
         .map((task) => `${task.resident} ${task.name}`);
+    const records = Array.isArray(data.careProfile?.records) ? data.careProfile.records : [];
+
+    if (!data.events.length && !data.tasks.length && !records.length) {
+        return [
+            `${summary.periodLabel}照护摘要：当前还没有老人端上报的真实事件。`,
+            '风险情况：暂无跌倒报警、照护记录、巡路或找物事件。',
+            '待处理重点：请等待老人端完成一次巡路、找物、用药记录或跌倒报警后再复核。',
+            'AI 建议：当前不生成照护判断；后续只根据真实上报记录给出建议。'
+        ].join('\n');
+    }
 
     return [
-        `${summary.periodLabel}照护摘要：当前管理 ${summary.residents} 名长护对象，照护任务完成率 ${summary.taskCompletion}%，服务闭环率 ${summary.serviceClosedLoop}%。`,
+        `${summary.periodLabel}照护摘要：当前管理 ${summary.residents} 名长护对象，真实事件 ${data.events.length} 条，照护任务完成率 ${summary.taskCompletion}%，服务闭环率 ${summary.serviceClosedLoop}%。`,
         `风险情况：待复核事件 ${summary.openEvents} 条，其中高风险 ${summary.highRiskOpen} 条，中风险 ${summary.mediumRiskOpen} 条，平均响应 ${summary.responseSeconds} 秒。`,
         openNames.length ? `待处理重点：${openNames.join('；')}。` : '待处理重点：暂无未闭环风险事件。',
         missedTasks.length ? `任务缺口：${missedTasks.join('；')} 需要照护者复核。` : '任务缺口：今日暂无未确认任务。',
-        'AI 建议：优先处理高风险跌倒相关事件；对未确认用药任务进行电话复核；夜间起身频繁对象建议检查床边照明和地面障碍物。'
+        summary.highRiskOpen > 0
+            ? 'AI 建议：优先处理高风险跌倒报警事件；其他低风险巡路和找物记录可作为服务留痕复核。'
+            : 'AI 建议：当前没有未处理跌倒报警；低风险巡路和找物记录主要用于服务留痕，中风险照护记录请照护者复核。'
     ].join('\n');
 }
 
@@ -225,8 +197,8 @@ export function buildCareAgentContext(profile = CARE_MANAGEMENT_DATA.careProfile
     const budgetLeft = Math.max(0, Number(profile.monthlyCareBudget || 0) - Number(profile.usedCareBudget || 0));
     const budgetRatio = profile.monthlyCareBudget ? Math.round((budgetLeft / profile.monthlyCareBudget) * 100) : 0;
     return {
-        resident: profile.resident,
-        longTermCareLevel: profile.longTermCareLevel,
+        resident: profile.resident || '当前长护对象',
+        longTermCareLevel: profile.longTermCareLevel || '未填写',
         chronicConditions: profile.chronicConditions || [],
         budgetLeft,
         budgetRatio,
@@ -246,20 +218,29 @@ export function buildCareAgentReply(data = CARE_MANAGEMENT_DATA, message = '') {
     const openMissedTasks = (data.tasks || []).filter((task) => task.status === 'missed');
     const openRisks = (data.events || []).filter((event) => event.status !== 'handled');
     const highRisks = openRisks.filter((event) => event.severity === 'high');
+    const mediumRisks = openRisks.filter((event) => event.severity === 'medium');
+    const records = Array.isArray(profile.records) ? profile.records : [];
 
     if (/记录|记一下|已吃|吃过|头晕|疼|不舒服|复核/.test(text)) {
+        const recordType = /药|已吃|吃过|服药|降压/.test(text) ? '用药' : /头晕|疼|不舒服|症状/.test(text) ? '症状' : '复核';
         return {
             intent: 'record',
-            speech: `已记录：${text}。我会把它放入${context.resident}的长护服务记录，并提醒照护者复核。`,
+            speech: `已记录：${text}。这是一条${recordType}记录，会作为中风险照护事件进入管理端复核。`,
             action: {
                 type: 'append_record',
-                recordType: /药|已吃|吃过/.test(text) ? '用药' : /头晕|疼|不舒服/.test(text) ? '症状' : '复核',
+                recordType,
                 text
             }
         };
     }
 
     if (/费用|药费|护理费|开销|剩余|够不够/.test(text) || normalized.includes('budget')) {
+        if (!Number(profile.monthlyCareBudget || 0)) {
+            return {
+                intent: 'budget_advice',
+                speech: '当前没有录入真实长护服务额度或费用数据，暂时不能给出费用建议。请先录入真实额度、已用额度或服务记录。'
+            };
+        }
         return {
             intent: 'budget_advice',
             speech: `${context.resident}本月长护服务额度剩余 ${context.budgetLeft} 元，约占 ${context.budgetRatio}%。建议优先安排高风险复核、上门照护和康复训练，普通服务可排到下周。`
@@ -267,10 +248,15 @@ export function buildCareAgentReply(data = CARE_MANAGEMENT_DATA, message = '') {
     }
 
     if (/药|用药|降压|吃药/.test(text)) {
-        const missed = openMissedTasks.map((task) => `${task.name} ${task.time}`).join('、') || '暂无未确认用药任务';
+        const medicationRecords = records.filter((record) => record.type === '用药');
+        const missed = openMissedTasks.map((task) => `${task.name} ${task.time}`).join('、');
         return {
             intent: 'medication_advice',
-            speech: `${context.resident}当前用药确认率 ${context.medicationAdherence}%。${missed}。建议先电话确认早间用药，再在 App 内补记确认结果。`
+            speech: missed
+                ? `当前有未确认用药任务：${missed}。建议照护者优先复核。`
+                : medicationRecords.length
+                    ? `当前已有 ${medicationRecords.length} 条真实用药记录，最近一条是：${medicationRecords[0].text}。`
+                    : '当前还没有真实用药记录。请通过老人端说“记录我吃了某某药”来新增记录。'
         };
     }
 
@@ -278,13 +264,20 @@ export function buildCareAgentReply(data = CARE_MANAGEMENT_DATA, message = '') {
         const highRiskText = highRisks.length ? `当前有 ${highRisks.length} 条高风险待复核。` : '当前没有未处理高风险事件。';
         return {
             intent: 'risk_advice',
-            speech: `${highRiskText}${context.resident}存在夜间起身频繁和卫生间通行风险，建议今晚先检查床边照明、拖鞋位置、通往卫生间的地面障碍，并保留跌倒确认提醒。`
+            speech: `${highRiskText}中风险照护记录 ${mediumRisks.length} 条，普通巡路和找物记录为低风险。请优先复核跌倒报警，其次复核用药、症状等照护记录。`
+        };
+    }
+
+    if (!openRisks.length && !records.length && !(data.tasks || []).length) {
+        return {
+            intent: 'daily_advice',
+            speech: '当前还没有真实老人端数据；请先完成一次巡路、找物、用药记录或跌倒报警测试。'
         };
     }
 
     return {
         intent: 'daily_advice',
-        speech: `${context.resident}今日重点是复核早间用药、处理 ${openRisks.length} 条待复核风险，并合理使用剩余 ${context.budgetLeft} 元长护服务额度。建议先处理用药未确认，再安排夜间起身风险排查。`
+        speech: `当前有 ${openRisks.length} 条待复核事件，其中高风险 ${highRisks.length} 条、中风险 ${mediumRisks.length} 条。请按高风险跌倒报警、中风险照护记录、低风险巡路找物记录的顺序处理。`
     };
 }
 
@@ -306,7 +299,7 @@ export function applyCareAgentAction(data = CARE_MANAGEMENT_DATA, reply, now = n
         resident: next.careProfile.resident,
         title: `照护助手记录：${action.recordType || '记录'}`,
         detail: action.text || reply.speech || '新增对话记录',
-        severity: action.recordType === '症状' ? 'medium' : 'low',
+        severity: 'medium',
         time,
         status: 'open',
         source: '照护数据智能助手'
@@ -415,6 +408,10 @@ function renderProgress(root, progress) {
 }
 
 function renderEvents(root, events) {
+    if (!events.length) {
+        setHtml(root, '<article class="care-event"><div><h3>暂无真实事件</h3><p>老人端完成巡路、找物、照护记录或跌倒报警后会自动同步到这里。</p></div></article>');
+        return;
+    }
     const sorted = [...events].sort((a, b) => Number(a.status === 'handled') - Number(b.status === 'handled'));
     setHtml(root, sorted.map((event) => `
         <article class="care-event">
@@ -436,6 +433,10 @@ function renderEvents(root, events) {
 }
 
 function renderResidents(root, residents) {
+    if (!residents.length) {
+        setHtml(root, '<article class="care-resident"><div class="care-avatar" aria-hidden="true">当</div><div><h3>当前长护对象 · 未填写</h3><p>等待老人端真实数据 · 任务 0/0</p></div><span class="care-severity low">低风险</span></article>');
+        return;
+    }
     setHtml(root, residents.map((resident) => `
         <article class="care-resident">
             <div class="care-avatar" aria-hidden="true">${escapeHtml(resident.name.slice(0, 1))}</div>
@@ -449,6 +450,10 @@ function renderResidents(root, residents) {
 }
 
 function renderTasks(root, tasks) {
+    if (!tasks.length) {
+        setHtml(root, '<article class="care-task"><div><h3>暂无真实任务</h3><p>任务指导完成后会形成服务留痕。</p></div><span class="care-status pending">待产生</span></article>');
+        return;
+    }
     setHtml(root, tasks.map((task) => `
         <article class="care-task">
             <div>
@@ -488,6 +493,9 @@ function renderCareAgentInsights(root, profile) {
     const context = buildCareAgentContext(profile);
     const reminders = context.proactiveReminders.length ? context.proactiveReminders : ['今日暂无主动提醒。'];
     const records = context.records.slice(0, 3);
+    const recordHtml = records.length
+        ? records.map((item) => `<p><b>${escapeHtml(item.time)} · ${escapeHtml(item.type)}</b> ${escapeHtml(item.text)}</p>`).join('')
+        : '<p>暂无真实照护记录。</p>';
     setHtml(root, `
         <div class="care-agent-block">
             <h3>主动提醒</h3>
@@ -495,7 +503,7 @@ function renderCareAgentInsights(root, profile) {
         </div>
         <div class="care-agent-block">
             <h3>最近记录</h3>
-            ${records.map((item) => `<p><b>${escapeHtml(item.time)} · ${escapeHtml(item.type)}</b> ${escapeHtml(item.text)}</p>`).join('')}
+            ${recordHtml}
         </div>
     `);
 }
@@ -557,7 +565,6 @@ export function setupManagementDashboard(doc = document) {
         closeButton: doc.getElementById('careCloseButton'),
         exportButton: doc.getElementById('careExportReportButton'),
         generateButton: doc.getElementById('careGenerateReportButton'),
-        addDemoEventButton: doc.getElementById('careAddDemoEventButton'),
         navRiskCount: doc.getElementById('careNavRiskCount'),
         navResidentCount: doc.getElementById('careNavResidentCount'),
         careAgentProfile: doc.getElementById('careAgentProfile'),
@@ -570,7 +577,7 @@ export function setupManagementDashboard(doc = document) {
     let agentMessages = [
         {
             role: 'assistant',
-            text: buildCareAgentReply(data, '今天还要注意什么？').speech
+            text: '当前只使用老人端真实上报数据。完成巡路、找物、用药记录或跌倒报警后，我会基于这些记录给出建议。'
         }
     ];
 
@@ -634,20 +641,6 @@ export function setupManagementDashboard(doc = document) {
         speak('风险事件已标记处理。');
     }
 
-    function addDemoEvent() {
-        data = appendCareManagementEvent(data, {
-            id: `demo-${Date.now()}`,
-            resident: '演示长护对象',
-            title: '新增跌倒风险预警',
-            detail: '前方地面有障碍物且手机移动不稳定，老人端已语音提醒停下并扶稳。',
-            severity: 'high',
-            source: '比赛演示'
-        });
-        saveCareManagementData(data);
-        render();
-        speak('已添加一条演示风险事件。');
-    }
-
     openButton.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -664,7 +657,6 @@ export function setupManagementDashboard(doc = document) {
         downloadReport(`# 银龄智护 照护日报\n\n${currentReport}\n`);
         speak('照护日报已导出。');
     });
-    elements.addDemoEventButton?.addEventListener('click', addDemoEvent);
     elements.careAgentSendButton?.addEventListener('click', () => {
         const value = elements.careAgentInput?.value || '';
         sendAgentMessage(value);

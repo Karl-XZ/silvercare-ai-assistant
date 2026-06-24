@@ -34,14 +34,67 @@ test('care management events persist and update summary counts', () => {
   });
 
   assert.equal(next.events[0].title, '卫生间地面湿滑预警');
-  assert.equal(calculateCareSummary(next, 'today').highRiskOpen, 2);
+  assert.equal(next.events[0].severity, 'low');
+  assert.equal(calculateCareSummary(next, 'today').highRiskOpen, 0);
 
   assert.equal(saveCareManagementData(next, storage), true);
   const loaded = loadCareManagementData(CARE_MANAGEMENT_DATA, storage);
   assert.equal(loaded.events[0].title, '卫生间地面湿滑预警');
 });
 
-test('navigation result can become a care management risk event', () => {
+test('voice care record event is stored in events and resident records', () => {
+  const storage = memoryStorage();
+  const base = cloneCareData(CARE_MANAGEMENT_DATA);
+  const next = appendCareManagementEvent(base, {
+    type: 'care_record',
+    title: '照护助手记录：用药',
+    detail: '吃了降压药',
+    severity: 'low',
+    record_type: '用药',
+    record_text: '吃了降压药'
+  });
+
+  assert.equal(next.events[0].title, '照护助手记录：用药');
+  assert.equal(next.events[0].severity, 'medium');
+  assert.equal(next.careProfile.records[0].type, '用药');
+  assert.equal(next.careProfile.records[0].text, '吃了降压药');
+
+  assert.equal(saveCareManagementData(next, storage), true);
+  const loaded = loadCareManagementData(CARE_MANAGEMENT_DATA, storage);
+  assert.equal(loaded.careProfile.records[0].text, '吃了降压药');
+});
+
+test('legacy demo management data is filtered when loading stored data', () => {
+  const storage = memoryStorage();
+  saveCareManagementData({
+    events: [
+      { id: 'e1', resident: '王阿姨', title: '疑似跌倒已询问', detail: '模拟事件', severity: 'high' },
+      { id: 'real-1', resident: '当前长护对象', title: '照护助手记录：用药', detail: '吃了降压药', severity: 'medium' }
+    ],
+    residents: [
+      { id: 'r1', name: '李伯伯', level: '长护三级' },
+      { id: 'current-user', name: '当前长护对象', level: '未填写' }
+    ],
+    tasks: [{ id: 't1', resident: '李伯伯', name: '早间用药' }],
+    careProfile: {
+      resident: '李伯伯',
+      records: [
+        { time: '08:45', type: '用药', text: '早间用药未确认，已进入复核队列。' },
+        { time: '10:30', type: '用药', text: '吃了降压药' }
+      ]
+    }
+  }, storage);
+
+  const loaded = loadCareManagementData(CARE_MANAGEMENT_DATA, storage);
+  assert.equal(loaded.events.length, 1);
+  assert.equal(loaded.events[0].id, 'real-1');
+  assert.equal(loaded.residents.length, 1);
+  assert.equal(loaded.tasks.length, 0);
+  assert.equal(loaded.careProfile.records.length, 1);
+  assert.equal(loaded.careProfile.records[0].text, '吃了降压药');
+});
+
+test('navigation and object search results are low-risk service traces', () => {
   const event = buildNavigationCareEvent({
     priority: 'high',
     distance: 0.8,
@@ -50,8 +103,8 @@ test('navigation result can become a care management risk event', () => {
     environment: { occupancy: 'occupied', markers: ['脚边障碍物'] }
   });
 
-  assert.equal(event.title, '居家行走高风险预警');
-  assert.equal(event.severity, 'high');
+  assert.equal(event.title, '老人端巡路记录');
+  assert.equal(event.severity, 'low');
   assert.match(event.detail, /脚边有椅子/);
   assert.match(event.detail, /0.8米/);
 });

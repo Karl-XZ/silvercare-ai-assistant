@@ -116,6 +116,17 @@ function handleServerMessage(data) {
             markNativeResponseDone();
             updateInquiryUI(data);
             break;
+        case 'care_record':
+            reportCareEvent({
+                type: 'care_record',
+                title: data.title || `照护助手记录：${data.record_type || '记录'}`,
+                severity: data.severity || 'medium',
+                detail: data.record_text || data.detail || data.speech || '老人端新增照护记录。',
+                source: data.source || '老人端语音记录',
+                record_type: data.record_type || '记录',
+                record_text: data.record_text || data.detail || ''
+            });
+            break;
         case 'runtime_status': updateRuntimeUI(data); break;
         case 'speech_transcript':
             updateUserCaption(data.text || '未识别到清晰语音，请再试一次。');

@@ -541,6 +541,33 @@ public class SilverCareProcessorTest {
     }
 
     @Test
+    public void offlineMedicationRecordCommandCreatesCareRecordWithoutWaitingForLlm() {
+        TestFakes.AiClient ai = new TestFakes.AiClient();
+        ai.settings.aiRuntimeMode = AiRuntimeMode.OFFLINE_MNN.value;
+        ai.transcript = "记录我吃了降压药了";
+        TestFakes.Sink sink = new TestFakes.Sink();
+        SilverCareProcessor processor = new SilverCareProcessor(
+            ai,
+            new MemoryStore(new TestFakes.Preferences()),
+            sink
+        );
+
+        processor.processInquiry("data:image/png;base64,test", "data:audio/webm;base64,test");
+
+        JSONObject inquiry = sink.firstOfType("inquiry_result");
+        JSONObject careRecord = sink.firstOfType("care_record");
+        JSONObject speak = sink.firstOfType("speak");
+        assertThat(inquiry, notNullValue());
+        assertThat(inquiry.optString("intent"), equalTo("care_record"));
+        assertThat(careRecord, notNullValue());
+        assertThat(careRecord.optString("record_type"), equalTo("用药"));
+        assertThat(careRecord.optString("record_text"), containsString("降压药"));
+        assertThat(speak, notNullValue());
+        assertThat(speak.optString("text"), containsString("已记录"));
+        assertThat(ai.lastTextPrompt, equalTo(""));
+    }
+
+    @Test
     public void transcriptFallbackAnswersRememberedObjectLocation() {
         TestFakes.AiClient ai = new TestFakes.AiClient();
         ai.settings.aiRuntimeMode = AiRuntimeMode.OFFLINE_MNN.value;

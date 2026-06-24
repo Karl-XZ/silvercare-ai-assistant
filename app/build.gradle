@@ -22,7 +22,7 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.silvercare.aiassistant"
+        applicationId "com.medicalinsurance.longtermcare"
         minSdk 23
         targetSdk 35
         versionCode 1
