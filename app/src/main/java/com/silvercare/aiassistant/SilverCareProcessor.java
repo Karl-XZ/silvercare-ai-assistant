@@ -690,6 +690,45 @@ final class SilverCareProcessor {
         ) && !isCapabilityQuestion(value);
     }
 
+    private static boolean isObjectSearchGoal(String goal) {
+        String value = cleanTarget(goal);
+        if (value.isEmpty()) return false;
+        if (containsAny(
+            value,
+            "通过",
+            "穿过",
+            "进入",
+            "走到",
+            "走去",
+            "前往",
+            "到达",
+            "通行",
+            "巡路",
+            "路线",
+            "走廊",
+            "门口",
+            "门厅",
+            "卫生间",
+            "厕所",
+            "浴室",
+            "厨房",
+            "客厅",
+            "卧室",
+            "楼梯",
+            "电梯",
+            "出口",
+            "入口",
+            "通道",
+            "前方空间",
+            "空地",
+            "空间",
+            "尽头"
+        )) {
+            return false;
+        }
+        return true;
+    }
+
     private static boolean isCapabilityQuestion(String text) {
         String value = text == null ? "" : text.trim();
         return containsAny(
@@ -1229,7 +1268,25 @@ final class SilverCareProcessor {
 
     private String navigationPrompt() {
         String context = socialContext.isEmpty() ? "无" : String.join(" | ", socialContext);
-        String task = currentGoal == null ? "通用导航" : "正在寻找：" + currentGoal;
+        boolean objectSearchGoal = isObjectSearchGoal(currentGoal);
+        String task = currentGoal == null
+            ? "通用导航"
+            : objectSearchGoal ? "找物目标：" + currentGoal : "导航目标：" + currentGoal;
+        String missingTargetRule = objectSearchGoal
+            ? """
+            If Current task starts with "找物目标：" and the requested object is not clearly visible in the image:
+            - Do not infer, hallucinate, or guess the object position from surrounding objects.
+            - Set target_detected to false, confidence_score to 0, distance to 0, direction to "unknown".
+            - speech must tell the user: "我还没有看到目标，请缓慢向左或向右转动手机，然后再次刷新。"
+            - scene_description may summarize what is visible, but must not claim the object was found.
+            If the object is visible, give body-relative, tactile guidance to approach or touch it.
+            """
+            : """
+            If Current task is "通用导航" or starts with "导航目标：":
+            - Do not use the missing-object phone-rotation instruction.
+            - Do not say "我还没有看到目标" only because a hallway, doorway, room, path, or passage goal is not centered.
+            - Give route guidance based on walkable space, obstacles, doorway edges, walls, and safe body-relative movement.
+            """;
         return """
             You are 银龄智护, a socially aware visual navigation assistant for blind users.
             Keep JSON keys and enum values in English. All natural-language values must be Simplified Chinese.
@@ -1239,12 +1296,7 @@ final class SilverCareProcessor {
             Known locations: %s
 
             Analyze hazards, navigable space, people, social intent, object states, text, and affordances.
-            If Current task starts with "正在寻找：" and the requested target is not clearly visible in the image:
-            - Do not infer, hallucinate, or guess the target position from surrounding objects.
-            - Set target_detected to false, confidence_score to 0, distance to 0, direction to "unknown".
-            - speech must tell the user: "我还没有看到目标，请缓慢向左或向右转动手机，然后再次刷新。"
-            - scene_description may summarize what is visible, but must not claim the target was found.
-            If the target is visible, give body-relative, tactile guidance to approach or touch it.
+            %s
             If immediate danger is within 0.5m, start speech with "停下".
             The user is blind or has low vision, often an older adult. Speech must be actionable without seeing the screen:
             - Use body-relative directions: 正前方、左前方、右手边、脚边、腰部高度.
@@ -1270,7 +1322,7 @@ final class SilverCareProcessor {
               "environment": {"occupancy":"free|occupied|unknown","markers":["中文标记"],"affordances":"中文可操作方式"},
               "objects": [{"name":"对象名","category":"类别","distance":2.0,"direction":"ahead","confidence_score":90,"risk_level":"low|med|high"}]
             }
-            """.formatted(task, context, memoryStore.historyContext(), memoryStore.locationSummary());
+            """.formatted(task, context, memoryStore.historyContext(), memoryStore.locationSummary(), missingTargetRule);
     }
 
     private String microPrompt() {

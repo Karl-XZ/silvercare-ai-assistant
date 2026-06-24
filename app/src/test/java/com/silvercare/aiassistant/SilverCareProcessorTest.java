@@ -155,8 +155,37 @@ public class SilverCareProcessorTest {
         assertThat(ai.lastTextMaxNewTokens, equalTo(24));
         assertThat(ai.lastTextEndWith, equalTo("}"));
         assertThat(ai.visionResponses.isEmpty(), equalTo(true));
-        assertThat(ai.lastVisionPrompt, containsString("正在寻找：杯子"));
+        assertThat(ai.lastVisionPrompt, containsString("找物目标：杯子"));
+        assertThat(ai.lastVisionPrompt, containsString("我还没有看到目标，请缓慢向左或向右转动手机，然后再次刷新。"));
         assertThat(sink.firstOfType("result").optString("current_goal"), equalTo("杯子"));
+    }
+
+    @Test
+    public void navigationGoalDoesNotUseMissingObjectRotationRule() {
+        TestFakes.AiClient ai = new TestFakes.AiClient();
+        ai.transcript = "帮我通过前方门口";
+        ai.visionResponses.add("""
+            {
+              "thinking":"上游误判为找物，但目标实际是通行导航",
+              "intent":"search",
+              "search_target":"通过前方门口",
+              "speech":"开始通过门口"
+            }
+            """);
+        addNavigationResponse(ai, "门口", "前方门口可通行，请贴着右侧慢慢走。");
+        TestFakes.Sink sink = new TestFakes.Sink();
+        SilverCareProcessor processor = new SilverCareProcessor(
+            ai,
+            new MemoryStore(new TestFakes.Preferences()),
+            sink
+        );
+
+        processor.processInquiry("data:image/png;base64,test", "data:audio/webm;base64,test");
+
+        assertThat(ai.lastVisionPrompt, containsString("导航目标：通过前方门口"));
+        assertThat(ai.lastVisionPrompt, not(containsString("找物目标：通过前方门口")));
+        assertThat(ai.lastVisionPrompt, not(containsString("我还没有看到目标，请缓慢向左或向右转动手机，然后再次刷新。")));
+        assertThat(sink.firstOfType("result").optString("current_goal"), equalTo("通过前方门口"));
     }
 
     @Test
