@@ -94,6 +94,31 @@ test('legacy demo management data is filtered when loading stored data', () => {
   assert.equal(loaded.careProfile.records[0].text, '吃了降压药');
 });
 
+test('legacy period resident counts do not override current user count', () => {
+  const storage = memoryStorage();
+  saveCareManagementData({
+    periods: {
+      today: { label: '今日', residents: 16, trend: [1, 2, 3, 4, 5, 6, 7] },
+      week: { label: '7 日', residents: 16 },
+      month: { label: '30 日', residents: 16 }
+    },
+    residents: [
+      { id: 'demo-1', name: '王阿姨', level: '长护三级' },
+      { id: 'demo-2', name: '李伯伯', level: '长护二级' }
+    ],
+    events: [],
+    tasks: []
+  }, storage);
+
+  const loaded = loadCareManagementData(CARE_MANAGEMENT_DATA, storage);
+  const summary = calculateCareSummary(loaded, 'today');
+
+  assert.equal(loaded.residents.length, 1);
+  assert.equal(loaded.residents[0].name, '当前长护对象');
+  assert.equal(loaded.periods.today.residents, undefined);
+  assert.equal(summary.residents, 1);
+});
+
 test('navigation and object search results are low-risk service traces', () => {
   const event = buildNavigationCareEvent({
     priority: 'high',

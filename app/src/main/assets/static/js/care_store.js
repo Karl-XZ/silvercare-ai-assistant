@@ -78,7 +78,10 @@ export function mergeCareData(base, stored = {}) {
     const next = cloneCareData(base);
     if (Array.isArray(stored.events)) next.events = stored.events.filter((item) => !isLegacyDemoItem(item));
     if (Array.isArray(stored.tasks)) next.tasks = stored.tasks.filter((item) => !isLegacyDemoItem(item));
-    if (Array.isArray(stored.residents)) next.residents = stored.residents.filter((item) => !isLegacyDemoItem(item));
+    if (Array.isArray(stored.residents)) {
+        const realResidents = stored.residents.filter((item) => !isLegacyDemoItem(item));
+        next.residents = realResidents.length ? realResidents : cloneCareData(base.residents || []);
+    }
     if (stored.careProfile && typeof stored.careProfile === 'object') {
         const sanitizedProfile = sanitizeStoredCareProfile(stored.careProfile);
         next.careProfile = { ...(next.careProfile || {}), ...sanitizedProfile };
@@ -88,8 +91,19 @@ export function mergeCareData(base, stored = {}) {
     }
     if (stored.generatedAt) next.generatedAt = stored.generatedAt;
     if (stored.periods && typeof stored.periods === 'object') {
-        next.periods = { ...next.periods, ...stored.periods };
+        next.periods = mergeStoredPeriods(next.periods, stored.periods);
     }
+    return next;
+}
+
+function mergeStoredPeriods(basePeriods = {}, storedPeriods = {}) {
+    const next = cloneCareData(basePeriods);
+    Object.entries(storedPeriods || {}).forEach(([key, value]) => {
+        if (!value || typeof value !== 'object') return;
+        const period = { ...(next[key] || {}), ...value };
+        delete period.residents;
+        next[key] = period;
+    });
     return next;
 }
 

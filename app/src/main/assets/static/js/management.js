@@ -136,7 +136,7 @@ export function calculateCareSummary(data = CARE_MANAGEMENT_DATA, periodKey = 't
 
     return {
         periodLabel: period.label || '今日',
-        residents: Number(data.residents?.length || period.residents || 0),
+        residents: residentCountForData(data),
         taskCompletion,
         responseSeconds: Number(period.responseSeconds || 0),
         serviceClosedLoop,
@@ -154,6 +154,13 @@ export function calculateCareSummary(data = CARE_MANAGEMENT_DATA, periodKey = 't
         ],
         highAndMediumOpen
     };
+}
+
+function residentCountForData(data = {}) {
+    const residents = Array.isArray(data.residents) ? data.residents : [];
+    if (residents.length) return residents.length;
+    const profileResident = String(data.careProfile?.resident || '').trim();
+    return profileResident ? 1 : 0;
 }
 
 export function markRiskEventHandled(data, eventId) {
