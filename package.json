@@ -4,8 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check:js": "node tools/check-js.mjs",
+    "check:js": "node tools/check-js.mjs && node tools/check-ios-bridge.mjs && node tools/check-ios-native-runtime.mjs && node tools/check-ios-parity-surface.mjs && node tools/check-ios-permissions.mjs && node tools/check-ios-tts-playback.mjs && node tools/check-no-sensitive-secrets.mjs",
     "test:js": "node --test app/src/test/js/*.test.mjs",
+    "test:ios:sim": "bash ios/Tools/run_simulator_automation.sh",
+    "test:ios:device": "bash ios/Tools/run_device_smoke.sh",
+    "test:ios:device-ui": "bash ios/Tools/run_device_ui_debug.sh",
+    "check:ios:device-summary": "node tools/check-ios-device-smoke-summary.mjs",
+    "check:ios:device-ui-summary": "node tools/check-ios-device-ui-summary.mjs",
+    "check:ios:online-chain": "node tools/check-ios-online-chain.mjs",
+    "verify:ios:migration": "node tools/run-ios-migration-verification.mjs",
+    "check:ios:migration-summary": "node tools/check-ios-migration-verification-summary.mjs",
+    "check:secrets": "node tools/check-no-sensitive-secrets.mjs",
+    "check:dashscope:scenarios": "node tools/check-live-dashscope-scenarios.mjs && node tools/check-no-sensitive-secrets.mjs",
+    "test:dashscope:scenarios": "node tools/run-live-dashscope-scenarios.mjs && node tools/check-live-dashscope-scenarios.mjs && node tools/check-no-sensitive-secrets.mjs",
     "benchmark": "npm --prefix public_benchmark_silvercare run benchmark"
   }
 }

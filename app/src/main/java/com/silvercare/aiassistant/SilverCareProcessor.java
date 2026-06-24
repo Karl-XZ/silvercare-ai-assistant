@@ -1124,6 +1124,11 @@ final class SilverCareProcessor {
 
             Analyze hazards, navigable space, people, social intent, object states, text, and affordances.
             If immediate danger is within 0.5m, start speech with "停下".
+            Target search rule:
+            - If Current task starts with "正在寻找：" and the requested target is not clearly visible in the current image, do NOT infer or guess its location, direction, or distance.
+            - In that case return target_detected:false, priority:"low", category:"target", subject as the requested target, distance:0, direction:"unknown", confidence_score:0.
+            - The speech must say the target is not in the frame yet and ask the user to slowly turn the phone left or right, then refresh. Example: "画面里还没有找到杯子。请左右缓慢转动手机，然后点击刷新。"
+            - Only set target_detected:true and give a direction/distance when the target is clearly visible with high confidence.
             The user is blind or has low vision, often an older adult. Speech must be actionable without seeing the screen:
             - Use body-relative directions: 正前方、左前方、右手边、脚边、腰部高度.
             - Avoid color-only or vague references like "绿色行李箱旁边" or "排插附近".

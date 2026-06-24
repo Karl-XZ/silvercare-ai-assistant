@@ -32,6 +32,11 @@ let lastReportedCareEventKey = '';
 let lastReportedCareEventAt = 0;
 let pendingMicroRefreshTimer = null;
 
+function isTtsFallbackNotice(text) {
+    return /TTS|朗读|语音合成/.test(text || '')
+        && /Key|密钥|回退|fallback|无效音频地址/.test(text || '');
+}
+
 function diagnosticExcerpt(value) {
     const text = String(value || '').replace(/\s+/g, ' ').trim();
     return text.length > 160 ? `${text.slice(0, 160)}...` : text;
@@ -93,6 +98,10 @@ function handleServerMessage(data) {
 
     switch (data.type) {
         case 'result':
+            markNativeFrameDone();
+            STATE.lastNavigationResultAt = Date.now();
+            STATE.lastNavigationSpeech = data.speech || data.guidance_speech || '';
+            STATE.lastNavigationSubject = data.subject || '';
             updateNavUI(data);
             updateAiCaption(data.speech || data.guidance_speech || data.thinking || data.scene_description);
             reportNavigationCareEvent(data);
@@ -103,11 +112,13 @@ function handleServerMessage(data) {
             }
             break;
         case 'micro_result':
+            markNativeFrameDone();
             updateMicroUI(data);
             updateAiCaption(data.guidance_speech);
             handleMicroGuidanceSpeech(data);
             break;
         case 'task_update':
+            markNativeFrameDone();
             updateTaskUI(data);
             updateAiCaption(data.speech || data.visual_feedback);
             reportTaskCareEvent(data);
@@ -142,12 +153,19 @@ function handleServerMessage(data) {
             handleModelDownloadProgress(data);
             break;
         case 'smart_refresh_skipped':
+            markNativeFrameDone();
             updateStatus(STATE.navigationRefreshMode === 'manual' ? '手动刷新' : '自动刷新', 'active', { speak: false });
             showFeedback(data.text || '画面无明显变化', 1200, false);
             break;
         case 'speech_status':
             STATE.speechListening = Boolean(data.listening);
             setRecordingUI(STATE.speechListening);
+            break;
+        case 'camera_status':
+            handleCameraStatus(data);
+            break;
+        case 'frame_status':
+            handleFrameStatus(data);
             break;
         case 'fall_alarm':
             updateAiCaption(data.text || '已发送报警');
@@ -157,9 +175,18 @@ function handleServerMessage(data) {
         case 'speak':
             markNativeResponseDone();
             updateAiCaption(data.text);
-            speak(data.text);
+            if (!hasNativeBridge()) {
+                speak(data.text);
+            }
             break;
         case 'error':
+            if (isTtsFallbackNotice(data.text || '')) {
+                logDiagnostic('tts_fallback_notice_suppressed', {
+                    text: diagnosticExcerpt(data.text || '')
+                });
+                break;
+            }
+            markNativeFrameDone();
             markNativeResponseDone();
             STATE.speechListening = false;
             setRecordingUI(false);
@@ -169,6 +196,91 @@ function handleServerMessage(data) {
             updateAiCaption(data.text || '发生错误');
             showFeedback(data.text || '发生错误');
             break;
+    }
+}
+
+function markNativeFrameDone() {
+    window.clearTimeout(STATE.nativeFrameTimer);
+    STATE.nativeFrameTimer = null;
+    STATE.nativeFrameInFlight = false;
+    STATE.nativeLastFrameReturnedAt = Date.now();
+}
+
+function handleFrameStatus(data = {}) {
+    const status = data.status || '';
+    if (status === 'processing') return;
+    if (status === 'busy') {
+        markNativeFrameDone();
+        updateStatus(STATE.navigationRefreshMode === 'manual' ? '手动刷新' : '自动刷新', 'active', { speak: false });
+        return;
+    }
+    if (status === 'error') {
+        markNativeFrameDone();
+        updateStatus(STATE.navigationRefreshMode === 'manual' ? '手动刷新' : '自动刷新', 'active', { speak: false });
+        if (data.text) showFeedback(data.text, 1800, false);
+        return;
+    }
+    if (status === 'dropped' || status === 'idle') {
+        markNativeFrameDone();
+    }
+}
+
+function handleCameraStatus(data = {}) {
+    const status = data.status || '';
+    const text = data.text || '';
+    STATE.nativeCameraStatus = status || STATE.nativeCameraStatus || 'idle';
+    STATE.nativeCameraStatusText = text || STATE.nativeCameraStatusText || '';
+    STATE.nativeCameraErrorCode = data.error_code || '';
+    STATE.nativeCameraAuthorizationStatus = data.authorization_status || STATE.nativeCameraAuthorizationStatus || 'unknown';
+    if (typeof data.available === 'boolean') STATE.nativeCameraAvailable = data.available;
+    if (typeof data.hardware_available === 'boolean') STATE.nativeCameraHardwareAvailable = data.hardware_available;
+    if (typeof data.preview_visible === 'boolean') STATE.nativeCameraPreviewVisible = data.preview_visible;
+
+    if (status === 'running') {
+        window.clearTimeout(STATE.nativeCameraStartTimer);
+        STATE.nativeCameraStartTimer = null;
+        STATE.nativeCameraStartPending = false;
+        STATE.nativeCameraRunning = data.running !== false;
+        STATE.nativeCameraPreviewVisible = data.preview_visible !== false;
+        if (!STATE.active) {
+            STATE.active = true;
+            UI.body.classList.add('active');
+        }
+        updateStatus(STATE.navigationRefreshMode === 'manual' ? '手动刷新' : '扫描中', 'active', { speak: false });
+        if (text) showFeedback(text, 1000, false);
+        connectWS();
+        return;
+    }
+
+    if (status === 'stopped') {
+        markNativeFrameDone();
+        window.clearTimeout(STATE.nativeCameraStartTimer);
+        STATE.nativeCameraStartTimer = null;
+        STATE.nativeCameraStartPending = false;
+        STATE.nativeCameraRunning = Boolean(data.running);
+        STATE.nativeCameraPreviewVisible = false;
+        updateStatus('就绪', '', { speak: false });
+        return;
+    }
+
+    if (status === 'warming') {
+        markNativeFrameDone();
+        updateStatus('等待相机帧', 'active', { speak: false });
+        return;
+    }
+
+    if (status === 'error' || status === 'frame_error') {
+        markNativeFrameDone();
+        window.clearTimeout(STATE.nativeCameraStartTimer);
+        STATE.nativeCameraStartTimer = null;
+        STATE.nativeCameraStartPending = false;
+        STATE.nativeCameraRunning = Boolean(data.running);
+        STATE.nativeCameraPreviewVisible = Boolean(data.preview_visible);
+        STATE.active = false;
+        UI.body.classList.remove('active');
+        updateStatus('摄像头错误', 'error', { speak: false });
+        updateAiCaption(text || '摄像头启动失败');
+        showFeedback(text || '摄像头错误', 2600, true);
     }
 }
 
@@ -245,17 +357,25 @@ export function connectWS() {
     if (hasNativeBridge()) {
         STATE.nativeMode = true;
         STATE.ws = null;
-        const runtimeMode = safeNativeString('aiRuntimeMode', 'offline_mnn');
+        const runtimeMode = safeNativeString('aiRuntimeMode', 'dashscope');
         const runtimeLabel = safeNativeString('runtimeDisplayName', runtimeMode === 'offline_mnn' ? '端侧离线 MNN' : '联网 DashScope');
         const offlineReady = safeNativeBoolean('offlineModelReady', false);
+        const nativeCameraStatus = safeNativeString('nativeCameraStatus', 'idle');
         updateRuntimeUI({
             ai_runtime_mode: runtimeMode,
             runtime_label: runtimeLabel,
             offline_ready: offlineReady,
-            asr_runtime_mode: safeNativeString('asrRuntimeMode', 'local_vosk'),
-            asr_runtime_label: safeNativeString('asrRuntimeDisplayName', '本地内置 ASR'),
+            asr_runtime_mode: safeNativeString('asrRuntimeMode', 'dashscope'),
+            asr_runtime_label: safeNativeString('asrRuntimeDisplayName', '联网 DashScope'),
             local_asr_enabled: safeNativeBoolean('localAsrEnabled', false),
             local_asr_ready: safeNativeBoolean('localAsrReady', false),
+            tts_runtime_mode: safeNativeString('ttsRuntimeMode', 'dashscope'),
+            tts_runtime_label: safeNativeString('ttsRuntimeDisplayName', '联网 DashScope'),
+            tts_status: safeNativeString('ttsStatusText', '联网 DashScope TTS 需要先填写 Key。'),
+            local_tts_ready: safeNativeBoolean('localTtsReady', false),
+            local_tts_model_ready: safeNativeBoolean('localTtsModelReady', false),
+            local_tts_runtime_available: safeNativeBoolean('localTtsRuntimeAvailable', false),
+            local_tts_voice_quality_passed: safeNativeBoolean('localTtsVoiceQualityPassed', false),
             mnn_llm_tuning_mode: safeNativeString('mnnLlmTuningMode', 'auto'),
             mnn_llm_tuning_label: safeNativeString('mnnLlmTuningDisplayName', 'SME2 自动调优'),
             mnn_sme2_supported: safeNativeBoolean('mnnSme2Supported', false),
@@ -263,8 +383,17 @@ export function connectWS() {
             navigation_refresh_label: safeNativeString('navigationRefreshDisplayName', '自动刷新'),
             navigation_refresh_interval_ms: safeNativeNumber('navigationRefreshIntervalMs', 3000),
             smart_navigation_refresh_enabled: safeNativeBoolean('smartNavigationRefreshEnabled', false),
+            native_camera_available: safeNativeBoolean('nativeCameraAvailable', false),
+            native_camera_running: safeNativeBoolean('nativeCameraRunning', false),
+            native_camera_preview_visible: safeNativeBoolean('nativeCameraPreviewVisible', false),
+            native_camera_status: nativeCameraStatus,
+            native_camera_status_text: safeNativeString('nativeCameraStatusText', ''),
+            native_camera_error_code: safeNativeString('nativeCameraErrorCode', ''),
+            native_camera_authorization_status: safeNativeString('nativeCameraAuthorizationStatus', 'unknown'),
+            native_camera_hardware_available: safeNativeBoolean('nativeCameraHardwareAvailable', false),
             captions_enabled: safeNativeBoolean('captionsEnabled', true)
         });
+        if (nativeCameraStatus === 'error' || nativeCameraStatus === 'frame_error') return;
         updateStatus(runtimeMode === 'offline_mnn' ? '端侧离线' : '本机联网', 'active', { speak: false });
         showFeedback(runtimeMode === 'offline_mnn' ? '端侧离线模式' : '联网 DashScope 模式', 1600, false);
 

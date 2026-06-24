@@ -206,7 +206,7 @@ final class OfflineVisionInterpreter {
                     .put("distance", 0)
                     .put("direction", "unknown")
                     .put("confidence_score", 0)
-                    .put("speech", "还没有找到" + target + "。请缓慢转动手机继续扫描。")
+                    .put("speech", "画面里还没有找到" + target + "。请左右缓慢转动手机，然后点击刷新。")
                     .put("scene_description", "离线检测到 " + detections.size() + " 个物体。")
                     .put("objects", objects);
             }
@@ -271,7 +271,7 @@ final class OfflineVisionInterpreter {
                 .put("x", 0)
                 .put("y", 0)
                 .put("action", "move")
-                .put("guidance_speech", target == null ? "请说出要找的目标。" : "未找到" + target + "，请缓慢移动手机。");
+                .put("guidance_speech", target == null ? "请说出要找的目标。" : "画面里还没有找到" + target + "，请左右缓慢转动手机，然后点击刷新。");
         }
 
         String action = Math.abs(hit.xVector) <= 12 && Math.abs(hit.yVector) <= 12 ? "stop" : "move";

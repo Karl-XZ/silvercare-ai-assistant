@@ -16,6 +16,7 @@ import {
 } from './fall_detector_core.js';
 import {
     toggleIntelLayer,
+    setIntelLayerVisible,
     showFeedback,
     setRecordingUI,
     showFallAlert,
@@ -50,6 +51,7 @@ let nativeSpeechMaxTimer = null;
 let nativeSpeechResponseTimer = null;
 let nativeSpeechPendingResult = false;
 let nativeSpeechTranscriptReceived = false;
+let inquiryButtonPressed = false;
 
 let visualCanvas = null;
 let visualCtx = null;
@@ -92,7 +94,7 @@ export function setupInputs() {
     window.setInterval(sampleVideoFrame, FALL.sampleIntervalMs);
     window.setTimeout(() => {
         speakIfVoiceFirst(
-            '银龄智护 已就绪。双击屏幕启动或停止导航。长按屏幕提问。点右上角设置可以切换联网或端侧离线方案，并修改语音优先模式和跌倒检测。',
+            '银龄智护 已就绪。双击屏幕启动或停止导航。长按屏幕提问。点右上角设置填写 DashScope Key，并修改语音优先模式和跌倒检测。',
             { minGapMs: 10000 }
         );
     }, 1200);
@@ -108,46 +110,170 @@ export function setupInputs() {
     }
 }
 
+window.SILVERCARE_UI_ACTION = (action) => {
+    switch (action) {
+        case 'toggle':
+            toggleSystem();
+            break;
+        case 'details':
+            toggleIntelLayer();
+            break;
+        case 'close-details':
+            setIntelLayerVisible(false);
+            break;
+        case 'settings':
+            openSettings();
+            break;
+        case 'management':
+            document.getElementById('managementCommand')?.click();
+            break;
+        case 'close-management':
+            document.getElementById('careCloseButton')?.click();
+            break;
+        case 'inquiry-start':
+            startRecording();
+            break;
+        case 'inquiry-stop':
+            stopRecording();
+            break;
+        default:
+            break;
+    }
+};
+
 function setupCommandButtons() {
     UI.toggleCommand?.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
+        if (shouldIgnoreClickAfterTouchFallback(event.currentTarget)) return;
         toggleSystem();
     });
 
     UI.detailsCommand?.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
+        if (shouldIgnoreClickAfterTouchFallback(event.currentTarget)) return;
         toggleIntelLayer();
     });
 
     UI.closeIntelButton?.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        if (STATE.debug) toggleIntelLayer();
+        if (shouldIgnoreClickAfterTouchFallback(event.currentTarget)) return;
+        setIntelLayerVisible(false);
     });
 
     UI.settingsCommand?.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
+        if (shouldIgnoreClickAfterTouchFallback(event.currentTarget)) return;
         openSettings();
     });
 
     if (UI.inquiryCommand) {
-        UI.inquiryCommand.addEventListener('pointerdown', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            UI.inquiryCommand.setPointerCapture?.(event.pointerId);
-            startRecording();
-        });
+        UI.inquiryCommand.addEventListener('pointerdown', startButtonRecording);
 
         UI.inquiryCommand.addEventListener('pointerup', stopButtonRecording);
         UI.inquiryCommand.addEventListener('pointercancel', stopButtonRecording);
         UI.inquiryCommand.addEventListener('lostpointercapture', stopButtonRecording);
+        UI.inquiryCommand.addEventListener('touchstart', startButtonRecording, { passive: false });
+        UI.inquiryCommand.addEventListener('touchend', stopButtonRecording);
+        UI.inquiryCommand.addEventListener('touchcancel', stopButtonRecording);
         UI.inquiryCommand.addEventListener('click', (event) => {
             event.preventDefault();
             event.stopPropagation();
         });
+    }
+    setupCommandFallbacks();
+}
+
+function startButtonRecording(event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    if (inquiryButtonPressed) return;
+    inquiryButtonPressed = true;
+    if (event?.pointerId !== undefined) {
+        UI.inquiryCommand?.setPointerCapture?.(event.pointerId);
+    }
+    startRecording();
+}
+
+function setupCommandFallbacks() {
+    document.addEventListener('pointerup', (event) => {
+        const target = closestCommandTarget(event.target);
+        if (!target) return;
+        if (shouldIgnoreClickAfterTouchFallback(target)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+        markTouchFallbackHandled(target);
+        runCommandTarget(target);
+    }, { capture: true });
+
+    document.addEventListener('touchend', (event) => {
+        const target = commandTargetFromTouch(event);
+        if (!target) return;
+        if (shouldIgnoreClickAfterTouchFallback(target)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation?.();
+        markTouchFallbackHandled(target);
+        runCommandTarget(target);
+    }, { capture: true, passive: false });
+}
+
+function markTouchFallbackHandled(target) {
+    if (!target) return;
+    target.dataset.silvercareTouchFallbackAt = String(Date.now());
+}
+
+function shouldIgnoreClickAfterTouchFallback(target) {
+    const last = Number(target?.dataset?.silvercareTouchFallbackAt || 0);
+    return Number.isFinite(last) && Date.now() - last < 450;
+}
+
+function commandTargetFromTouch(event) {
+    const touch = event.changedTouches?.[0] || event.touches?.[0];
+    const target = touch
+        ? document.elementFromPoint(touch.clientX, touch.clientY)
+        : event.target;
+    return closestCommandTarget(target);
+}
+
+function closestCommandTarget(target) {
+    let node = target;
+    while (node && node !== document.body) {
+        if (node.id === 'toggleCommand'
+            || node.id === 'managementCommand'
+            || node.id === 'detailsCommand'
+            || node.id === 'settingsCommand'
+            || node.id === 'closeIntelButton') {
+            return node;
+        }
+        node = node.parentElement || node.parentNode;
+    }
+    return null;
+}
+
+function runCommandTarget(target) {
+    switch (target.id) {
+        case 'toggleCommand':
+            toggleSystem();
+            break;
+        case 'detailsCommand':
+            toggleIntelLayer();
+            break;
+        case 'closeIntelButton':
+            setIntelLayerVisible(false);
+            break;
+        case 'settingsCommand':
+            openSettings();
+            break;
+        case 'managementCommand':
+            target.click();
+            break;
+        default:
+            break;
     }
 }
 
@@ -172,6 +298,8 @@ function setupFallActions() {
 function stopButtonRecording(event) {
     event?.preventDefault();
     event?.stopPropagation();
+    if (!inquiryButtonPressed && !nativeSpeechActive && !mediaRecorder) return;
+    inquiryButtonPressed = false;
     stopRecording();
 }
 
@@ -188,7 +316,14 @@ function openSettings() {
 }
 
 function isInteractiveTarget(target) {
-    return !!target?.closest?.('button, input, textarea, select, #intelligence-layer, #console-log, #fallAlert, #careDashboard');
+    let node = target;
+    while (node && node !== document.body) {
+        if (node.matches?.('button, input, textarea, select, #intelligence-layer, #console-log, #fallAlert, #careDashboard')) {
+            return true;
+        }
+        node = node.parentElement || node.parentNode;
+    }
+    return false;
 }
 
 function handleTouchStart(e) {
@@ -246,7 +381,6 @@ function clearSingleTapTimer() {
 function shouldManualSingleTapRefresh() {
     return STATE.active
         && STATE.navigationRefreshMode === 'manual'
-        && STATE.mode !== 'micro'
         && !nativeSpeechActive
         && !nativeSpeechPendingResult
         && !fallAlertActive;
@@ -518,7 +652,7 @@ async function startRecording() {
         return;
     }
 
-    showFeedback('正在聆听...');
+    showFeedback('正在聆听...', 1600, false);
     updateUserCaption('正在聆听...');
     updateAiCaption('等待 AI 回复...');
     setRecordingUI(true);
@@ -576,7 +710,7 @@ function stopRecording() {
         return;
     }
 
-    showFeedback('正在思考...');
+    showFeedback('正在思考...', 1600, false);
     updateUserCaption('语音已提交，正在识别...');
     updateAiCaption('正在思考...');
     if (window.spatialAudio) window.spatialAudio.playTone(440, 'sine', 0.1);
@@ -594,7 +728,7 @@ function stopNativeSpeechInquiry() {
     nativeSpeechStopTimer = null;
     nativeSpeechMaxTimer = null;
     startNativeResponseWatchdog();
-    showFeedback('正在思考...');
+    showFeedback('正在思考...', 1600, false);
     updateUserCaption('语音已提交，正在识别...');
     updateAiCaption('正在思考...');
     setRecordingUI(false);
@@ -644,7 +778,7 @@ function startNativeSpeechInquiry() {
         return;
     }
     const imageData = captureCurrentFrame();
-    if (!imageData) {
+    if (!imageData && !hasNativeCameraBridge()) {
         showFeedback('画面捕获失败');
         return;
     }
@@ -672,7 +806,7 @@ function startNativeSpeechInquiry() {
             stopNativeSpeechInquiry();
         }
     }, MAX_NATIVE_SPEECH_MS);
-    showFeedback('正在聆听...');
+    showFeedback('正在聆听...', 1600, false);
     updateUserCaption('正在聆听...');
     updateAiCaption('等待 AI 回复...');
     setRecordingUI(true);
@@ -767,6 +901,7 @@ function clearNativeResponseWatchdog() {
 }
 
 function captureCurrentFrame() {
+    if (hasNativeCameraBridge()) return '';
     if (!UI.cam?.videoWidth || !UI.cam?.videoHeight) return '';
 
     const canvas = document.createElement('canvas');
@@ -777,4 +912,10 @@ function captureCurrentFrame() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(UI.cam, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL('image/jpeg', 0.6);
+}
+
+function hasNativeCameraBridge() {
+    return !!(window.AndroidSilverCare
+        && typeof window.AndroidSilverCare.startCamera === 'function'
+        && typeof window.AndroidSilverCare.captureFrame === 'function');
 }

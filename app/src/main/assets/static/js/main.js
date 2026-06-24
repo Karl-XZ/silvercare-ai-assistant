@@ -4,7 +4,7 @@
  */
 
 import { CONFIG, STATE } from './config.js';
-import { UI, showFeedback, updateStatus } from './ui.js';
+import { UI, showFeedback, updateAiCaption, updateStatus } from './ui.js';
 import { connectWS, sendFrame } from './network.js';
 import { setupInputs } from './input.js';
 import { setupManagementDashboard } from './management.js';
@@ -21,7 +21,7 @@ window.LONG_TERM_CARE_ASSISTANT = { STATE, CONFIG, UI };
 // --- System Control ---
 
 export async function toggleSystem() {
-    if (STATE.active) {
+    if (STATE.active || STATE.nativeCameraStartPending) {
         stopSystem();
     } else {
         await startSystem();
@@ -32,6 +32,47 @@ async function startSystem() {
     if (window.spatialAudio) window.spatialAudio.init();
 
     try {
+        if (hasStandaloneNativeBridge() && !hasNativeCameraBridge()) {
+            STATE.active = false;
+            STATE.nativeCameraStartPending = false;
+            STATE.nativeCameraRunning = false;
+            UI.body.classList.remove('active');
+            window.clearTimeout(STATE.nativeCameraStartTimer);
+            STATE.nativeCameraStartTimer = null;
+            const statusText = safeNativeString('nativeCameraStatusText', '');
+            const auth = safeNativeString('nativeCameraAuthorizationStatus', 'unknown');
+            const hardwareAvailable = safeNativeBoolean('nativeCameraHardwareAvailable', false);
+            const text = statusText
+                || (!hardwareAvailable ? '没有找到可用摄像头' : (auth === 'denied' || auth === 'restricted' ? '摄像头权限未开启' : '摄像头不可用'));
+            showFeedback(text, 2600, true);
+            updateAiCaption(text);
+            updateStatus('摄像头错误', 'error', { speak: false });
+            return;
+        }
+
+        if (hasNativeCameraBridge()) {
+            STATE.nativeCameraStartPending = true;
+            STATE.nativeCameraRunning = false;
+            window.clearTimeout(STATE.nativeCameraStartTimer);
+            STATE.nativeCameraStartTimer = window.setTimeout(() => {
+                if (!STATE.nativeCameraStartPending || STATE.nativeCameraRunning) return;
+                STATE.nativeCameraStartPending = false;
+                STATE.active = false;
+                UI.body.classList.remove('active');
+                updateStatus('摄像头无响应', 'error', { speak: false });
+                showFeedback('摄像头启动无响应，请检查权限', 2600, true);
+                try {
+                    window.AndroidSilverCare.stopCamera?.();
+                } catch (error) {
+                    console.error('Native camera stop after timeout failed:', error);
+                }
+            }, 8000);
+            showFeedback('正在打开摄像头...', 1200, false);
+            updateStatus('启动相机', 'active', { speak: false });
+            window.AndroidSilverCare.startCamera();
+            return;
+        }
+
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { 
                 facingMode: { ideal: 'environment' }, 
@@ -59,6 +100,13 @@ async function startSystem() {
 
 function stopSystem() {
     STATE.active = false;
+    STATE.nativeCameraStartPending = false;
+    STATE.nativeCameraRunning = false;
+    window.clearTimeout(STATE.nativeCameraStartTimer);
+    STATE.nativeCameraStartTimer = null;
+    STATE.nativeFrameInFlight = false;
+    window.clearTimeout(STATE.nativeFrameTimer);
+    STATE.nativeFrameTimer = null;
     STATE.mode = 'nav';
     STATE.wsRetryCount = 0;
     
@@ -76,7 +124,9 @@ function stopSystem() {
     stopLoop();
 
     // Stop Camera
-    if (UI.cam.srcObject) {
+    if (hasNativeCameraBridge()) {
+        window.AndroidSilverCare.stopCamera();
+    } else if (UI.cam.srcObject) {
         UI.cam.srcObject.getTracks().forEach(track => track.stop());
         UI.cam.srcObject = null;
     }
@@ -96,6 +146,7 @@ export function startLoop() {
         return;
     }
     updateStatus('自动刷新', 'active', { speak: false });
+    tick({ force: true });
     STATE.loop = setInterval(() => tick({ auto: true }), CONFIG.scanInterval);
 }
 
@@ -108,6 +159,7 @@ export function startMicroLoop() {
         return;
     }
     updateStatus('精确引导', 'active', { speak: false });
+    tick({ force: true });
     STATE.loop = setInterval(() => tick({ auto: true }), CONFIG.scanInterval);
 }
 
@@ -139,9 +191,21 @@ function manualFrameRefreshEnabled() {
 function tick(options = {}) {
     if (!STATE.active) return;
     if (!STATE.nativeMode && (!STATE.ws || STATE.ws.readyState !== WebSocket.OPEN)) return;
-    if (!UI.cam?.videoWidth || !UI.cam?.videoHeight) return;
     if (options.auto && STATE.speechListening) return;
     if (options.auto && STATE.ttsSpeaking) return;
+    if (hasNativeCameraBridge()) {
+        if (STATE.nativeFrameInFlight) return;
+        STATE.nativeFrameInFlight = true;
+        window.clearTimeout(STATE.nativeFrameTimer);
+        STATE.nativeFrameTimer = window.setTimeout(() => {
+            if (!STATE.nativeFrameInFlight) return;
+            STATE.nativeFrameInFlight = false;
+            updateStatus(STATE.navigationRefreshMode === 'manual' ? '手动刷新' : '等待相机帧', 'active', { speak: false });
+        }, Math.max(CONFIG.scanInterval * 2, 6000));
+        window.AndroidSilverCare.captureFrame();
+        return;
+    }
+    if (!UI.cam?.videoWidth || !UI.cam?.videoHeight) return;
 
     const cvs = document.createElement('canvas');
     const ratio = UI.cam.videoHeight / UI.cam.videoWidth;
@@ -154,6 +218,44 @@ function tick(options = {}) {
     cvs.toBlob(blob => {
         sendFrame(blob);
     }, 'image/jpeg', CONFIG.jpegQuality);
+}
+
+function hasNativeCameraBridge() {
+    return !!(window.AndroidSilverCare
+        && typeof window.AndroidSilverCare.startCamera === 'function'
+        && typeof window.AndroidSilverCare.stopCamera === 'function'
+        && typeof window.AndroidSilverCare.captureFrame === 'function');
+}
+
+function hasStandaloneNativeBridge() {
+    try {
+        return !!(window.AndroidSilverCare && typeof window.AndroidSilverCare.isStandalone === 'function' && window.AndroidSilverCare.isStandalone());
+    } catch (error) {
+        console.error('Native standalone bridge check failed:', error);
+        return false;
+    }
+}
+
+function safeNativeString(fn, fallback = '') {
+    try {
+        if (window.AndroidSilverCare && typeof window.AndroidSilverCare[fn] === 'function') {
+            return String(window.AndroidSilverCare[fn]() || fallback);
+        }
+    } catch (error) {
+        console.error(`Native bridge ${fn} failed:`, error);
+    }
+    return fallback;
+}
+
+function safeNativeBoolean(fn, fallback = false) {
+    try {
+        if (window.AndroidSilverCare && typeof window.AndroidSilverCare[fn] === 'function') {
+            return Boolean(window.AndroidSilverCare[fn]());
+        }
+    } catch (error) {
+        console.error(`Native bridge ${fn} failed:`, error);
+    }
+    return fallback;
 }
 
 window.LONG_TERM_CARE_TTS_STATE_CHANGED = (speaking) => {

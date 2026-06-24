@@ -156,6 +156,8 @@ public class SilverCareProcessorTest {
         assertThat(ai.lastTextEndWith, equalTo("}"));
         assertThat(ai.visionResponses.isEmpty(), equalTo(true));
         assertThat(ai.lastVisionPrompt, containsString("正在寻找：杯子"));
+        assertThat(ai.lastVisionPrompt, containsString("do NOT infer or guess its location"));
+        assertThat(ai.lastVisionPrompt, containsString("target_detected:false"));
         assertThat(sink.firstOfType("result").optString("current_goal"), equalTo("杯子"));
     }
 

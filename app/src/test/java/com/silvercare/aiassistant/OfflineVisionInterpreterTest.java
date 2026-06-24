@@ -102,6 +102,30 @@ public class OfflineVisionInterpreterTest {
     }
 
     @Test
+    public void missingSearchTargetAsksUserToRotateAndRefresh() throws Exception {
+        String result = OfflineVisionInterpreter.interpret(
+            "Current task: 正在寻找：药盒\n",
+            """
+            {
+              "image_width": 640,
+              "image_height": 480,
+              "detections": [
+                {"class":"chair","score":0.82,"box":[240,210,420,380]}
+              ]
+            }
+            """,
+            "detector"
+        );
+
+        JSONObject json = new JSONObject(result);
+        assertThat(json.optBoolean("target_detected"), equalTo(false));
+        assertThat(json.optString("direction"), equalTo("unknown"));
+        assertThat(json.optString("priority"), equalTo("low"));
+        assertThat(json.optString("speech"), containsString("左右缓慢转动手机"));
+        assertThat(json.optString("speech"), containsString("点击刷新"));
+    }
+
+    @Test
     public void microPromptReturnsVectorGuidance() throws Exception {
         String result = OfflineVisionInterpreter.interpret(
             "You are 多模态长护精确引导模式\nTarget: 杯子\n",

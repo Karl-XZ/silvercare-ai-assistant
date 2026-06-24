@@ -1,0 +1,950 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		005B1949A87B56F0A91AD9B7 /* ModelManifestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2609A7CFDAACEAA77DF4836F /* ModelManifestTests.swift */; };
+		01F53A80861EEACAA232BC04 /* SilverCareCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 72F54DE5F858C46F5E7CBB0D /* SilverCareCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		06F93881526654304C018383 /* MemoryStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E24A4D25027CB4F8DE2958 /* MemoryStoreTests.swift */; };
+		077AB8F7A568ACBCAE1AACC9 /* IOSHybridAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13E898F85E0D5B2473AE5D2 /* IOSHybridAIClient.swift */; };
+		107E684161F3DABFCED64976 /* OfflineVisionInterpreter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFC885BD291A40DAAFCEDCB /* OfflineVisionInterpreter.swift */; };
+		138F183F0A64E93A75E2F1AF /* OfflineVisionInterpreterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCD5030F938FC2824423C374 /* OfflineVisionInterpreterTests.swift */; };
+		162781EA0B28470B17428884 /* RuntimeStatusSnapshotStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E081A0BC711D056C1052B024 /* RuntimeStatusSnapshotStoreTests.swift */; };
+		1FBDBA9D8466225A70564DE6 /* OfflineModelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE0A0A1EBCF7FD04ED0CD55 /* OfflineModelManager.swift */; };
+		20746FEFE56F3B58D0C284C8 /* DynamicIOSMNNTTSRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9F788BC874FAD086731EB7D /* DynamicIOSMNNTTSRuntime.swift */; };
+		238F348ADC649846F8175571 /* DashScopeClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E3D4DDEA607DF808A7EF16 /* DashScopeClientTests.swift */; };
+		2DA28BA8079457A5F3C24770 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D85DE05EEB9F082A8DD437D /* CoreMotion.framework */; };
+		3672A4E45EBD31555DA4D29D /* LocalAssetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E32A1062E0A46285FDC72896 /* LocalAssetServer.swift */; };
+		4776BA10A4D9775A06C5B96B /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = FA2C4A9B3D4C408238516592 /* libz.tbd */; };
+		48C6FF66E3A17B11294953C4 /* MemoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8695C1B206D51C538A0E949 /* MemoryStore.swift */; };
+		4CFBDA191D03DAFB39AC792E /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 736C310CE59097C22FCC6F45 /* UserNotifications.framework */; };
+		553CB8127C507390684FAB28 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4BD5ADC214D1E83C632F3EA /* WebKit.framework */; };
+		5C39584820646219C3A7A768 /* LocalAsrTextCorrectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A822B0D00C7D73648571452E /* LocalAsrTextCorrectorTests.swift */; };
+		5EEF4FE0D1060CAD1456853D /* FallDetectorCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DEB9086CCFE2D32CA26FBE /* FallDetectorCore.swift */; };
+		6727A9A0F683D94E8DA35AD4 /* SilverCareiOSUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD176CBD436651D2A265F448 /* SilverCareiOSUITests.swift */; };
+		6DBACC1412773133E66C174C /* TestDoubles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 045B6886D9986181EF119F39 /* TestDoubles.swift */; };
+		70A6926EEDBEB130E9B62E04 /* SilverCareProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08FC129280391A94A35CAB7D /* SilverCareProcessor.swift */; };
+		70AC207F3BE9C34798BC1152 /* IOSDiagnosticLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0929A314E53A9D94CA3325A /* IOSDiagnosticLogger.swift */; };
+		7496BAA027F7F45D02BDCB2F /* JSONSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40319ECD40DEE353ECC9EDDD /* JSONSupport.swift */; };
+		7C4A300D914C15AF976BE793 /* WebAssetLocator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F07628D8A571C1186FEB4C7 /* WebAssetLocator.swift */; };
+		7D487F597BF652D5AF7C4920 /* NativeCameraService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B376442C3AD1499BD9C5120D /* NativeCameraService.swift */; };
+		7DD3F8595E77B7154C66AF60 /* SystemSpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D50F6104B4057A9438963D8 /* SystemSpeechService.swift */; };
+		865C440992E9B1B15DE84805 /* SilverCareProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 658E1A66D17FE98A4E5E5610 /* SilverCareProcessorTests.swift */; };
+		9D43CDA30E22BC05EC3C2DA2 /* LocalTTSModelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B142BA5B54A8A90EE126FF8 /* LocalTTSModelManager.swift */; };
+		A220DBB72301EA547354D367 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF63AD3CB074ACD657E38DE3 /* ContentView.swift */; };
+		AB2C448C9D76864532BBBE24 /* DashScopeAudioRecorderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74167359ACADADC4A1EE7F36 /* DashScopeAudioRecorderService.swift */; };
+		AE4B41D1271E781F7DBD6BC3 /* SilverCareBridgeScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A9D0CDEA9B60B3E4BE1361 /* SilverCareBridgeScript.swift */; };
+		B0595A4496B0FD94EB66C68B /* DashScopeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A830EA4871579C296FA6760 /* DashScopeClient.swift */; };
+		BBDBAF885EEC76F8C56B123B /* SilverCareTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B533C00783F1DEF6F80AF81 /* SilverCareTypes.swift */; };
+		BF9B854F7F2219773A4D3FF2 /* SilverCareAppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98B9AE0C62D0AE6DC15197E2 /* SilverCareAppModel.swift */; };
+		C0FDC57415D9088C12BADD1D /* SilverCareCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 72F54DE5F858C46F5E7CBB0D /* SilverCareCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C6BE857DB8DD44589794505A /* DynamicIOSMNNLocalModelRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC5EDBAAABE7485064623D0B /* DynamicIOSMNNLocalModelRuntime.swift */; };
+		C75B7BB2B9E7BC33FA527A6D /* SilverCareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72F54DE5F858C46F5E7CBB0D /* SilverCareCore.framework */; };
+		CBE69F45D082D6BE8152A60C /* MnnLlmTuningProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC87FE8D887720EFD9F35B1 /* MnnLlmTuningProfileTests.swift */; };
+		CC36136468460600F51E1E59 /* SilverCareAutomationScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E68C199301C4E39BEAC8DC3 /* SilverCareAutomationScript.swift */; };
+		CCB02859101A08DBAC7FAA05 /* LocalAsrTextCorrector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785EE9DB214B605312EDA49E /* LocalAsrTextCorrector.swift */; };
+		D18F3BC044F28A2EF2858D77 /* LocalVoskASRRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC56E56D6C8E4B99187E7FAB /* LocalVoskASRRuntime.swift */; };
+		D613835D3A1C11DA1180B44A /* WebAssets in Resources */ = {isa = PBXBuildFile; fileRef = ABC728A4484753D2DC3C12E2 /* WebAssets */; };
+		D6CEEDBA4012FB15E2683B3D /* SilverCareWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB6A61DB888A9D02D725BF46 /* SilverCareWebView.swift */; };
+		D8F2058C4C42012751BC5E11 /* SilverCareiOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 217A99AA27E966E7255B8927 /* SilverCareiOSApp.swift */; };
+		DB9930090CE3ADE288D7684E /* FallDetectorCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4102EB4DA74A2AE48BC86E2D /* FallDetectorCoreTests.swift */; };
+		DD1232731AC09E5AB1454111 /* MotionFallMonitorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E7D6AE43BFCAD099707CFFB /* MotionFallMonitorService.swift */; };
+		DF5D54A35E1390CEA3216BC9 /* SilverCareCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72F54DE5F858C46F5E7CBB0D /* SilverCareCore.framework */; };
+		EDECD9D374B0246F7A377BCE /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F92301F599BDCC0855FAF8FB /* AVFoundation.framework */; };
+		F57592F021056123C97F0D1D /* SilverCareProcessorPipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C47DC34FD4360194798EC9F /* SilverCareProcessorPipeline.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4B78A651B79AEF217AB003F8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5A381C4E26FBD940EAAADBF3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8CA52BA10C5AB93BDBFC7979;
+			remoteInfo = SilverCareiOS;
+		};
+		8B8921C0147F932A71B8F1B9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5A381C4E26FBD940EAAADBF3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB07BEDEEE7D0176DDFE7249;
+			remoteInfo = SilverCareCore;
+		};
+		E2EB8240A5D0F4AD9BB31EE0 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5A381C4E26FBD940EAAADBF3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8CA52BA10C5AB93BDBFC7979;
+			remoteInfo = SilverCareiOS;
+		};
+		E34EB8AB1AA110007CC4E00B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5A381C4E26FBD940EAAADBF3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB07BEDEEE7D0176DDFE7249;
+			remoteInfo = SilverCareCore;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9835210CD8391DC2DE6763E3 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				01F53A80861EEACAA232BC04 /* SilverCareCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EAFA9D607474720A1D5BA67A /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				C0FDC57415D9088C12BADD1D /* SilverCareCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		045B6886D9986181EF119F39 /* TestDoubles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDoubles.swift; sourceTree = "<group>"; };
+		08FC129280391A94A35CAB7D /* SilverCareProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareProcessor.swift; sourceTree = "<group>"; };
+		0DFC885BD291A40DAAFCEDCB /* OfflineVisionInterpreter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineVisionInterpreter.swift; sourceTree = "<group>"; };
+		0E7D6AE43BFCAD099707CFFB /* MotionFallMonitorService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionFallMonitorService.swift; sourceTree = "<group>"; };
+		1B533C00783F1DEF6F80AF81 /* SilverCareTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareTypes.swift; sourceTree = "<group>"; };
+		1C47DC34FD4360194798EC9F /* SilverCareProcessorPipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareProcessorPipeline.swift; sourceTree = "<group>"; };
+		1D85DE05EEB9F082A8DD437D /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
+		217A99AA27E966E7255B8927 /* SilverCareiOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareiOSApp.swift; sourceTree = "<group>"; };
+		2609A7CFDAACEAA77DF4836F /* ModelManifestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManifestTests.swift; sourceTree = "<group>"; };
+		3D50F6104B4057A9438963D8 /* SystemSpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSpeechService.swift; sourceTree = "<group>"; };
+		3E700CCC536DD7B5A1EB1002 /* SilverCareiOSUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SilverCareiOSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		40319ECD40DEE353ECC9EDDD /* JSONSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JSONSupport.swift; sourceTree = "<group>"; };
+		4102EB4DA74A2AE48BC86E2D /* FallDetectorCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallDetectorCoreTests.swift; sourceTree = "<group>"; };
+		44DEB9086CCFE2D32CA26FBE /* FallDetectorCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FallDetectorCore.swift; sourceTree = "<group>"; };
+		47E3D4DDEA607DF808A7EF16 /* DashScopeClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashScopeClientTests.swift; sourceTree = "<group>"; };
+		5E68C199301C4E39BEAC8DC3 /* SilverCareAutomationScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareAutomationScript.swift; sourceTree = "<group>"; };
+		658E1A66D17FE98A4E5E5610 /* SilverCareProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareProcessorTests.swift; sourceTree = "<group>"; };
+		72F54DE5F858C46F5E7CBB0D /* SilverCareCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SilverCareCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		736C310CE59097C22FCC6F45 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
+		74167359ACADADC4A1EE7F36 /* DashScopeAudioRecorderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashScopeAudioRecorderService.swift; sourceTree = "<group>"; };
+		785EE9DB214B605312EDA49E /* LocalAsrTextCorrector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAsrTextCorrector.swift; sourceTree = "<group>"; };
+		7FE0A0A1EBCF7FD04ED0CD55 /* OfflineModelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineModelManager.swift; sourceTree = "<group>"; };
+		81A9D0CDEA9B60B3E4BE1361 /* SilverCareBridgeScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareBridgeScript.swift; sourceTree = "<group>"; };
+		8A830EA4871579C296FA6760 /* DashScopeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashScopeClient.swift; sourceTree = "<group>"; };
+		8B142BA5B54A8A90EE126FF8 /* LocalTTSModelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalTTSModelManager.swift; sourceTree = "<group>"; };
+		8F07628D8A571C1186FEB4C7 /* WebAssetLocator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAssetLocator.swift; sourceTree = "<group>"; };
+		91B26EAF086E44879D26EB39 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		98B9AE0C62D0AE6DC15197E2 /* SilverCareAppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareAppModel.swift; sourceTree = "<group>"; };
+		A822B0D00C7D73648571452E /* LocalAsrTextCorrectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAsrTextCorrectorTests.swift; sourceTree = "<group>"; };
+		A8695C1B206D51C538A0E949 /* MemoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryStore.swift; sourceTree = "<group>"; };
+		ABC728A4484753D2DC3C12E2 /* WebAssets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = WebAssets; path = ../app/src/main/assets; sourceTree = SOURCE_ROOT; };
+		AC56E56D6C8E4B99187E7FAB /* LocalVoskASRRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVoskASRRuntime.swift; sourceTree = "<group>"; };
+		B376442C3AD1499BD9C5120D /* NativeCameraService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCameraService.swift; sourceTree = "<group>"; };
+		BB6A61DB888A9D02D725BF46 /* SilverCareWebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareWebView.swift; sourceTree = "<group>"; };
+		BC5EDBAAABE7485064623D0B /* DynamicIOSMNNLocalModelRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicIOSMNNLocalModelRuntime.swift; sourceTree = "<group>"; };
+		BD176CBD436651D2A265F448 /* SilverCareiOSUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilverCareiOSUITests.swift; sourceTree = "<group>"; };
+		BEC87FE8D887720EFD9F35B1 /* MnnLlmTuningProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MnnLlmTuningProfileTests.swift; sourceTree = "<group>"; };
+		C3E24A4D25027CB4F8DE2958 /* MemoryStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryStoreTests.swift; sourceTree = "<group>"; };
+		CF63AD3CB074ACD657E38DE3 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		CFB7952E7C72FFDBEF2C5F3F /* SilverCareiOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SilverCareiOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0929A314E53A9D94CA3325A /* IOSDiagnosticLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSDiagnosticLogger.swift; sourceTree = "<group>"; };
+		DCD5030F938FC2824423C374 /* OfflineVisionInterpreterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineVisionInterpreterTests.swift; sourceTree = "<group>"; };
+		DF3758E1934FFD7EC3566B97 /* SilverCareiOSTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SilverCareiOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E081A0BC711D056C1052B024 /* RuntimeStatusSnapshotStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuntimeStatusSnapshotStoreTests.swift; sourceTree = "<group>"; };
+		E32A1062E0A46285FDC72896 /* LocalAssetServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalAssetServer.swift; sourceTree = "<group>"; };
+		F13E898F85E0D5B2473AE5D2 /* IOSHybridAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSHybridAIClient.swift; sourceTree = "<group>"; };
+		F4BD5ADC214D1E83C632F3EA /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		F92301F599BDCC0855FAF8FB /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		F9F788BC874FAD086731EB7D /* DynamicIOSMNNTTSRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DynamicIOSMNNTTSRuntime.swift; sourceTree = "<group>"; };
+		FA2C4A9B3D4C408238516592 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		ACC2B5950B8C9AC14A784898 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4776BA10A4D9775A06C5B96B /* libz.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B084C9FC888B0BE7E9880865 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C75B7BB2B9E7BC33FA527A6D /* SilverCareCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E57EA45AF21CFEF06E7C417A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DF5D54A35E1390CEA3216BC9 /* SilverCareCore.framework in Frameworks */,
+				553CB8127C507390684FAB28 /* WebKit.framework in Frameworks */,
+				EDECD9D374B0246F7A377BCE /* AVFoundation.framework in Frameworks */,
+				2DA28BA8079457A5F3C24770 /* CoreMotion.framework in Frameworks */,
+				4CFBDA191D03DAFB39AC792E /* UserNotifications.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0D5F3B133E0334F94A1B65D6 /* Bridge */ = {
+			isa = PBXGroup;
+			children = (
+				E32A1062E0A46285FDC72896 /* LocalAssetServer.swift */,
+				5E68C199301C4E39BEAC8DC3 /* SilverCareAutomationScript.swift */,
+				81A9D0CDEA9B60B3E4BE1361 /* SilverCareBridgeScript.swift */,
+				BB6A61DB888A9D02D725BF46 /* SilverCareWebView.swift */,
+				8F07628D8A571C1186FEB4C7 /* WebAssetLocator.swift */,
+			);
+			path = Bridge;
+			sourceTree = "<group>";
+		};
+		14820D4F659A3587B030055B = {
+			isa = PBXGroup;
+			children = (
+				ABC728A4484753D2DC3C12E2 /* WebAssets */,
+				7B95A311E9E6DDA174F81369 /* SilverCareCore */,
+				189760E896FF277C1E8E1C5F /* SilverCareCoreTests */,
+				327EE941B496887F07FF5747 /* SilverCareiOS */,
+				E0D7302160E7673B71EFC607 /* SilverCareiOSTests */,
+				D3A7D37083C778E1F78C9B21 /* SilverCareiOSUITests */,
+				2E07A31626254CACC7515160 /* Frameworks */,
+				B90A793A037DFFA26B402E70 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		189760E896FF277C1E8E1C5F /* SilverCareCoreTests */ = {
+			isa = PBXGroup;
+			children = (
+				47E3D4DDEA607DF808A7EF16 /* DashScopeClientTests.swift */,
+				4102EB4DA74A2AE48BC86E2D /* FallDetectorCoreTests.swift */,
+				A822B0D00C7D73648571452E /* LocalAsrTextCorrectorTests.swift */,
+				C3E24A4D25027CB4F8DE2958 /* MemoryStoreTests.swift */,
+				BEC87FE8D887720EFD9F35B1 /* MnnLlmTuningProfileTests.swift */,
+				2609A7CFDAACEAA77DF4836F /* ModelManifestTests.swift */,
+				DCD5030F938FC2824423C374 /* OfflineVisionInterpreterTests.swift */,
+				658E1A66D17FE98A4E5E5610 /* SilverCareProcessorTests.swift */,
+				045B6886D9986181EF119F39 /* TestDoubles.swift */,
+			);
+			name = SilverCareCoreTests;
+			path = Tests/SilverCareCoreTests;
+			sourceTree = "<group>";
+		};
+		2E07A31626254CACC7515160 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F92301F599BDCC0855FAF8FB /* AVFoundation.framework */,
+				1D85DE05EEB9F082A8DD437D /* CoreMotion.framework */,
+				FA2C4A9B3D4C408238516592 /* libz.tbd */,
+				736C310CE59097C22FCC6F45 /* UserNotifications.framework */,
+				F4BD5ADC214D1E83C632F3EA /* WebKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		327EE941B496887F07FF5747 /* SilverCareiOS */ = {
+			isa = PBXGroup;
+			children = (
+				91B26EAF086E44879D26EB39 /* Info.plist */,
+				BD14BC32AB88FAE770EA58FA /* App */,
+				0D5F3B133E0334F94A1B65D6 /* Bridge */,
+				DCAA5398DBCACF4570B1F5D8 /* Services */,
+			);
+			path = SilverCareiOS;
+			sourceTree = "<group>";
+		};
+		7B95A311E9E6DDA174F81369 /* SilverCareCore */ = {
+			isa = PBXGroup;
+			children = (
+				8A830EA4871579C296FA6760 /* DashScopeClient.swift */,
+				44DEB9086CCFE2D32CA26FBE /* FallDetectorCore.swift */,
+				40319ECD40DEE353ECC9EDDD /* JSONSupport.swift */,
+				785EE9DB214B605312EDA49E /* LocalAsrTextCorrector.swift */,
+				8B142BA5B54A8A90EE126FF8 /* LocalTTSModelManager.swift */,
+				A8695C1B206D51C538A0E949 /* MemoryStore.swift */,
+				7FE0A0A1EBCF7FD04ED0CD55 /* OfflineModelManager.swift */,
+				0DFC885BD291A40DAAFCEDCB /* OfflineVisionInterpreter.swift */,
+				08FC129280391A94A35CAB7D /* SilverCareProcessor.swift */,
+				1B533C00783F1DEF6F80AF81 /* SilverCareTypes.swift */,
+			);
+			name = SilverCareCore;
+			path = Sources/SilverCareCore;
+			sourceTree = "<group>";
+		};
+		B90A793A037DFFA26B402E70 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				72F54DE5F858C46F5E7CBB0D /* SilverCareCore.framework */,
+				CFB7952E7C72FFDBEF2C5F3F /* SilverCareiOS.app */,
+				DF3758E1934FFD7EC3566B97 /* SilverCareiOSTests.xctest */,
+				3E700CCC536DD7B5A1EB1002 /* SilverCareiOSUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BD14BC32AB88FAE770EA58FA /* App */ = {
+			isa = PBXGroup;
+			children = (
+				CF63AD3CB074ACD657E38DE3 /* ContentView.swift */,
+				98B9AE0C62D0AE6DC15197E2 /* SilverCareAppModel.swift */,
+				217A99AA27E966E7255B8927 /* SilverCareiOSApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D3A7D37083C778E1F78C9B21 /* SilverCareiOSUITests */ = {
+			isa = PBXGroup;
+			children = (
+				BD176CBD436651D2A265F448 /* SilverCareiOSUITests.swift */,
+			);
+			name = SilverCareiOSUITests;
+			path = UITests/SilverCareiOSUITests;
+			sourceTree = "<group>";
+		};
+		DCAA5398DBCACF4570B1F5D8 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				74167359ACADADC4A1EE7F36 /* DashScopeAudioRecorderService.swift */,
+				BC5EDBAAABE7485064623D0B /* DynamicIOSMNNLocalModelRuntime.swift */,
+				F9F788BC874FAD086731EB7D /* DynamicIOSMNNTTSRuntime.swift */,
+				D0929A314E53A9D94CA3325A /* IOSDiagnosticLogger.swift */,
+				F13E898F85E0D5B2473AE5D2 /* IOSHybridAIClient.swift */,
+				AC56E56D6C8E4B99187E7FAB /* LocalVoskASRRuntime.swift */,
+				0E7D6AE43BFCAD099707CFFB /* MotionFallMonitorService.swift */,
+				B376442C3AD1499BD9C5120D /* NativeCameraService.swift */,
+				1C47DC34FD4360194798EC9F /* SilverCareProcessorPipeline.swift */,
+				3D50F6104B4057A9438963D8 /* SystemSpeechService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		E0D7302160E7673B71EFC607 /* SilverCareiOSTests */ = {
+			isa = PBXGroup;
+			children = (
+				E081A0BC711D056C1052B024 /* RuntimeStatusSnapshotStoreTests.swift */,
+			);
+			path = SilverCareiOSTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8CA52BA10C5AB93BDBFC7979 /* SilverCareiOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC075E05A7DCF0CB17E2C8AE /* Build configuration list for PBXNativeTarget "SilverCareiOS" */;
+			buildPhases = (
+				4C2D60111FB28619AE84D5E0 /* Sources */,
+				401C36824FA021FB21185703 /* Resources */,
+				E57EA45AF21CFEF06E7C417A /* Frameworks */,
+				9835210CD8391DC2DE6763E3 /* Embed Frameworks */,
+				45A9C9618DA865AC7CE67333 /* Embed optional native runtimes */,
+				943C2DB6684F63CB95623EDB /* Embed private DashScope config */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AE6402FBE7F690FD3500E1A5 /* PBXTargetDependency */,
+			);
+			name = SilverCareiOS;
+			packageProductDependencies = (
+			);
+			productName = SilverCareiOS;
+			productReference = CFB7952E7C72FFDBEF2C5F3F /* SilverCareiOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AD6529F79B8735D54AC99FB7 /* SilverCareiOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1C1E36F830543FE65663E2BF /* Build configuration list for PBXNativeTarget "SilverCareiOSUITests" */;
+			buildPhases = (
+				16E76BB6CDE059CF82BF3900 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				141FB1EEDEA947636439AE8E /* PBXTargetDependency */,
+			);
+			name = SilverCareiOSUITests;
+			packageProductDependencies = (
+			);
+			productName = SilverCareiOSUITests;
+			productReference = 3E700CCC536DD7B5A1EB1002 /* SilverCareiOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		E8E7501CFB31278DAEE73D1F /* SilverCareiOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 585D02A8F45CA460784CBEF2 /* Build configuration list for PBXNativeTarget "SilverCareiOSTests" */;
+			buildPhases = (
+				6F82E28859F28B07D0A1FD3D /* Sources */,
+				B084C9FC888B0BE7E9880865 /* Frameworks */,
+				EAFA9D607474720A1D5BA67A /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D33DAB848EA3A0C2C6A5F9BA /* PBXTargetDependency */,
+				0623C1CE2201E24B5389FD78 /* PBXTargetDependency */,
+			);
+			name = SilverCareiOSTests;
+			packageProductDependencies = (
+			);
+			productName = SilverCareiOSTests;
+			productReference = DF3758E1934FFD7EC3566B97 /* SilverCareiOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		EB07BEDEEE7D0176DDFE7249 /* SilverCareCore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8DA274E6EB8ACBE291ACE1E0 /* Build configuration list for PBXNativeTarget "SilverCareCore" */;
+			buildPhases = (
+				F8AD101A8678180D95A004C5 /* Sources */,
+				ACC2B5950B8C9AC14A784898 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SilverCareCore;
+			packageProductDependencies = (
+			);
+			productName = SilverCareCore;
+			productReference = 72F54DE5F858C46F5E7CBB0D /* SilverCareCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		5A381C4E26FBD940EAAADBF3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					8CA52BA10C5AB93BDBFC7979 = {
+						DevelopmentTeam = 887TZ78HJ5;
+						ProvisioningStyle = Automatic;
+					};
+					AD6529F79B8735D54AC99FB7 = {
+						DevelopmentTeam = 887TZ78HJ5;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 8CA52BA10C5AB93BDBFC7979;
+					};
+					E8E7501CFB31278DAEE73D1F = {
+						DevelopmentTeam = 887TZ78HJ5;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 223DE7BB777F1EA9DD4D608E /* Build configuration list for PBXProject "SilverCareiOS" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 14820D4F659A3587B030055B;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B90A793A037DFFA26B402E70 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EB07BEDEEE7D0176DDFE7249 /* SilverCareCore */,
+				8CA52BA10C5AB93BDBFC7979 /* SilverCareiOS */,
+				E8E7501CFB31278DAEE73D1F /* SilverCareiOSTests */,
+				AD6529F79B8735D54AC99FB7 /* SilverCareiOSUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		401C36824FA021FB21185703 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D613835D3A1C11DA1180B44A /* WebAssets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		45A9C9618DA865AC7CE67333 /* Embed optional native runtimes */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed optional native runtimes";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "bash \"$SRCROOT/Tools/embed_native_runtime_artifacts.sh\"";
+		};
+		943C2DB6684F63CB95623EDB /* Embed private DashScope config */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed private DashScope config";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "bash \"$SRCROOT/Tools/embed_private_dashscope_config.sh\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		16E76BB6CDE059CF82BF3900 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6727A9A0F683D94E8DA35AD4 /* SilverCareiOSUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4C2D60111FB28619AE84D5E0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A220DBB72301EA547354D367 /* ContentView.swift in Sources */,
+				AB2C448C9D76864532BBBE24 /* DashScopeAudioRecorderService.swift in Sources */,
+				C6BE857DB8DD44589794505A /* DynamicIOSMNNLocalModelRuntime.swift in Sources */,
+				20746FEFE56F3B58D0C284C8 /* DynamicIOSMNNTTSRuntime.swift in Sources */,
+				70AC207F3BE9C34798BC1152 /* IOSDiagnosticLogger.swift in Sources */,
+				077AB8F7A568ACBCAE1AACC9 /* IOSHybridAIClient.swift in Sources */,
+				3672A4E45EBD31555DA4D29D /* LocalAssetServer.swift in Sources */,
+				D18F3BC044F28A2EF2858D77 /* LocalVoskASRRuntime.swift in Sources */,
+				DD1232731AC09E5AB1454111 /* MotionFallMonitorService.swift in Sources */,
+				7D487F597BF652D5AF7C4920 /* NativeCameraService.swift in Sources */,
+				BF9B854F7F2219773A4D3FF2 /* SilverCareAppModel.swift in Sources */,
+				CC36136468460600F51E1E59 /* SilverCareAutomationScript.swift in Sources */,
+				AE4B41D1271E781F7DBD6BC3 /* SilverCareBridgeScript.swift in Sources */,
+				F57592F021056123C97F0D1D /* SilverCareProcessorPipeline.swift in Sources */,
+				D6CEEDBA4012FB15E2683B3D /* SilverCareWebView.swift in Sources */,
+				D8F2058C4C42012751BC5E11 /* SilverCareiOSApp.swift in Sources */,
+				7DD3F8595E77B7154C66AF60 /* SystemSpeechService.swift in Sources */,
+				7C4A300D914C15AF976BE793 /* WebAssetLocator.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6F82E28859F28B07D0A1FD3D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				238F348ADC649846F8175571 /* DashScopeClientTests.swift in Sources */,
+				DB9930090CE3ADE288D7684E /* FallDetectorCoreTests.swift in Sources */,
+				5C39584820646219C3A7A768 /* LocalAsrTextCorrectorTests.swift in Sources */,
+				06F93881526654304C018383 /* MemoryStoreTests.swift in Sources */,
+				CBE69F45D082D6BE8152A60C /* MnnLlmTuningProfileTests.swift in Sources */,
+				005B1949A87B56F0A91AD9B7 /* ModelManifestTests.swift in Sources */,
+				138F183F0A64E93A75E2F1AF /* OfflineVisionInterpreterTests.swift in Sources */,
+				162781EA0B28470B17428884 /* RuntimeStatusSnapshotStoreTests.swift in Sources */,
+				865C440992E9B1B15DE84805 /* SilverCareProcessorTests.swift in Sources */,
+				6DBACC1412773133E66C174C /* TestDoubles.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F8AD101A8678180D95A004C5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B0595A4496B0FD94EB66C68B /* DashScopeClient.swift in Sources */,
+				5EEF4FE0D1060CAD1456853D /* FallDetectorCore.swift in Sources */,
+				7496BAA027F7F45D02BDCB2F /* JSONSupport.swift in Sources */,
+				CCB02859101A08DBAC7FAA05 /* LocalAsrTextCorrector.swift in Sources */,
+				9D43CDA30E22BC05EC3C2DA2 /* LocalTTSModelManager.swift in Sources */,
+				48C6FF66E3A17B11294953C4 /* MemoryStore.swift in Sources */,
+				1FBDBA9D8466225A70564DE6 /* OfflineModelManager.swift in Sources */,
+				107E684161F3DABFCED64976 /* OfflineVisionInterpreter.swift in Sources */,
+				70A6926EEDBEB130E9B62E04 /* SilverCareProcessor.swift in Sources */,
+				BBDBAF885EEC76F8C56B123B /* SilverCareTypes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0623C1CE2201E24B5389FD78 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8CA52BA10C5AB93BDBFC7979 /* SilverCareiOS */;
+			targetProxy = 4B78A651B79AEF217AB003F8 /* PBXContainerItemProxy */;
+		};
+		141FB1EEDEA947636439AE8E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8CA52BA10C5AB93BDBFC7979 /* SilverCareiOS */;
+			targetProxy = E2EB8240A5D0F4AD9BB31EE0 /* PBXContainerItemProxy */;
+		};
+		AE6402FBE7F690FD3500E1A5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB07BEDEEE7D0176DDFE7249 /* SilverCareCore */;
+			targetProxy = E34EB8AB1AA110007CC4E00B /* PBXContainerItemProxy */;
+		};
+		D33DAB848EA3A0C2C6A5F9BA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB07BEDEEE7D0176DDFE7249 /* SilverCareCore */;
+			targetProxy = 8B8921C0147F932A71B8F1B9 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1FED8ED3CC63C09393987E54 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 887TZ78HJ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.silvercare.aiassistant.ios.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SilverCareiOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SilverCareiOS";
+			};
+			name = Release;
+		};
+		26F8BF4AF5968F2FCAF3A8D3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.8;
+			};
+			name = Release;
+		};
+		285750D61952C90810B407C4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 887TZ78HJ5;
+				INFOPLIST_FILE = SilverCareiOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.silvercare.aiassistant.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		701F72B584DB29535D275A93 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 887TZ78HJ5;
+				INFOPLIST_FILE = SilverCareiOS/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.silvercare.aiassistant.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7BEC3D09BD3F11005C348859 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.8;
+			};
+			name = Debug;
+		};
+		8FEC17A473317A3D4F94F373 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 887TZ78HJ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.silvercare.aiassistant.ios.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "";
+				TEST_TARGET_NAME = SilverCareiOS;
+			};
+			name = Release;
+		};
+		9A0ED45C288FD714E68F2638 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.silvercare.aiassistant.core;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		A64D43D298F1B0D04DFC1356 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GENERATE_INFOPLIST_FILE = YES;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.silvercare.aiassistant.core;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		B667C331B8FE598AEA5D1210 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 887TZ78HJ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.silvercare.aiassistant.ios.uitests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "";
+				TEST_TARGET_NAME = SilverCareiOS;
+			};
+			name = Debug;
+		};
+		EC72F82C7C9C1FB7E495E1BF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 887TZ78HJ5;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.silvercare.aiassistant.ios.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SilverCareiOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SilverCareiOS";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1C1E36F830543FE65663E2BF /* Build configuration list for PBXNativeTarget "SilverCareiOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B667C331B8FE598AEA5D1210 /* Debug */,
+				8FEC17A473317A3D4F94F373 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		223DE7BB777F1EA9DD4D608E /* Build configuration list for PBXProject "SilverCareiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7BEC3D09BD3F11005C348859 /* Debug */,
+				26F8BF4AF5968F2FCAF3A8D3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		585D02A8F45CA460784CBEF2 /* Build configuration list for PBXNativeTarget "SilverCareiOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EC72F82C7C9C1FB7E495E1BF /* Debug */,
+				1FED8ED3CC63C09393987E54 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		8DA274E6EB8ACBE291ACE1E0 /* Build configuration list for PBXNativeTarget "SilverCareCore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A64D43D298F1B0D04DFC1356 /* Debug */,
+				9A0ED45C288FD714E68F2638 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CC075E05A7DCF0CB17E2C8AE /* Build configuration list for PBXNativeTarget "SilverCareiOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				285750D61952C90810B407C4 /* Debug */,
+				701F72B584DB29535D275A93 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 5A381C4E26FBD940EAAADBF3 /* Project object */;
+}

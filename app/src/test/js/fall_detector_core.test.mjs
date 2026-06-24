@@ -33,12 +33,12 @@ function brightness(frame) {
 
 test('readSensorFromMotion computes acceleration and rotation metrics', () => {
   const sensor = readSensorFromMotion({
-    accelerationIncludingGravity: { x: 0, y: 0, z: 25 },
-    rotationRate: { alpha: 120, beta: 180, gamma: 0 }
+    accelerationIncludingGravity: { x: 0, y: 0, z: 29 },
+    rotationRate: { alpha: 180, beta: 220, gamma: 0 }
   }, 1234);
 
   assert.equal(sensor.time, 1234);
-  assert.equal(Math.round(sensor.accMagnitude), 25);
+  assert.equal(Math.round(sensor.accMagnitude), 29);
   assert.equal(hasFallImpact(sensor), true);
 });
 

@@ -29,4 +29,12 @@ __pycache__/
 test_runs/models/
 test_runs/fine_tune/
 test_runs/submission_readiness/
+test_runs/live_dashscope_scenarios/
 
+ios/.build/
+ios/build/
+ios/SilverCareiOS.xcodeproj/project.xcworkspace/xcuserdata/
+ios/SilverCareiOS.xcodeproj/xcuserdata/
+*.xcuserstate
+
+ios/Native/Vendor/_downloads/

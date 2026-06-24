@@ -34,14 +34,15 @@ test('care management events persist and update summary counts', () => {
   });
 
   assert.equal(next.events[0].title, '卫生间地面湿滑预警');
-  assert.equal(calculateCareSummary(next, 'today').highRiskOpen, 2);
+  assert.equal(next.events[0].severity, 'low');
+  assert.equal(calculateCareSummary(next, 'today').highRiskOpen, 0);
 
   assert.equal(saveCareManagementData(next, storage), true);
   const loaded = loadCareManagementData(CARE_MANAGEMENT_DATA, storage);
   assert.equal(loaded.events[0].title, '卫生间地面湿滑预警');
 });
 
-test('navigation result can become a care management risk event', () => {
+test('navigation result can become a low-risk management record', () => {
   const event = buildNavigationCareEvent({
     priority: 'high',
     distance: 0.8,
@@ -50,10 +51,24 @@ test('navigation result can become a care management risk event', () => {
     environment: { occupancy: 'occupied', markers: ['脚边障碍物'] }
   });
 
-  assert.equal(event.title, '居家行走高风险预警');
-  assert.equal(event.severity, 'high');
+  assert.equal(event.title, '行走导航记录');
+  assert.equal(event.severity, 'low');
   assert.match(event.detail, /脚边有椅子/);
   assert.match(event.detail, /0.8米/);
+});
+
+test('target search result is recorded as low risk', () => {
+  const event = buildNavigationCareEvent({
+    priority: 'high',
+    category: 'target',
+    target_detected: true,
+    subject: '杯子',
+    direction: 'right',
+    speech: '杯子在右手边，距离约一米。'
+  });
+
+  assert.equal(event.title, '寻物导航记录');
+  assert.equal(event.severity, 'low');
 });
 
 test('fall alarm payload becomes high-risk management event', () => {

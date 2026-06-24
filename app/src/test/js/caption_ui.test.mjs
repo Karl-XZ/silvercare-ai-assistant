@@ -91,6 +91,101 @@ test('caption visibility setting hides panel and suppresses live announcements',
   assert.equal(announcer.textContent, '银龄智护：字幕重新开启');
 });
 
+test('rapid AI caption updates collapse to the latest stable reply', async () => {
+  ui.setCaptionVisibility(false);
+  ui.setCaptionVisibility(true);
+  ui.updateAiCaption('第一条导航回复，前方可以通行。');
+  ui.updateAiCaption('第二条导航回复，稍微向左。');
+  ui.updateAiCaption('第三条导航回复，保持直行。');
+
+  assert.equal(elements.get('aiCaption').textContent, '第一条导航回复，前方可以通行。');
+
+  await new Promise((resolve) => setTimeout(resolve, 1700));
+
+  assert.equal(elements.get('aiCaption').textContent, '第三条导航回复，保持直行。');
+});
+
+test('transient AI captions are throttled more aggressively', async () => {
+  ui.setCaptionVisibility(false);
+  ui.setCaptionVisibility(true);
+  ui.updateAiCaption('稳定回复：前方道路清晰。');
+  ui.updateAiCaption('正在思考...');
+
+  assert.equal(elements.get('aiCaption').textContent, '稳定回复：前方道路清晰。');
+
+  await new Promise((resolve) => setTimeout(resolve, 2300));
+
+  assert.equal(elements.get('aiCaption').textContent, '正在思考...');
+});
+
+test('duplicate AI caption text is suppressed across scan intervals', () => {
+  const realNow = Date.now;
+  let now = 1_000_000;
+  Date.now = () => now;
+  try {
+    ui.setCaptionVisibility(false);
+    ui.setCaptionVisibility(true);
+
+    ui.updateAiCaption('联网 DashScope 需要先填写 Key。');
+    assert.equal(elements.get('a11y-announcer').textContent, '银龄智护：联网 DashScope 需要先填写 Key。');
+
+    elements.get('a11y-announcer').textContent = '';
+    now += 4000;
+    ui.updateAiCaption('联网 DashScope 需要先填写 Key。');
+
+    assert.equal(elements.get('aiCaption').textContent, '联网 DashScope 需要先填写 Key。');
+    assert.equal(elements.get('a11y-announcer').textContent, '');
+
+    now += 7000;
+    ui.updateAiCaption('联网 DashScope 需要先填写 Key。');
+
+    assert.equal(elements.get('a11y-announcer').textContent, '银龄智护：联网 DashScope 需要先填写 Key。');
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test('main feedback compresses long runtime messages', () => {
+  const spoken = [];
+  window.AndroidSilverCare = {
+    isVoiceFirstEnabled: () => true,
+    speak: (text) => spoken.push(text)
+  };
+
+  ui.showFeedback('联网 DashScope TTS 需要先填写 DashScope Key。请打开右上角设置，填写密钥后再切换到联网语音合成。', 1200, true);
+
+  const text = elements.get('mainFeedback').textContent;
+  assert.equal(elements.get('mainFeedback').classList.contains('visible'), true);
+  assert.ok(text.length <= 56);
+  assert.match(text, /…$/);
+  assert.deepEqual(spoken, [text]);
+});
+
+test('duplicate main feedback text is suppressed across scan intervals', () => {
+  const realNow = Date.now;
+  let now = 2_000_000;
+  Date.now = () => now;
+  try {
+    const announcer = elements.get('a11y-announcer');
+    ui.showFeedback('联网 DashScope 需要先填写 Key。', 1200, false);
+    assert.equal(announcer.textContent, '联网 DashScope 需要先填写 Key。');
+
+    announcer.textContent = '';
+    now += 4000;
+    ui.showFeedback('联网 DashScope 需要先填写 Key。', 1200, false);
+
+    assert.equal(elements.get('mainFeedback').textContent, '联网 DashScope 需要先填写 Key。');
+    assert.equal(announcer.textContent, '');
+
+    now += 7000;
+    ui.showFeedback('联网 DashScope 需要先填写 Key。', 1200, false);
+
+    assert.equal(announcer.textContent, '联网 DashScope 需要先填写 Key。');
+  } finally {
+    Date.now = realNow;
+  }
+});
+
 test('status can update refresh mode without entering the TTS queue', () => {
   const spoken = [];
   window.AndroidSilverCare = {

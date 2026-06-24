@@ -62,6 +62,20 @@ let modelDownloadHideTimer = null;
 let lastStatusText = '';
 let lastSpokenText = '';
 let lastSpokenAt = 0;
+let lastFeedbackText = '';
+let lastFeedbackAt = 0;
+let lastAiCaptionText = '';
+let lastAiCaptionAt = 0;
+let pendingAiCaptionTimer = null;
+let pendingAiCaptionText = '';
+
+const AI_CAPTION_MIN_GAP_MS = 1600;
+const AI_CAPTION_TRANSIENT_GAP_MS = 2200;
+const AI_CAPTION_DUPLICATE_GAP_MS = 10000;
+const FEEDBACK_DUPLICATE_GAP_MS = 10000;
+const AI_CAPTION_MAX_CHARS = 96;
+const FEEDBACK_MAX_CHARS = 56;
+const AI_CAPTION_TRANSIENT_RE = /^(正在|等待|语音已提交|启动|摄像头|联网|端侧|本机|自动刷新|手动刷新)/;
 
 function escapeHtml(value) {
     return String(value ?? '')
@@ -178,18 +192,76 @@ export function updateUserCaption(text) {
 }
 
 export function updateAiCaption(text) {
-    const clean = String(text || '').trim();
+    const clean = normalizeCaptionText(text);
     if (!clean || !UI.aiCaption) return;
-    setText(UI.aiCaption, clean);
-    if (captionsEnabled()) announce(`银龄智护：${clean}`);
+
+    const now = Date.now();
+    const visibleText = UI.aiCaption.textContent?.trim() || '';
+    if ((clean === lastAiCaptionText || clean === pendingAiCaptionText || clean === visibleText) && now - lastAiCaptionAt < AI_CAPTION_DUPLICATE_GAP_MS) {
+        return;
+    }
+
+    if (!captionsEnabled()) {
+        window.clearTimeout(pendingAiCaptionTimer);
+        pendingAiCaptionText = '';
+        applyAiCaption(clean);
+        return;
+    }
+
+    const urgent = /错误|失败|超时|报警|权限|阻止|未开启|需要|Key|密钥|ASR|识别/.test(clean);
+    const minGap = AI_CAPTION_TRANSIENT_RE.test(clean) ? AI_CAPTION_TRANSIENT_GAP_MS : AI_CAPTION_MIN_GAP_MS;
+    if (!urgent && now - lastAiCaptionAt < minGap) {
+        pendingAiCaptionText = clean;
+        window.clearTimeout(pendingAiCaptionTimer);
+        pendingAiCaptionTimer = window.setTimeout(() => {
+            const next = pendingAiCaptionText;
+            pendingAiCaptionText = '';
+            applyAiCaption(next);
+        }, minGap - (now - lastAiCaptionAt));
+        return;
+    }
+
+    applyAiCaption(clean);
 }
 
 export function captionsEnabled() {
     return STATE.captionsEnabled !== false;
 }
 
+function normalizeCaptionText(text) {
+    const clean = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!clean) return '';
+    if (clean.length <= AI_CAPTION_MAX_CHARS) return clean;
+    return `${clean.slice(0, AI_CAPTION_MAX_CHARS - 1)}…`;
+}
+
+function normalizeFeedbackText(text) {
+    const clean = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!clean) return '';
+    if (clean.length <= FEEDBACK_MAX_CHARS) return clean;
+    return `${clean.slice(0, FEEDBACK_MAX_CHARS - 1)}…`;
+}
+
+function applyAiCaption(text) {
+    if (!text || !UI.aiCaption) return;
+    window.clearTimeout(pendingAiCaptionTimer);
+    pendingAiCaptionTimer = null;
+    pendingAiCaptionText = '';
+    lastAiCaptionText = text;
+    lastAiCaptionAt = Date.now();
+    if (UI.aiCaption.textContent !== text) setText(UI.aiCaption, text);
+    if (captionsEnabled()) announce(`银龄智护：${text}`);
+}
+
 export function setCaptionVisibility(enabled) {
-    STATE.captionsEnabled = enabled !== false;
+    const next = enabled !== false;
+    const changed = STATE.captionsEnabled !== next;
+    STATE.captionsEnabled = next;
+    if (changed) {
+        window.clearTimeout(pendingAiCaptionTimer);
+        pendingAiCaptionText = '';
+        lastAiCaptionAt = 0;
+    }
     if (!UI.captionPanel) return;
     UI.captionPanel.classList.toggle('is-hidden', !STATE.captionsEnabled);
     UI.captionPanel.setAttribute('aria-hidden', String(!STATE.captionsEnabled));
@@ -291,6 +363,36 @@ function syncCommandState() {
     }
 }
 
+function syncNativeCameraModeClass() {
+    const nativeCameraMode = Boolean(
+        STATE.nativeCameraAvailable ||
+        STATE.nativeCameraRunning ||
+        STATE.nativeCameraPreviewVisible
+    );
+    document.documentElement?.classList?.toggle('silvercare-ios-native-camera', nativeCameraMode);
+}
+
+function applyNativeCameraFailure(text) {
+    window.clearTimeout(STATE.nativeCameraStartTimer);
+    STATE.nativeCameraStartTimer = null;
+    STATE.nativeCameraStartPending = false;
+    STATE.nativeCameraRunning = false;
+    STATE.nativeCameraPreviewVisible = false;
+    STATE.nativeFrameInFlight = false;
+    window.clearTimeout(STATE.nativeFrameTimer);
+    STATE.nativeFrameTimer = null;
+    if (STATE.loop) {
+        window.clearInterval(STATE.loop);
+        STATE.loop = null;
+    }
+    STATE.active = false;
+    UI.body.classList.remove('active');
+    syncNativeCameraModeClass();
+    updateStatus('摄像头错误', 'error', { speak: false });
+    updateAiCaption(text || '摄像头启动失败');
+    showFeedback(text || '摄像头错误', 2600, true);
+}
+
 function renderCue(el, label, value) {
     if (!el) return;
     if (!value) {
@@ -339,13 +441,22 @@ function updateSearchBanner(goal) {
 }
 
 export function showFeedback(text, duration = 1600, speak = true) {
-    if (!text || !UI.mainFeedback) return;
+    const clean = normalizeFeedbackText(text);
+    if (!clean || !UI.mainFeedback) return;
+
+    const now = Date.now();
+    const visibleText = UI.mainFeedback.textContent?.trim() || '';
+    if (clean === lastFeedbackText && clean === visibleText && now - lastFeedbackAt < FEEDBACK_DUPLICATE_GAP_MS) {
+        return;
+    }
+    lastFeedbackText = clean;
+    lastFeedbackAt = now;
 
     window.clearTimeout(feedbackTimer);
-    UI.mainFeedback.textContent = text;
+    UI.mainFeedback.textContent = clean;
     UI.mainFeedback.classList.add('visible');
-    announce(text);
-    if (speak) speakIfVoiceFirst(text);
+    announce(clean);
+    if (speak) speakIfVoiceFirst(clean);
 
     feedbackTimer = window.setTimeout(() => {
         UI.mainFeedback?.classList.remove('visible');
@@ -366,7 +477,7 @@ export function updateStatus(text, stateClass = '', options = {}) {
 }
 
 export function updateRuntimeUI(data = {}) {
-    const mode = data.ai_runtime_mode || data.mode || STATE.aiRuntimeMode || 'offline_mnn';
+    const mode = data.ai_runtime_mode || data.mode || STATE.aiRuntimeMode || 'dashscope';
     const label = data.runtime_label || (mode === 'offline_mnn' ? '端侧离线 MNN' : '联网 DashScope');
     STATE.aiRuntimeMode = mode;
     STATE.runtimeLabel = label;
@@ -375,6 +486,21 @@ export function updateRuntimeUI(data = {}) {
     STATE.asrRuntimeLabel = data.asr_runtime_label || (STATE.asrRuntimeMode === 'local_vosk' ? '本地内置 ASR' : '联网 DashScope');
     STATE.localAsrEnabled = STATE.asrRuntimeMode === 'local_vosk';
     STATE.localAsrReady = Boolean(data.local_asr_ready);
+    STATE.ttsRuntimeMode = data.tts_runtime_mode || STATE.ttsRuntimeMode || 'dashscope';
+    STATE.ttsRuntimeLabel = data.tts_runtime_label || (
+        STATE.ttsRuntimeMode === 'local_mnn'
+            ? '本地 MNN TTS'
+            : STATE.ttsRuntimeMode === 'system'
+                ? '手机系统 TTS'
+                : STATE.ttsRuntimeMode === 'auto'
+                    ? '自动兜底'
+                    : '联网 DashScope'
+    );
+    STATE.ttsStatusText = data.tts_status || data.tts_status_text || STATE.ttsStatusText || '';
+    STATE.localTtsReady = Boolean(data.local_tts_ready);
+    STATE.localTtsModelReady = Boolean(data.local_tts_model_ready);
+    STATE.localTtsRuntimeAvailable = Boolean(data.local_tts_runtime_available);
+    STATE.localTtsVoiceQualityPassed = Boolean(data.local_tts_voice_quality_passed);
     STATE.mnnLlmTuningLabel = data.mnn_llm_tuning_label || STATE.mnnLlmTuningLabel || 'SME2 自动调优';
     STATE.mnnSme2Supported = Boolean(data.mnn_sme2_supported);
     STATE.navigationRefreshMode = data.navigation_refresh_mode || STATE.navigationRefreshMode || 'auto';
@@ -385,12 +511,27 @@ export function updateRuntimeUI(data = {}) {
         STATE.navigationRefreshIntervalMs = CONFIG.scanInterval;
     }
     STATE.smartNavigationRefreshEnabled = Boolean(data.smart_navigation_refresh_enabled);
+    STATE.nativeCameraAvailable = Boolean(data.native_camera_available);
+    STATE.nativeCameraRunning = Boolean(data.native_camera_running);
+    STATE.nativeCameraPreviewVisible = Boolean(data.native_camera_preview_visible);
+    STATE.nativeCameraStatus = data.native_camera_status || STATE.nativeCameraStatus || 'idle';
+    STATE.nativeCameraStatusText = data.native_camera_status_text || STATE.nativeCameraStatusText || '';
+    STATE.nativeCameraErrorCode = data.native_camera_error_code || '';
+    STATE.nativeCameraAuthorizationStatus = data.native_camera_authorization_status || STATE.nativeCameraAuthorizationStatus || 'unknown';
+    STATE.nativeCameraHardwareAvailable = Boolean(data.native_camera_hardware_available);
+    syncNativeCameraModeClass();
     setCaptionVisibility(data.captions_enabled !== false);
+    if (STATE.nativeCameraStatus === 'error' || STATE.nativeCameraStatus === 'frame_error') {
+        applyNativeCameraFailure(STATE.nativeCameraStatusText);
+    }
 
     const offlineLabel = data.offline_text_model_label || 'Qwen 文本模型';
     const asrLabel = STATE.asrRuntimeMode === 'local_vosk'
         ? (STATE.localAsrReady ? ' · 本地内置ASR' : ' · 本地内置ASR未就绪')
         : ' · 联网ASR';
+    const ttsLabel = STATE.ttsRuntimeMode === 'local_mnn'
+        ? (STATE.localTtsReady ? ' · 朗读:本地MNN' : ' · 朗读:本地MNN未就绪')
+        : ` · 朗读:${STATE.ttsRuntimeLabel}`;
     const tuningLabel = mode === 'offline_mnn'
         ? ` · ${STATE.mnnLlmTuningLabel}${STATE.mnnSme2Supported ? '' : '（回退）'}`
         : '';
@@ -399,8 +540,8 @@ export function updateRuntimeUI(data = {}) {
         : ` · ${Math.round((STATE.navigationRefreshIntervalMs || CONFIG.scanInterval) / 1000)}秒刷新`;
     const smartLabel = STATE.smartNavigationRefreshEnabled ? ' · 智能刷新' : '';
     const subtitle = mode === 'offline_mnn'
-        ? (STATE.offlineReady ? `银龄智护端侧智能照护版 · 端侧离线 · ${offlineLabel}${tuningLabel}${asrLabel}${refreshLabel}${smartLabel}` : `银龄智护端侧智能照护版 · 端侧离线未就绪 · ${offlineLabel}${tuningLabel}${refreshLabel}${smartLabel}`)
-        : `银龄智护端侧智能照护版 · 联网 DashScope 模式${asrLabel}${refreshLabel}${smartLabel}`;
+        ? (STATE.offlineReady ? `银龄智护端侧智能照护版 · 端侧离线 · ${offlineLabel}${tuningLabel}${asrLabel}${ttsLabel}${refreshLabel}${smartLabel}` : `银龄智护端侧智能照护版 · 端侧离线未就绪 · ${offlineLabel}${tuningLabel}${asrLabel}${ttsLabel}${refreshLabel}${smartLabel}`)
+        : `银龄智护端侧智能照护版 · 联网 DashScope 模式${asrLabel}${ttsLabel}${refreshLabel}${smartLabel}`;
     setText(UI.runtimeSubtitle, subtitle);
 }
 

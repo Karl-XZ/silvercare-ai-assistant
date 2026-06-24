@@ -1,4 +1,4 @@
-export const CARE_STORAGE_KEY = 'silvercare_ai_assistant_data_v1';
+export const CARE_STORAGE_KEY = 'silvercare_ai_assistant_data_v2';
 
 export function cloneCareData(data) {
     return JSON.parse(JSON.stringify(data));
@@ -38,6 +38,9 @@ export function mergeCareData(base, stored = {}) {
     if (Array.isArray(stored.events)) next.events = stored.events;
     if (Array.isArray(stored.tasks)) next.tasks = stored.tasks;
     if (Array.isArray(stored.residents)) next.residents = stored.residents;
+    if (stored.careProfile && typeof stored.careProfile === 'object') {
+        next.careProfile = { ...(next.careProfile || {}), ...stored.careProfile };
+    }
     if (stored.generatedAt) next.generatedAt = stored.generatedAt;
     if (stored.periods && typeof stored.periods === 'object') {
         next.periods = { ...next.periods, ...stored.periods };
@@ -61,9 +64,9 @@ export function appendCareManagementEvent(data, payload = {}) {
 
 export function normalizeCareEvent(payload = {}) {
     const type = String(payload.type || payload.event_type || '').trim();
-    const severity = normalizeSeverity(payload.severity || severityFromType(type));
     const title = String(payload.title || titleFromType(type)).trim();
     const detail = String(payload.detail || payload.reason || payload.description || '老人端上报了一条需要复核的长护服务事件。').trim();
+    const severity = classifyCareSeverity({ ...payload, type, title, detail });
 
     return {
         id: payload.id || `event-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -80,17 +83,19 @@ export function normalizeCareEvent(payload = {}) {
 
 export function buildNavigationCareEvent(data = {}) {
     const priority = String(data.priority || '').toLowerCase();
+    const category = String(data.category || '').toLowerCase();
     const environment = data.environment || {};
     const markers = Array.isArray(environment.markers) ? environment.markers : [];
     const subject = data.subject || markers[0] || environment.risk || data.scene || '前方环境风险';
-    const highRisk = priority === 'critical' || priority === 'high';
-    const mediumRisk = priority === 'medium' || environment.occupancy === 'occupied';
-    if (!highRisk && !mediumRisk) return null;
+    const shouldRecord = ['critical', 'high', 'medium'].includes(priority)
+        || data.target_detected === true
+        || category === 'target';
+    if (!shouldRecord) return null;
 
     return {
-        type: 'navigation_risk',
-        title: highRisk ? '居家行走高风险预警' : '居家环境风险提醒',
-        severity: highRisk ? 'high' : 'medium',
+        type: category === 'target' ? 'target_search' : 'navigation_record',
+        title: category === 'target' ? '寻物导航记录' : '行走导航记录',
+        severity: 'low',
         detail: [
             data.speech || data.thinking || `识别到${subject}`,
             data.direction ? `方向：${data.direction}` : '',
@@ -115,20 +120,45 @@ export function buildTaskCareEvent(task = {}) {
     return {
         type: 'care_task',
         title: task.title || '照护任务状态更新',
-        severity: task.severity || (task.status === 'missed' ? 'medium' : 'low'),
+        severity: classifyCareSeverity({
+            ...task,
+            type: 'care_task',
+            title: task.title || task.name || '',
+            detail: task.detail || ''
+        }),
         detail: task.detail || `${task.name || '照护任务'}：${task.status || '已记录'}`,
         source: '照护任务'
     };
 }
 
 function normalizeSeverity(value) {
-    return ['high', 'medium', 'low'].includes(String(value)) ? String(value) : 'medium';
+    return ['high', 'medium', 'low'].includes(String(value)) ? String(value) : '';
+}
+
+function classifyCareSeverity(payload = {}) {
+    const type = String(payload.type || '').toLowerCase();
+    const status = String(payload.status || '').toLowerCase();
+    const text = [
+        payload.title,
+        payload.detail,
+        payload.reason,
+        payload.description,
+        payload.recordType,
+        payload.name
+    ].map((value) => String(value || '').toLowerCase()).join(' ');
+
+    if (/fall|alarm|跌倒|摔倒|报警/.test(`${type} ${text}`)) return 'high';
+    if (/medication|medicine|drug|用药|吃药|服药|药/.test(`${type} ${text}`)) return 'medium';
+    if (status === 'missed' || /missed|未确认|未响应|症状|头晕|疼|不舒服|复核/.test(`${type} ${text}`)) return 'medium';
+    if (/navigation|target|search|寻物|找|导航|行走|路径/.test(`${type} ${text}`)) return 'low';
+    return normalizeSeverity(payload.severity) || 'low';
 }
 
 function severityFromType(type) {
     if (type.includes('fall') || type.includes('alarm')) return 'high';
-    if (type.includes('task') || type.includes('navigation')) return 'medium';
-    return 'medium';
+    if (type.includes('task')) return 'medium';
+    if (type.includes('navigation') || type.includes('target') || type.includes('search')) return 'low';
+    return 'low';
 }
 
 function titleFromType(type) {
