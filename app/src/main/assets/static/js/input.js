@@ -726,7 +726,7 @@ function startNativeResponseWatchdog() {
         nativeSpeechPendingResult = false;
         nativeSpeechTranscriptReceived = false;
         setRecordingUI(false);
-        updateUserCaption('未识别到清晰语音，请再试一次。');
+        updateUserCaption('语音识别等待超时，请再试一次。');
         updateAiCaption('语音识别超时，请再试一次，或在设置里切换到联网 ASR。');
         showFeedback('语音识别超时', 2600, true);
         if (window.AndroidSilverCare && typeof window.AndroidSilverCare.stopSpeechInquiry === 'function') {

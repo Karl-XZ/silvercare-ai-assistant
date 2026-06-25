@@ -1517,7 +1517,7 @@ public class MainActivity extends Activity
             );
             if (transcript.isEmpty()) {
                 sendSpeechTranscript("");
-                sendError("没有识别到清晰语音。");
+                sendError("没有识别到清晰语音。", "asr_no_speech");
                 return;
             }
             sendSpeechTranscript(transcript);
@@ -1573,8 +1573,16 @@ public class MainActivity extends Activity
     }
 
     private void sendError(String text) {
+        sendError(text, "");
+    }
+
+    private void sendError(String text, String code) {
         try {
-            send(new JSONObject().put("type", "error").put("text", text));
+            JSONObject payload = new JSONObject().put("type", "error").put("text", text);
+            if (code != null && !code.trim().isEmpty()) {
+                payload.put("code", code.trim());
+            }
+            send(payload);
         } catch (Exception ignored) {
         }
     }
@@ -2496,10 +2504,12 @@ public class MainActivity extends Activity
         sendSpeechStatus(true);
         executor.execute(() -> {
             long requestStarted = DiagnosticLogger.start();
+            AudioCaptureResult capture = AudioCaptureResult.empty();
             byte[] pcm = new byte[0];
             Exception recordError = null;
             try {
-                pcm = recordPcmUntilStopped();
+                capture = recordPcmUntilStopped();
+                pcm = capture.pcm;
             } catch (Exception error) {
                 recordError = error;
                 sendError("录音失败：" + readableError(error));
@@ -2517,12 +2527,20 @@ public class MainActivity extends Activity
             try {
                 DiagnosticLogger.event("local_asr_transcribe_pipeline_start", new JSONObject()
                     .put("recorded_pcm_bytes", pcm.length)
+                    .put("audio_source", capture.sourceName)
+                    .put("audio_peak", capture.peak)
+                    .put("audio_rms", capture.rms)
                     .put("elapsed_since_request_ms", DiagnosticLogger.elapsed(requestStarted)));
                 String rawTranscript = transcribeLocalAsrWithTimeout(asrStatus.modelDir, pcm);
                 processRecognizedSpeech(pendingSpeechImageDataUrl, rawTranscript, true);
             } catch (Exception error) {
                 sendSpeechTranscript("");
-                sendError("本地语音识别失败：" + readableError(error));
+                String readable = readableError(error);
+                if (readable.contains("没有识别到清晰语音")) {
+                    sendError("没有识别到清晰语音。请靠近手机麦克风再说一遍。", "asr_no_speech");
+                } else {
+                    sendError("本地语音识别失败：" + readable);
+                }
                 finishSpeechRequest();
                 finishNativeSpeechUi();
             }
@@ -2583,9 +2601,11 @@ public class MainActivity extends Activity
 
         sendSpeechStatus(true);
         executor.execute(() -> {
+            AudioCaptureResult capture = AudioCaptureResult.empty();
             byte[] pcm = new byte[0];
             try {
-                pcm = recordPcmUntilStopped();
+                capture = recordPcmUntilStopped();
+                pcm = capture.pcm;
             } catch (Exception error) {
                 sendError("录音失败：" + readableError(error));
             } finally {
@@ -2606,6 +2626,9 @@ public class MainActivity extends Activity
                 long asrStarted = DiagnosticLogger.start();
                 DiagnosticLogger.event("dashscope_asr_start", new JSONObject()
                     .put("pcm_bytes", pcm.length)
+                    .put("audio_source", capture.sourceName)
+                    .put("audio_peak", capture.peak)
+                    .put("audio_rms", capture.rms)
                     .put("audio_data_chars", audioDataUrl.length()));
                 String transcript = new DashScopeClient(this).transcribe(audioDataUrl);
                 DiagnosticLogger.event("dashscope_asr_end", new JSONObject()
@@ -2621,7 +2644,7 @@ public class MainActivity extends Activity
         });
     }
 
-    private byte[] recordPcmUntilStopped() {
+    private AudioCaptureResult recordPcmUntilStopped() {
         long diagnosticStarted = DiagnosticLogger.start();
         int sampleRate = 16000;
         int minBuffer = AudioRecord.getMinBufferSize(
@@ -2634,17 +2657,9 @@ public class MainActivity extends Activity
         }
 
         int bufferSize = Math.max(minBuffer, sampleRate);
-        AudioRecord recorder = new AudioRecord(
-            MediaRecorder.AudioSource.VOICE_RECOGNITION,
-            sampleRate,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT,
-            bufferSize
-        );
+        AudioRecord recorder = createAudioRecord(sampleRate, bufferSize);
         audioRecord = recorder;
-        if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
-            throw new IllegalStateException("录音器初始化失败。");
-        }
+        String sourceName = audioSourceName(recorder.getAudioSource());
 
         ByteArrayOutputStream pcm = new ByteArrayOutputStream();
         byte[] buffer = new byte[bufferSize];
@@ -2653,10 +2668,14 @@ public class MainActivity extends Activity
             "audio_record_start",
             "sample_rate", sampleRate,
             "buffer_size", bufferSize,
+            "audio_source", sourceName,
             "max_ms", SPEECH_RECORDING_MAX_MS
         );
         recorder.startRecording();
         boolean stoppedByMax = false;
+        long squareSum = 0L;
+        long sampleCount = 0L;
+        int peak = 0;
         while (wavRecording.get()) {
             if (System.currentTimeMillis() - startedAt > SPEECH_RECORDING_MAX_MS) {
                 wavRecording.set(false);
@@ -2666,17 +2685,89 @@ public class MainActivity extends Activity
             int read = recorder.read(buffer, 0, buffer.length);
             if (read > 0) {
                 pcm.write(buffer, 0, read);
+                for (int i = 0; i + 1 < read; i += 2) {
+                    int low = buffer[i] & 0xff;
+                    int high = buffer[i + 1];
+                    int sample = (short) ((high << 8) | low);
+                    int abs = Math.abs(sample);
+                    if (abs > peak) peak = abs;
+                    squareSum += (long) sample * (long) sample;
+                    sampleCount += 1;
+                }
             }
         }
         byte[] bytes = pcm.toByteArray();
+        double rms = sampleCount == 0 ? 0.0d : Math.sqrt(squareSum / (double) sampleCount);
         DiagnosticLogger.eventPairs(
             "audio_record_end",
             "elapsed_ms", DiagnosticLogger.elapsed(diagnosticStarted),
             "pcm_bytes", bytes.length,
             "approx_audio_ms", Math.round(bytes.length / 2.0d / sampleRate * 1000.0d),
+            "audio_source", sourceName,
+            "peak", peak,
+            "rms", Math.round(rms),
             "stopped_by_max", stoppedByMax
         );
-        return bytes;
+        return new AudioCaptureResult(bytes, sourceName, peak, Math.round(rms));
+    }
+
+    private AudioRecord createAudioRecord(int sampleRate, int bufferSize) {
+        int[] sources = new int[] {
+            MediaRecorder.AudioSource.MIC,
+            MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            MediaRecorder.AudioSource.DEFAULT
+        };
+        StringBuilder errors = new StringBuilder();
+        for (int source : sources) {
+            AudioRecord recorder = null;
+            try {
+                recorder = new AudioRecord(
+                    source,
+                    sampleRate,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT,
+                    bufferSize
+                );
+                if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                    return recorder;
+                }
+                errors.append(audioSourceName(source)).append(": not initialized; ");
+            } catch (Exception error) {
+                errors.append(audioSourceName(source)).append(": ").append(readableError(error)).append("; ");
+            }
+            if (recorder != null) {
+                try {
+                    recorder.release();
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        throw new IllegalStateException("录音器初始化失败：" + errors);
+    }
+
+    private static String audioSourceName(int source) {
+        if (source == MediaRecorder.AudioSource.MIC) return "MIC";
+        if (source == MediaRecorder.AudioSource.VOICE_RECOGNITION) return "VOICE_RECOGNITION";
+        if (source == MediaRecorder.AudioSource.DEFAULT) return "DEFAULT";
+        return "source_" + source;
+    }
+
+    private static final class AudioCaptureResult {
+        final byte[] pcm;
+        final String sourceName;
+        final int peak;
+        final long rms;
+
+        AudioCaptureResult(byte[] pcm, String sourceName, int peak, long rms) {
+            this.pcm = pcm == null ? new byte[0] : pcm;
+            this.sourceName = sourceName == null ? "" : sourceName;
+            this.peak = peak;
+            this.rms = rms;
+        }
+
+        static AudioCaptureResult empty() {
+            return new AudioCaptureResult(new byte[0], "", 0, 0L);
+        }
     }
 
     private void stopSpeechInquiry() {

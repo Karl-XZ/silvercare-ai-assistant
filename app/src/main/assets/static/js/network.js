@@ -129,10 +129,12 @@ function handleServerMessage(data) {
             break;
         case 'runtime_status': updateRuntimeUI(data); break;
         case 'speech_transcript':
-            updateUserCaption(data.text || '未识别到清晰语音，请再试一次。');
             if (data.text) {
+                updateUserCaption(data.text);
                 markNativeTranscriptReady();
                 updateAiCaption('正在思考...');
+            } else {
+                updateUserCaption('语音已提交，正在确认识别结果...');
             }
             break;
         case 'speech_transcript_correction':
@@ -174,7 +176,7 @@ function handleServerMessage(data) {
             markNativeResponseDone();
             STATE.speechListening = false;
             setRecordingUI(false);
-            if (/语音|录音|ASR|识别/.test(data.text || '')) {
+            if (data.code === 'asr_no_speech') {
                 updateUserCaption('未识别到清晰语音，请再试一次。');
             }
             updateAiCaption(data.text || '发生错误');
