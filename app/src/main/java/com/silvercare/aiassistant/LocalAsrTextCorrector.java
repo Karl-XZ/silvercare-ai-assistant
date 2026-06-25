@@ -51,6 +51,7 @@ final class LocalAsrTextCorrector {
     static String fastCorrect(String value) {
         String text = sanitize(value);
         if (text.isEmpty()) return "";
+        if (looksLikeAsrContextPromptLeak(text)) return "";
         return text
             .replace("我的晚", "我的碗")
             .replace("到我的晚", "到我的碗")
@@ -59,6 +60,13 @@ final class LocalAsrTextCorrector {
             .replace("手几", "手机")
             .replace("关闭影导", "关闭引导")
             .replace("影导", "引导");
+    }
+
+    private static boolean looksLikeAsrContextPromptLeak(String value) {
+        String normalized = sanitize(value).replace(" ", "");
+        return normalized.contains("银龄智护盲人导航助手")
+            || normalized.contains("常见词：找门")
+            || normalized.contains("找水杯、按电梯上行按钮、巡路");
     }
 
     static String sanitize(String value) {

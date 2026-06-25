@@ -37,6 +37,14 @@ public class LocalAsrTextCorrectorTest {
     }
 
     @Test
+    public void fastCorrectDropsAsrContextPromptLeak() {
+        assertThat(
+            LocalAsrTextCorrector.fastCorrect("银龄智护 盲人导航助手。常见词：找门、找水杯、按电梯上行按钮、巡路、障碍物、跌倒、厨房、办公室。"),
+            equalTo("")
+        );
+    }
+
+    @Test
     public void promptIncludesAsrContextAndRawTranscript() {
         String prompt = LocalAsrTextCorrector.prompt("关闭影导");
 

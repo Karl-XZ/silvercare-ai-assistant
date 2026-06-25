@@ -67,6 +67,39 @@ public class DashScopeClientTest {
     }
 
     @Test
+    public void transcribeSkipsPromptEchoAndUsesRealTranscriptCandidate() throws Exception {
+        TestFakes.Settings settings = new TestFakes.Settings();
+        settings.apiBaseUrl = "https://example.test/api";
+        RecordingTransport transport = new RecordingTransport(new JSONObject("""
+            {"output":{"choices":[{"message":{"content":[
+              {"text":"银龄智护 盲人导航助手。常见词：找门、找水杯、按电梯上行按钮、巡路、障碍物、跌倒、厨房、办公室。"},
+              {"text":"你好"}
+            ]}}]}}
+            """));
+        DashScopeClient client = new DashScopeClient(settings, transport);
+
+        String transcript = client.transcribe("data:audio/webm;base64,abc");
+
+        assertThat(transcript, equalTo("你好"));
+    }
+
+    @Test
+    public void transcribeReturnsEmptyWhenOnlyPromptEchoIsReturned() throws Exception {
+        TestFakes.Settings settings = new TestFakes.Settings();
+        settings.apiBaseUrl = "https://example.test/api";
+        RecordingTransport transport = new RecordingTransport(new JSONObject("""
+            {"output":{"choices":[{"message":{"content":[
+              {"text":"银龄智护 盲人导航助手。常见词：找门、找水杯、按电梯上行按钮、巡路、障碍物、跌倒、厨房、办公室。"}
+            ]}}]}}
+            """));
+        DashScopeClient client = new DashScopeClient(settings, transport);
+
+        String transcript = client.transcribe("data:audio/webm;base64,abc");
+
+        assertThat(transcript, equalTo(""));
+    }
+
+    @Test
     public void synthesizeSpeechBuildsQwenTtsPayloadAndParsesAudioUrl() throws Exception {
         TestFakes.Settings settings = new TestFakes.Settings();
         settings.apiBaseUrl = "https://example.test/api";

@@ -11,6 +11,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 final class DashScopeClient implements SilverCareArtificialIntelligenceClient {
+    private static final String ASR_CONTEXT_PROMPT =
+        "银龄智护 盲人导航助手。常见词：找门、找水杯、按电梯上行按钮、巡路、障碍物、跌倒、厨房、办公室。";
+
     private final SilverCareArtificialIntelligenceClient.SettingsProvider settings;
     private final JsonTransport transport;
 
@@ -95,8 +98,7 @@ final class DashScopeClient implements SilverCareArtificialIntelligenceClient {
                     .put(new JSONObject()
                     .put("role", "system")
                     .put("content", new JSONArray()
-                            .put(new JSONObject().put("text",
-                                "银龄智护 盲人导航助手。常见词：找门、找水杯、按电梯上行按钮、巡路、障碍物、跌倒、厨房、办公室。"))))
+                            .put(new JSONObject().put("text", ASR_CONTEXT_PROMPT))))
                     .put(new JSONObject()
                         .put("role", "user")
                         .put("content", new JSONArray()
@@ -112,11 +114,35 @@ final class DashScopeClient implements SilverCareArtificialIntelligenceClient {
             .getJSONObject(0)
             .getJSONObject("message")
             .getJSONArray("content");
-        String output = content.length() == 0 ? "" : content.getJSONObject(0).optString("text", "");
+        String output = transcriptFromContent(content);
         DiagnosticLogger.event("dashscope_transcribe_end", new JSONObject()
             .put("elapsed_ms", DiagnosticLogger.elapsed(diagnosticStarted))
             .put("text", DiagnosticLogger.excerpt(output)));
         return output;
+    }
+
+    private static String transcriptFromContent(JSONArray content) {
+        if (content == null || content.length() == 0) return "";
+        for (int index = 0; index < content.length(); index += 1) {
+            JSONObject item = content.optJSONObject(index);
+            if (item == null) continue;
+            String text = item.optString("text", "").trim();
+            if (text.isEmpty()) text = item.optString("transcript", "").trim();
+            if (text.isEmpty()) text = item.optString("sentence", "").trim();
+            if (text.isEmpty() || isAsrContextPromptLeak(text)) continue;
+            return text;
+        }
+        return "";
+    }
+
+    private static boolean isAsrContextPromptLeak(String text) {
+        String clean = text == null ? "" : text.trim();
+        if (clean.isEmpty()) return false;
+        String normalized = clean.replace(" ", "");
+        return normalized.contains("银龄智护盲人导航助手")
+            || normalized.contains("常见词：找门")
+            || normalized.contains("找水杯、按电梯上行按钮、巡路")
+            || normalized.equals(ASR_CONTEXT_PROMPT.replace(" ", ""));
     }
 
     public String synthesizeSpeechUrl(String text) throws Exception {
