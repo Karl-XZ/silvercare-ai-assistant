@@ -4,6 +4,8 @@ enum AsrRuntimeMode {
     LOCAL_VOSK("local_vosk", "本地内置 ASR"),
     DASHSCOPE("dashscope", "联网 DashScope");
 
+    static final AsrRuntimeMode DEFAULT = DASHSCOPE;
+
     final String value;
     final String label;
 
@@ -18,6 +20,7 @@ enum AsrRuntimeMode {
 
     static AsrRuntimeMode from(String value) {
         if (DASHSCOPE.value.equals(value)) return DASHSCOPE;
-        return LOCAL_VOSK;
+        if (LOCAL_VOSK.value.equals(value)) return LOCAL_VOSK;
+        return DEFAULT;
     }
 }

@@ -7,8 +7,8 @@ import static org.hamcrest.Matchers.equalTo;
 
 public class TtsRuntimeModeTest {
     @Test
-    public void unknownValueFallsBackToAuto() {
-        assertThat(TtsRuntimeMode.from("bad"), equalTo(TtsRuntimeMode.AUTO));
+    public void unknownValueFallsBackToDashScope() {
+        assertThat(TtsRuntimeMode.from("bad"), equalTo(TtsRuntimeMode.DASHSCOPE));
     }
 
     @Test

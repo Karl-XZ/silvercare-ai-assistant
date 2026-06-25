@@ -7,8 +7,8 @@ import static org.hamcrest.Matchers.equalTo;
 
 public class NavigationRefreshModeTest {
     @Test
-    public void unknownValueFallsBackToAuto() {
-        assertThat(NavigationRefreshMode.from("bad"), equalTo(NavigationRefreshMode.AUTO));
+    public void unknownValueFallsBackToManual() {
+        assertThat(NavigationRefreshMode.from("bad"), equalTo(NavigationRefreshMode.MANUAL));
     }
 
     @Test

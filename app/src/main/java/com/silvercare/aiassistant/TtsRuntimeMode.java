@@ -6,6 +6,8 @@ enum TtsRuntimeMode {
     SYSTEM("system", "手机系统 TTS（本地）"),
     DASHSCOPE("dashscope", "联网 DashScope");
 
+    static final TtsRuntimeMode DEFAULT = DASHSCOPE;
+
     final String value;
     final String label;
 
@@ -31,6 +33,6 @@ enum TtsRuntimeMode {
         for (TtsRuntimeMode mode : values()) {
             if (mode.value.equals(value)) return mode;
         }
-        return AUTO;
+        return DEFAULT;
     }
 }

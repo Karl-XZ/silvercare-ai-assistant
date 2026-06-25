@@ -4,6 +4,8 @@ enum NavigationRefreshMode {
     AUTO("auto", "自动刷新"),
     MANUAL("manual", "手动刷新");
 
+    static final NavigationRefreshMode DEFAULT = MANUAL;
+
     final String value;
     final String label;
 
@@ -16,7 +18,7 @@ enum NavigationRefreshMode {
         for (NavigationRefreshMode mode : values()) {
             if (mode.value.equals(value)) return mode;
         }
-        return AUTO;
+        return DEFAULT;
     }
 
     boolean isManual() {

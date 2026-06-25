@@ -4,6 +4,8 @@ enum AiRuntimeMode {
     DASHSCOPE("dashscope", "联网 DashScope"),
     OFFLINE_MNN("offline_mnn", "端侧离线 MNN");
 
+    static final AiRuntimeMode DEFAULT = DASHSCOPE;
+
     final String value;
     final String label;
 
@@ -16,7 +18,7 @@ enum AiRuntimeMode {
         for (AiRuntimeMode mode : values()) {
             if (mode.value.equals(value)) return mode;
         }
-        return DASHSCOPE;
+        return DEFAULT;
     }
 
     boolean isOffline() {

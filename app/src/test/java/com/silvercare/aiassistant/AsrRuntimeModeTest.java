@@ -16,12 +16,12 @@ public class AsrRuntimeModeTest {
     }
 
     @Test
-    public void defaultsUnknownValuesToLocalVosk() {
+    public void defaultsUnknownValuesToDashScope() {
         AsrRuntimeMode mode = AsrRuntimeMode.from("unknown");
 
-        assertThat(mode, equalTo(AsrRuntimeMode.LOCAL_VOSK));
-        assertThat(mode.isLocal(), equalTo(true));
-        assertThat(mode.value, equalTo("local_vosk"));
-        assertThat(mode.label, equalTo("本地内置 ASR"));
+        assertThat(mode, equalTo(AsrRuntimeMode.DASHSCOPE));
+        assertThat(mode.isLocal(), equalTo(false));
+        assertThat(mode.value, equalTo("dashscope"));
+        assertThat(mode.label, equalTo("联网 DashScope"));
     }
 }

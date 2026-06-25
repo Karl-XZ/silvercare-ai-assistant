@@ -366,7 +366,7 @@ export function updateStatus(text, stateClass = '', options = {}) {
 }
 
 export function updateRuntimeUI(data = {}) {
-    const mode = data.ai_runtime_mode || data.mode || STATE.aiRuntimeMode || 'offline_mnn';
+    const mode = data.ai_runtime_mode || data.mode || STATE.aiRuntimeMode || 'dashscope';
     const label = data.runtime_label || (mode === 'offline_mnn' ? '端侧离线 MNN' : '联网 DashScope');
     STATE.aiRuntimeMode = mode;
     STATE.runtimeLabel = label;
@@ -377,7 +377,7 @@ export function updateRuntimeUI(data = {}) {
     STATE.localAsrReady = Boolean(data.local_asr_ready);
     STATE.mnnLlmTuningLabel = data.mnn_llm_tuning_label || STATE.mnnLlmTuningLabel || 'SME2 自动调优';
     STATE.mnnSme2Supported = Boolean(data.mnn_sme2_supported);
-    STATE.navigationRefreshMode = data.navigation_refresh_mode || STATE.navigationRefreshMode || 'auto';
+    STATE.navigationRefreshMode = data.navigation_refresh_mode || STATE.navigationRefreshMode || 'manual';
     STATE.navigationRefreshLabel = data.navigation_refresh_label || (STATE.navigationRefreshMode === 'manual' ? '手动刷新' : '自动刷新');
     const intervalMs = Number(data.navigation_refresh_interval_ms);
     if (Number.isFinite(intervalMs)) {

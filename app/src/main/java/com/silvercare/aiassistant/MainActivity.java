@@ -339,7 +339,7 @@ public class MainActivity extends Activity
     }
 
     private AiRuntimeMode currentRuntimeMode() {
-        return AiRuntimeMode.from(preferences.getString(KEY_AI_RUNTIME_MODE, AiRuntimeMode.DASHSCOPE.value));
+        return AiRuntimeMode.from(preferences.getString(KEY_AI_RUNTIME_MODE, AiRuntimeMode.DEFAULT.value));
     }
 
     private void showInitialRuntimePromptIfNeeded() {
@@ -808,7 +808,7 @@ public class MainActivity extends Activity
             .setPositiveButton("保存", (dialog, which) -> {
                 RadioButton checked = group.findViewById(group.getCheckedRadioButtonId());
                 NavigationRefreshMode selected = checked == null
-                    ? NavigationRefreshMode.AUTO
+                    ? NavigationRefreshMode.DEFAULT
                     : (NavigationRefreshMode) checked.getTag();
                 int intervalSeconds = clampNavigationRefreshSeconds(intervalInput.getText().toString());
                 preferences.edit()
@@ -964,7 +964,7 @@ public class MainActivity extends Activity
             .setPositiveButton("保存", (dialog, which) -> {
                 RadioButton checked = group.findViewById(group.getCheckedRadioButtonId());
                 AsrRuntimeMode selected = checked == null
-                    ? AsrRuntimeMode.LOCAL_VOSK
+                    ? AsrRuntimeMode.DEFAULT
                     : (AsrRuntimeMode) checked.getTag();
                 preferences.edit().putString(KEY_ASR_RUNTIME_MODE, selected.value).apply();
                 sendRuntimeStatus();
@@ -1047,7 +1047,7 @@ public class MainActivity extends Activity
             .setPositiveButton("保存", (dialog, which) -> {
                 RadioButton checked = group.findViewById(group.getCheckedRadioButtonId());
                 TtsRuntimeMode selected = checked == null
-                    ? TtsRuntimeMode.AUTO
+                    ? TtsRuntimeMode.DEFAULT
                     : (TtsRuntimeMode) checked.getTag();
                 if (selected == TtsRuntimeMode.LOCAL_MNN && !LOCAL_MNN_TTS_VOICE_QUALITY_ENABLED) {
                     selected = TtsRuntimeMode.SYSTEM;
@@ -1766,33 +1766,28 @@ public class MainActivity extends Activity
         if (saved != null && !saved.trim().isEmpty()) {
             return AsrRuntimeMode.from(saved);
         }
-        if (preferences.contains(KEY_LEGACY_LOCAL_ASR_ENABLED)) {
-            return preferences.getBoolean(KEY_LEGACY_LOCAL_ASR_ENABLED, true)
-                ? AsrRuntimeMode.LOCAL_VOSK
-                : AsrRuntimeMode.DASHSCOPE;
-        }
-        return AsrRuntimeMode.LOCAL_VOSK;
+        return AsrRuntimeMode.DEFAULT;
     }
 
     private TtsRuntimeMode currentTtsRuntimeMode() {
         return TtsRuntimeMode.from(preferences.getString(
             KEY_TTS_RUNTIME_MODE,
-            TtsRuntimeMode.AUTO.value
+            TtsRuntimeMode.DEFAULT.value
         ));
     }
 
     private void migrateDisabledLocalMnnTtsPreference() {
         if (LOCAL_MNN_TTS_VOICE_QUALITY_ENABLED) return;
-        String stored = preferences.getString(KEY_TTS_RUNTIME_MODE, TtsRuntimeMode.AUTO.value);
+        String stored = preferences.getString(KEY_TTS_RUNTIME_MODE, TtsRuntimeMode.DEFAULT.value);
         if (TtsRuntimeMode.LOCAL_MNN.value.equals(stored) || "local_qwen".equals(stored)) {
-            preferences.edit().putString(KEY_TTS_RUNTIME_MODE, TtsRuntimeMode.SYSTEM.value).apply();
+            preferences.edit().putString(KEY_TTS_RUNTIME_MODE, TtsRuntimeMode.DEFAULT.value).apply();
         }
     }
 
     private NavigationRefreshMode currentNavigationRefreshMode() {
         return NavigationRefreshMode.from(preferences.getString(
             KEY_NAVIGATION_REFRESH_MODE,
-            NavigationRefreshMode.AUTO.value
+            NavigationRefreshMode.DEFAULT.value
         ));
     }
 

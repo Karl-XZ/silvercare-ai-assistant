@@ -256,22 +256,22 @@ export function connectWS() {
     if (hasNativeBridge()) {
         STATE.nativeMode = true;
         STATE.ws = null;
-        const runtimeMode = safeNativeString('aiRuntimeMode', 'offline_mnn');
+        const runtimeMode = safeNativeString('aiRuntimeMode', 'dashscope');
         const runtimeLabel = safeNativeString('runtimeDisplayName', runtimeMode === 'offline_mnn' ? '端侧离线 MNN' : '联网 DashScope');
         const offlineReady = safeNativeBoolean('offlineModelReady', false);
         updateRuntimeUI({
             ai_runtime_mode: runtimeMode,
             runtime_label: runtimeLabel,
             offline_ready: offlineReady,
-            asr_runtime_mode: safeNativeString('asrRuntimeMode', 'local_vosk'),
-            asr_runtime_label: safeNativeString('asrRuntimeDisplayName', '本地内置 ASR'),
+            asr_runtime_mode: safeNativeString('asrRuntimeMode', 'dashscope'),
+            asr_runtime_label: safeNativeString('asrRuntimeDisplayName', '联网 DashScope'),
             local_asr_enabled: safeNativeBoolean('localAsrEnabled', false),
             local_asr_ready: safeNativeBoolean('localAsrReady', false),
             mnn_llm_tuning_mode: safeNativeString('mnnLlmTuningMode', 'auto'),
             mnn_llm_tuning_label: safeNativeString('mnnLlmTuningDisplayName', 'SME2 自动调优'),
             mnn_sme2_supported: safeNativeBoolean('mnnSme2Supported', false),
-            navigation_refresh_mode: safeNativeString('navigationRefreshMode', 'auto'),
-            navigation_refresh_label: safeNativeString('navigationRefreshDisplayName', '自动刷新'),
+            navigation_refresh_mode: safeNativeString('navigationRefreshMode', 'manual'),
+            navigation_refresh_label: safeNativeString('navigationRefreshDisplayName', '手动刷新'),
             navigation_refresh_interval_ms: safeNativeNumber('navigationRefreshIntervalMs', 3000),
             smart_navigation_refresh_enabled: safeNativeBoolean('smartNavigationRefreshEnabled', false),
             captions_enabled: safeNativeBoolean('captionsEnabled', true)
