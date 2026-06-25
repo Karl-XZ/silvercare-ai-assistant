@@ -129,20 +129,44 @@ final class DashScopeClient implements SilverCareArtificialIntelligenceClient {
             String text = item.optString("text", "").trim();
             if (text.isEmpty()) text = item.optString("transcript", "").trim();
             if (text.isEmpty()) text = item.optString("sentence", "").trim();
-            if (text.isEmpty() || isAsrContextPromptLeak(text)) continue;
+            text = stripAsrContextPromptLeak(text);
+            if (text.isEmpty()) continue;
             return text;
         }
         return "";
     }
 
-    private static boolean isAsrContextPromptLeak(String text) {
+    private static String stripAsrContextPromptLeak(String text) {
         String clean = text == null ? "" : text.trim();
-        if (clean.isEmpty()) return false;
+        if (clean.isEmpty()) return "";
+        clean = clean.replace(ASR_CONTEXT_PROMPT, " ");
+
+        int start = clean.indexOf("银龄智护");
+        int common = clean.indexOf("常见词");
+        if (start < 0 && common >= 0) start = common;
+        if (start >= 0 && common >= start && clean.indexOf("找水杯", common) >= 0) {
+            int end = contextPromptEnd(clean, common);
+            if (end >= 0) {
+                clean = (clean.substring(0, start) + " " + clean.substring(end)).trim();
+            }
+        }
+
         String normalized = clean.replace(" ", "");
-        return normalized.contains("银龄智护盲人导航助手")
+        if (normalized.contains("银龄智护盲人导航助手")
             || normalized.contains("常见词：找门")
-            || normalized.contains("找水杯、按电梯上行按钮、巡路")
-            || normalized.equals(ASR_CONTEXT_PROMPT.replace(" ", ""));
+            || normalized.contains("找水杯、按电梯上行按钮、巡路")) {
+            return "";
+        }
+        return clean.replaceAll("\\s+", " ").trim();
+    }
+
+    private static int contextPromptEnd(String text, int from) {
+        String[] endings = {"办公室。", "办公室.", "办公室"};
+        for (String ending : endings) {
+            int index = text.indexOf(ending, from);
+            if (index >= 0) return index + ending.length();
+        }
+        return -1;
     }
 
     public String synthesizeSpeechUrl(String text) throws Exception {
