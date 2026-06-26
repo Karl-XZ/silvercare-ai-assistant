@@ -8,6 +8,7 @@ import { toggleSystem, checkDebugOverlay, refreshNavigationOnce } from './main.j
 import {
     FALL_DEFAULTS,
     computeVisualEvidence as computeVisualEvidenceCore,
+    fallConfigForSensitivity,
     hasFallImpact,
     isRecoveredFromFall,
     nextBaselineGravity,
@@ -30,7 +31,6 @@ import {
 import { sendInquiryData } from './network.js';
 import { buildFallCareEvent } from './care_store.js';
 
-const FALL = FALL_DEFAULTS;
 const MIN_NATIVE_SPEECH_MS = 850;
 const MAX_NATIVE_SPEECH_MS = 15000;
 const NATIVE_ASR_RESPONSE_TIMEOUT_MS = 35000;
@@ -72,7 +72,7 @@ function notifyNativeSpeechBusy() {
 }
 let fallAlertEvidence = null;
 let fallCountdownTimer = null;
-let fallCountdownLeft = FALL.countdownSeconds;
+let fallCountdownLeft = FALL_DEFAULTS.countdownSeconds;
 let fallRecoveryStableSince = 0;
 let lastFallTriggerAt = 0;
 
@@ -89,7 +89,7 @@ function logDiagnostic(event, data = {}) {
 export function setupInputs() {
     setupCommandButtons();
     setupFallActions();
-    window.setInterval(sampleVideoFrame, FALL.sampleIntervalMs);
+    window.setInterval(sampleVideoFrame, FALL_DEFAULTS.sampleIntervalMs);
     window.setTimeout(() => {
         speakIfVoiceFirst(
             '银龄智护 已就绪。双击屏幕启动或停止导航。长按屏幕提问。点右上角设置可以切换联网或端侧离线方案，并修改语音优先模式和跌倒检测。',
@@ -290,7 +290,8 @@ function processFallMotion(sensor) {
         return true;
     }
 
-    const impact = hasFallImpact(sensor, FALL);
+    const config = currentFallConfig();
+    const impact = hasFallImpact(sensor, config);
 
     if (pendingFallProbe) {
         pendingFallProbe.maxAcc = Math.max(pendingFallProbe.maxAcc, sensor.accMagnitude);
@@ -299,7 +300,7 @@ function processFallMotion(sensor) {
         return impact;
     }
 
-    if (!impact || Date.now() - lastFallTriggerAt < FALL.cooldownMs) return false;
+    if (!impact || Date.now() - lastFallTriggerAt < config.cooldownMs) return false;
 
     pendingFallProbe = {
         startedAt: Date.now(),
@@ -309,7 +310,7 @@ function processFallMotion(sensor) {
         maxRotation: sensor.rotationMagnitude
     };
 
-    window.setTimeout(evaluateFallProbe, FALL.probeDelayMs);
+    window.setTimeout(evaluateFallProbe, config.probeDelayMs);
     return true;
 }
 
@@ -324,23 +325,39 @@ function isFallDetectionEnabled() {
     return false;
 }
 
+function currentFallSensitivityLevel() {
+    try {
+        if (window.AndroidSilverCare && typeof window.AndroidSilverCare.fallDetectionSensitivity === 'function') {
+            return window.AndroidSilverCare.fallDetectionSensitivity();
+        }
+    } catch (error) {
+        console.error('Fall sensitivity read failed:', error);
+    }
+    return 10;
+}
+
+function currentFallConfig() {
+    return fallConfigForSensitivity(currentFallSensitivityLevel());
+}
+
 function updateBaselineGravity(sensor) {
     baselineGravity = nextBaselineGravity(baselineGravity, sensor, fallAlertActive);
 }
 
 function sampleVideoFrame() {
     if (!STATE.active || !isFallDetectionEnabled() || !UI.cam?.videoWidth || !UI.cam?.videoHeight) return;
+    const config = currentFallConfig();
 
     if (!visualCanvas) {
         visualCanvas = document.createElement('canvas');
-        visualCanvas.width = FALL.sampleWidth;
-        visualCanvas.height = FALL.sampleHeight;
+        visualCanvas.width = config.sampleWidth;
+        visualCanvas.height = config.sampleHeight;
         visualCtx = visualCanvas.getContext('2d', { willReadFrequently: true });
     }
 
-    visualCtx.drawImage(UI.cam, 0, 0, FALL.sampleWidth, FALL.sampleHeight);
-    const rgba = visualCtx.getImageData(0, 0, FALL.sampleWidth, FALL.sampleHeight).data;
-    const gray = new Uint8Array(FALL.sampleWidth * FALL.sampleHeight);
+    visualCtx.drawImage(UI.cam, 0, 0, config.sampleWidth, config.sampleHeight);
+    const rgba = visualCtx.getImageData(0, 0, config.sampleWidth, config.sampleHeight).data;
+    const gray = new Uint8Array(config.sampleWidth * config.sampleHeight);
     let brightnessTotal = 0;
 
     for (let i = 0, p = 0; i < rgba.length; i += 4, p += 1) {
@@ -365,7 +382,7 @@ function sampleVideoFrame() {
         brightness: brightnessTotal / (gray.length * 255)
     });
 
-    const cutoff = now - FALL.bufferWindowMs;
+    const cutoff = now - config.bufferWindowMs;
     visualSamples = visualSamples.filter((sample) => sample.time >= cutoff);
 }
 
@@ -374,8 +391,9 @@ function evaluateFallProbe() {
     pendingFallProbe = null;
     if (!probe || fallAlertActive || !STATE.active || !isFallDetectionEnabled()) return;
 
-    const visual = computeVisualEvidence(FALL.bufferWindowMs);
-    if (!shouldConfirmFall(probe, visual, FALL)) return;
+    const config = currentFallConfig();
+    const visual = computeVisualEvidence(config.bufferWindowMs, config);
+    if (!shouldConfirmFall(probe, visual, config)) return;
 
     lastFallTriggerAt = Date.now();
     triggerFallAlert({
@@ -389,18 +407,19 @@ function evaluateFallProbe() {
     });
 }
 
-function computeVisualEvidence(windowMs) {
-    return computeVisualEvidenceCore(visualSamples, windowMs, Date.now(), FALL);
+function computeVisualEvidence(windowMs, config = currentFallConfig()) {
+    return computeVisualEvidenceCore(visualSamples, windowMs, Date.now(), config);
 }
 
 function triggerFallAlert(evidence) {
+    const config = currentFallConfig();
     fallAlertActive = true;
     fallAlertStartedAt = Date.now();
     fallAlertEvidence = evidence;
-    fallCountdownLeft = FALL.countdownSeconds;
+    fallCountdownLeft = config.countdownSeconds;
     fallRecoveryStableSince = 0;
 
-    const message = `检测到手机冲击和最近 ${Math.round(FALL.bufferWindowMs / 1000)} 秒画面剧烈变化。若你没事，请点击“我没事”。`;
+    const message = `检测到手机冲击和最近 ${Math.round(config.bufferWindowMs / 1000)} 秒画面剧烈变化。若你没事，请点击“我没事”。`;
     showFallAlert(
         fallCountdownLeft,
         message,
@@ -419,8 +438,9 @@ function triggerFallAlert(evidence) {
 
 function monitorFallRecovery(sensor) {
     if (!fallAlertEvidence?.baseline || !currentGravity) return;
+    const config = currentFallConfig();
 
-    const recovered = isRecoveredFromFall(fallAlertEvidence.baseline, currentGravity, sensor, FALL);
+    const recovered = isRecoveredFromFall(fallAlertEvidence.baseline, currentGravity, sensor, config);
 
     if (!recovered) {
         fallRecoveryStableSince = 0;
@@ -432,7 +452,7 @@ function monitorFallRecovery(sensor) {
         return;
     }
 
-    const stableLongEnough = Date.now() - fallRecoveryStableSince >= FALL.recoveryHoldMs;
+    const stableLongEnough = Date.now() - fallRecoveryStableSince >= config.recoveryHoldMs;
     const alertVisibleLongEnough = Date.now() - fallAlertStartedAt >= 2200;
     if (stableLongEnough && alertVisibleLongEnough) {
         cancelFallAlert('检测到姿态恢复，已取消报警');

@@ -42,6 +42,7 @@ import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -105,6 +106,7 @@ public class MainActivity extends Activity
     private static final String KEY_CAPTIONS_ENABLED = "captions_enabled";
     private static final String KEY_VOICE_FIRST_ENABLED = "voice_first_enabled";
     private static final String KEY_FALL_DETECTION_ENABLED = "fall_detection_enabled";
+    private static final String KEY_FALL_DETECTION_SENSITIVITY = "fall_detection_sensitivity";
     private static final String KEY_MNN_LLM_TUNING_MODE = "mnn_llm_tuning_mode";
     private static final String KEY_NAVIGATION_REFRESH_MODE = "navigation_refresh_mode";
     private static final String KEY_NAVIGATION_REFRESH_INTERVAL_SECONDS = "navigation_refresh_interval_seconds";
@@ -112,6 +114,7 @@ public class MainActivity extends Activity
     private static final long SPEECH_RECORDING_MAX_MS = 15_000L;
     private static final long LOCAL_ASR_TRANSCRIBE_TIMEOUT_MS = 20_000L;
     private static final long LOCAL_ASR_CORRECTION_TIMEOUT_MS = 2_000L;
+    private static final int DEFAULT_FALL_DETECTION_SENSITIVITY = 10;
 
     private WebView webView;
     private WebViewAssetLoader assetLoader;
@@ -476,7 +479,7 @@ public class MainActivity extends Activity
         String ttsText = ttsSettingsText();
         String captionsText = isCaptionsEnabledInternal() ? "语音字幕：已开启" : "语音字幕：已关闭";
         String voiceText = isVoiceFirstEnabledInternal() ? "语音优先模式：已开启" : "语音优先模式：已关闭";
-        String fallText = isFallDetectionEnabledInternal() ? "跌倒检测：已开启" : "跌倒检测：已关闭";
+        String fallText = fallDetectionSettingsText();
         String refreshText = navigationRefreshSettingsText();
         String presetText = "一键切换全部：本地或云端";
         String[] items = new String[] {
@@ -1404,19 +1407,63 @@ public class MainActivity extends Activity
 
     private void showFallDetectionDialog() {
         boolean enabled = isFallDetectionEnabledInternal();
-        String action = enabled ? "关闭" : "开启";
+        int sensitivity = fallDetectionSensitivityInternal();
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        int padding = (int) (16 * getResources().getDisplayMetrics().density);
+        layout.setPadding(padding, 0, padding, 0);
+
+        TextView message = new TextView(this);
+        message.setText("使用本机加速度/陀螺仪和最近几秒摄像头画面变化进行判断，不把单帧画面发给 AI 做确认。检测到疑似摔倒后会先询问，10 秒内未取消才发送报警事件。\n\n敏感度 10 等于当前最高敏感度；数值越低越不敏感，可以减少误报，但可能漏掉较轻微的摔倒。");
+        message.setTextSize(14);
+        layout.addView(message);
+
+        CheckBox enabledBox = new CheckBox(this);
+        enabledBox.setText("开启跌倒检测");
+        enabledBox.setChecked(enabled);
+        layout.addView(enabledBox);
+
+        TextView sensitivityLabel = new TextView(this);
+        sensitivityLabel.setText(fallSensitivityLabel(sensitivity));
+        layout.addView(sensitivityLabel);
+
+        SeekBar seekBar = new SeekBar(this);
+        seekBar.setMax(9);
+        seekBar.setProgress(sensitivity - 1);
+        seekBar.setContentDescription("跌倒检测敏感度");
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                sensitivityLabel.setText(fallSensitivityLabel(progress + 1));
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+            }
+        });
+        layout.addView(seekBar);
 
         speakIfVoiceFirst(enabled
-            ? "跌倒检测当前已开启。你可以选择关闭。"
-            : "跌倒检测当前已关闭。你可以选择开启。");
+            ? "跌倒检测当前已开启，敏感度" + sensitivity + "。你可以调整。"
+            : "跌倒检测当前已关闭，敏感度" + sensitivity + "。你可以开启并调整。");
 
         new AlertDialog.Builder(this)
             .setTitle("跌倒检测")
-            .setMessage("使用本机加速度/陀螺仪和最近几秒摄像头画面变化进行判断，不把单帧画面发给 AI 做确认。检测到疑似摔倒后会先询问，10 秒内未取消才发送报警事件。")
-            .setPositiveButton(action, (dialog, which) -> {
-                boolean next = !enabled;
-                preferences.edit().putBoolean(KEY_FALL_DETECTION_ENABLED, next).apply();
-                speakNative(next ? "跌倒检测已开启。" : "跌倒检测已关闭。");
+            .setView(layout)
+            .setPositiveButton("保存", (dialog, which) -> {
+                boolean nextEnabled = enabledBox.isChecked();
+                int nextSensitivity = clampFallDetectionSensitivity(seekBar.getProgress() + 1);
+                preferences.edit()
+                    .putBoolean(KEY_FALL_DETECTION_ENABLED, nextEnabled)
+                    .putInt(KEY_FALL_DETECTION_SENSITIVITY, nextSensitivity)
+                    .apply();
+                speakNative((nextEnabled ? "跌倒检测已开启，" : "跌倒检测已关闭，")
+                    + "敏感度" + nextSensitivity + "。");
             })
             .setNegativeButton("取消", null)
             .show();
@@ -1893,6 +1940,41 @@ public class MainActivity extends Activity
 
     private boolean isFallDetectionEnabledInternal() {
         return preferences.getBoolean(KEY_FALL_DETECTION_ENABLED, true);
+    }
+
+    private int fallDetectionSensitivityInternal() {
+        return clampFallDetectionSensitivity(preferences.getInt(
+            KEY_FALL_DETECTION_SENSITIVITY,
+            DEFAULT_FALL_DETECTION_SENSITIVITY
+        ));
+    }
+
+    private static int clampFallDetectionSensitivity(int value) {
+        return Math.max(1, Math.min(10, value));
+    }
+
+    private String fallDetectionSettingsText() {
+        if (!isFallDetectionEnabledInternal()) {
+            return "跌倒检测：已关闭，敏感度" + fallDetectionSensitivityInternal();
+        }
+        return "跌倒检测：已开启，敏感度" + fallDetectionSensitivityInternal();
+    }
+
+    private String fallSensitivityLabel(int sensitivity) {
+        int level = clampFallDetectionSensitivity(sensitivity);
+        String label;
+        if (level <= 2) {
+            label = "非常不敏感";
+        } else if (level <= 4) {
+            label = "不敏感";
+        } else if (level <= 6) {
+            label = "中等";
+        } else if (level <= 8) {
+            label = "较敏感";
+        } else {
+            label = "敏感";
+        }
+        return "摔倒敏感度：" + level + "/10（" + label + "）";
     }
 
     private boolean isCaptionsEnabledInternal() {
@@ -3214,6 +3296,11 @@ public class MainActivity extends Activity
         @JavascriptInterface
         public boolean isFallDetectionEnabled() {
             return isFallDetectionEnabledInternal();
+        }
+
+        @JavascriptInterface
+        public int fallDetectionSensitivity() {
+            return fallDetectionSensitivityInternal();
         }
 
         @JavascriptInterface

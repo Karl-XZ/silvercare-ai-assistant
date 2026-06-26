@@ -4,7 +4,9 @@ import assert from 'node:assert/strict';
 import {
   FALL_DEFAULTS,
   angleBetween,
+  clampFallSensitivity,
   computeVisualEvidence,
+  fallConfigForSensitivity,
   hasFallImpact,
   isRecoveredFromFall,
   isVisualEvidenceStrong,
@@ -127,4 +129,34 @@ test('fall confirmation requires both sensor impact and visual history change', 
   assert.equal(shouldConfirmFall(strongSensor, weakVisual), false);
   assert.equal(shouldConfirmFall(weakSensor, strongVisual), false);
   assert.equal(shouldConfirmFall(strongSensor, strongVisual), true);
+});
+
+test('fall sensitivity level 10 keeps existing thresholds as highest sensitivity', () => {
+  const config = fallConfigForSensitivity(10);
+
+  assert.equal(config.impactDeviation, FALL_DEFAULTS.impactDeviation);
+  assert.equal(config.impactMagnitude, FALL_DEFAULTS.impactMagnitude);
+  assert.equal(config.rotationImpact, FALL_DEFAULTS.rotationImpact);
+  assert.equal(config.visualDiffStrong, FALL_DEFAULTS.visualDiffStrong);
+});
+
+test('lower fall sensitivity raises thresholds to reduce false alarms', () => {
+  const sensitive = fallConfigForSensitivity(10);
+  const insensitive = fallConfigForSensitivity(1);
+  const borderlineSensor = {
+    maxAcc: sensitive.impactMagnitude + 1,
+    maxDeviation: sensitive.impactDeviation + 1,
+    maxRotation: sensitive.rotationImpact + 1
+  };
+  const borderlineVisual = {
+    sampleCount: 7,
+    maxDiff: sensitive.visualDiffStrong + 0.01,
+    spikeCount: 2,
+    brightnessRange: sensitive.brightnessRangeStrong + 0.01
+  };
+
+  assert.equal(clampFallSensitivity(99), 10);
+  assert.equal(clampFallSensitivity(-5), 1);
+  assert.equal(shouldConfirmFall(borderlineSensor, borderlineVisual, sensitive), true);
+  assert.equal(shouldConfirmFall(borderlineSensor, borderlineVisual, insensitive), false);
 });

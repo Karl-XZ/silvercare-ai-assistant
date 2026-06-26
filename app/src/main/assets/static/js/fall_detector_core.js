@@ -18,6 +18,28 @@ export const FALL_DEFAULTS = {
     recoveryHoldMs: 1800
 };
 
+export function clampFallSensitivity(value) {
+    const level = Number.parseInt(value, 10);
+    if (!Number.isFinite(level)) return 10;
+    return Math.max(1, Math.min(10, level));
+}
+
+export function fallConfigForSensitivity(value, base = FALL_DEFAULTS) {
+    const level = clampFallSensitivity(value);
+    const sensitivityRatio = (level - 1) / 9;
+    const thresholdMultiplier = 1 + (1 - sensitivityRatio) * 1.4;
+    return {
+        ...base,
+        sensitivityLevel: level,
+        impactDeviation: Number((base.impactDeviation * thresholdMultiplier).toFixed(2)),
+        impactMagnitude: Number((base.impactMagnitude * thresholdMultiplier).toFixed(2)),
+        rotationImpact: Number((base.rotationImpact * thresholdMultiplier).toFixed(2)),
+        visualDiffSpike: Number(Math.min(0.42, base.visualDiffSpike * thresholdMultiplier).toFixed(3)),
+        visualDiffStrong: Number(Math.min(0.5, base.visualDiffStrong * thresholdMultiplier).toFixed(3)),
+        brightnessRangeStrong: Number(Math.min(0.8, base.brightnessRangeStrong * thresholdMultiplier).toFixed(3))
+    };
+}
+
 export function readSensorFromMotion(event, time = Date.now()) {
     const gravity = event.accelerationIncludingGravity || {};
     const x = Number(gravity.x);
