@@ -16,7 +16,6 @@ export const STATE = {
     nativeMode: false,
     loop: null,
     heading: 0,
-    lastShake: 0,
     mode: 'nav',
     aiRuntimeMode: 'dashscope',
     runtimeLabel: '联网 DashScope',

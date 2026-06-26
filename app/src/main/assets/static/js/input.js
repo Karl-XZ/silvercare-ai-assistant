@@ -258,11 +258,6 @@ function handleMotion(e) {
 
     const fallConsumed = processFallMotion(sensor);
     if (fallConsumed) return;
-
-    if (sensor.accDeviation > 20 && Date.now() - STATE.lastShake > 1000) {
-        STATE.lastShake = Date.now();
-        toggleIntelLayer();
-    }
 }
 
 function handleOrientation(e) {
