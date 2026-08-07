@@ -1,0 +1,194 @@
+{
+  "test": "text_inquiry",
+  "timestamp_ms": 1785852767832,
+  "device": "vivo V2509A",
+  "sdk": 36,
+  "package": "com.medicalinsurance.longtermcare",
+  "ready": true,
+  "status": "端侧离线模型已就绪\n\n模型目录：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\n离线文本模型：Qwen3-4B-Instruct-2507-MNN\n文本模型文件：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/Qwen3-4B-Instruct-2507-MNN\/config.json\nDAMO-YOLO：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/damo-yolo.mnn\nMNN Native Runtime：已加载",
+  "success": true,
+  "runs": [
+    {
+      "success": true,
+      "semantic_ok": true,
+      "expected_intent": "info",
+      "actual_intent": "info",
+      "spoken": "我可以看路、找东西、提醒风险。",
+      "elapsed_ms": 2,
+      "input_transcript": "你好你可以说什么你提做什么",
+      "name": "cold_capability_text_inquiry",
+      "messages": [
+        {
+          "type": "inquiry_result",
+          "thinking": "端侧确定性识别能力询问，跳过文本模型",
+          "current_goal": null,
+          "mode": "nav",
+          "intent": "info",
+          "task_active": false,
+          "speech": "我可以看路、找东西、提醒风险。",
+          "transcript": "你好你可以说什么你提做什么",
+          "ms": 1
+        },
+        {
+          "type": "speak",
+          "text": "我可以看路、找东西、提醒风险。"
+        }
+      ]
+    },
+    {
+      "success": true,
+      "semantic_ok": true,
+      "expected_intent": "nav_check",
+      "actual_intent": "nav_check",
+      "spoken": "正在查看前方是否可以通行。",
+      "elapsed_ms": 472,
+      "input_transcript": "帮我看看前方有没有障碍物",
+      "name": "warm_navigation_text_inquiry",
+      "messages": [
+        {
+          "type": "inquiry_result",
+          "thinking": "端侧确定性识别通行和避障询问，跳过文本模型",
+          "current_goal": null,
+          "mode": "nav",
+          "intent": "nav_check",
+          "task_active": false,
+          "speech": "正在查看前方是否可以通行。",
+          "transcript": "帮我看看前方有没有障碍物",
+          "ms": 0
+        },
+        {
+          "type": "speak",
+          "text": "正在查看前方是否可以通行。"
+        },
+        {
+          "type": "speak",
+          "text": "右侧约3.5米有小型障碍，请注意避让。"
+        },
+        {
+          "type": "result",
+          "priority": "medium",
+          "subject": "小型障碍",
+          "speech": "右侧约3.5米有小型障碍，请注意避让。",
+          "distance": 3.5,
+          "direction": "right",
+          "target_detected": false,
+          "current_goal": null,
+          "social_cues": {},
+          "environment": {},
+          "objects": [
+            {
+              "name": "球",
+              "category": "球",
+              "distance": 3.5,
+              "direction": "right",
+              "confidence_score": 31,
+              "risk_level": "low"
+            },
+            {
+              "name": "飞盘",
+              "category": "飞盘",
+              "distance": 3.5,
+              "direction": "right",
+              "confidence_score": 27,
+              "risk_level": "low"
+            }
+          ],
+          "scene": "离线检测到主要通行障碍：小型障碍。",
+          "ms": 472,
+          "stats": {}
+        }
+      ]
+    },
+    {
+      "success": true,
+      "semantic_ok": true,
+      "expected_intent": "search",
+      "actual_intent": "search",
+      "spoken": "好的，正在寻找碗。",
+      "elapsed_ms": 385,
+      "input_transcript": "帮我找到我的碗",
+      "name": "warm_search_bowl_text_inquiry",
+      "messages": [
+        {
+          "type": "inquiry_result",
+          "thinking": "端侧确定性识别可检测找物目标，跳过文本模型\n离线找物目标已校正为可检测类别：“碗”。原始目标：“碗”。",
+          "current_goal": "碗",
+          "mode": "nav",
+          "intent": "search",
+          "task_active": false,
+          "speech": "好的，正在寻找碗。",
+          "transcript": "帮我找到我的碗",
+          "ms": 1
+        },
+        {
+          "type": "speak",
+          "text": "好的，正在寻找碗。"
+        },
+        {
+          "type": "speak",
+          "text": "还没有找到碗。请缓慢转动手机继续扫描。"
+        },
+        {
+          "type": "result",
+          "priority": "low",
+          "subject": "碗",
+          "speech": "还没有找到碗。请缓慢转动手机继续扫描。",
+          "distance": 0,
+          "direction": "unknown",
+          "target_detected": false,
+          "current_goal": "碗",
+          "social_cues": {},
+          "environment": {},
+          "objects": [
+            {
+              "name": "球",
+              "category": "球",
+              "distance": 3.5,
+              "direction": "right",
+              "confidence_score": 31,
+              "risk_level": "low"
+            },
+            {
+              "name": "飞盘",
+              "category": "飞盘",
+              "distance": 3.5,
+              "direction": "right",
+              "confidence_score": 27,
+              "risk_level": "low"
+            }
+          ],
+          "scene": "离线检测到 2 个物体。",
+          "ms": 383,
+          "stats": {}
+        }
+      ]
+    },
+    {
+      "success": true,
+      "semantic_ok": true,
+      "expected_intent": "info",
+      "actual_intent": "info",
+      "spoken": "我听到你可能想找“血压计”，但它不在当前离线视觉可稳定识别的目标清单里。你可以改说：找杯子、碗、手机、椅子、桌子、行李箱等，或者直接问我问题。",
+      "elapsed_ms": 2,
+      "input_transcript": "帮我找到血压计",
+      "name": "warm_unsupported_target_text_inquiry",
+      "messages": [
+        {
+          "type": "inquiry_result",
+          "thinking": "端侧确定性识别明确但不受支持的找物目标，跳过文本模型",
+          "current_goal": null,
+          "mode": "nav",
+          "intent": "info",
+          "task_active": false,
+          "speech": "我听到你可能想找“血压计”，但它不在当前离线视觉可稳定识别的目标清单里。你可以改说：找杯子、碗、手机、椅子、桌子、行李箱等，或者直接问我问题。",
+          "transcript": "帮我找到血压计",
+          "ms": 1
+        },
+        {
+          "type": "speak",
+          "text": "我听到你可能想找“血压计”，但它不在当前离线视觉可稳定识别的目标清单里。你可以改说：找杯子、碗、手机、椅子、桌子、行李箱等，或者直接问我问题。"
+        }
+      ]
+    }
+  ]
+}

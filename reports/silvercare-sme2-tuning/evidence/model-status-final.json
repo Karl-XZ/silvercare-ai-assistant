@@ -1,0 +1,23 @@
+{
+  "test": "status",
+  "timestamp_ms": 1785125244917,
+  "device": "vivo V2509A",
+  "sdk": 36,
+  "package": "com.medicalinsurance.longtermcare",
+  "success": true,
+  "model_root": "\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models",
+  "mnn_available": true,
+  "mnn_summary": "mnn-arm64-v8a+sme2 · SME2 可用",
+  "mnn_sme2_supported": true,
+  "offline_ready": true,
+  "offline_status": "端侧离线模型已就绪\n\n模型目录：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\n离线文本模型：Qwen3-4B-Instruct-2507-MNN\n文本模型文件：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/Qwen3-4B-Instruct-2507-MNN\/config.json\nDAMO-YOLO：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/damo-yolo.mnn\nMNN Native Runtime：已加载",
+  "offline_1_5b_ready": true,
+  "offline_1_5b_status": "端侧离线模型已就绪\n\n模型目录：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\n离线文本模型：Qwen2.5-1.5B-Instruct-MNN\n文本模型文件：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/Qwen2.5-1.5B-Instruct-MNN\/config.json\nDAMO-YOLO：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/damo-yolo.mnn\nMNN Native Runtime：已加载",
+  "local_asr_ready": true,
+  "local_asr_status": "本地语音识别模型已就绪\n\n模型目录：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/asr\/vosk-model-small-cn-0.22\n模型来源：Vosk 中文小模型 vosk-model-small-cn-0.22\n下载大小：约 41.9MB\n用途：端侧离线语音转文字，录音不会上传。",
+  "local_tts_ready": false,
+  "local_tts_model_ready": true,
+  "local_tts_runtime_available": false,
+  "local_tts_voice_quality_passed": false,
+  "local_tts_status": "本地 MNN TTS 可生成音频，但真实试听不可懂，已停用主朗读。"
+}

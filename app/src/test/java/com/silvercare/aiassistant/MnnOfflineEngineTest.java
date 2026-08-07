@@ -46,7 +46,7 @@ public class MnnOfflineEngineTest {
         FakeBridge bridge = new FakeBridge(true);
         MnnOfflineEngine engine = new MnnOfflineEngine(settings, new OfflineModelManager(), bridge);
 
-        String vision = engine.visionJson("Current task: 正在寻找：狗\n", "image", "vision");
+        String vision = engine.visionJson("Current task: 找物目标：狗\n", "image", "vision");
         assertThat(vision, containsString("\"target_detected\":true"));
         assertThat(vision, containsString("\"subject\":\"狗\""));
         assertThat(engine.textJson("prompt", "reasoning"), equalTo("{\"native\":\"text\"}"));

@@ -368,7 +368,8 @@ final class OfflineVisionInterpreter {
 
     private static String extractTarget(String prompt) {
         if (prompt == null) return null;
-        String value = between(prompt, "正在寻找：", "\n");
+        String value = between(prompt, "Current task: 找物目标：", "\n");
+        if (value == null) value = between(prompt, "正在寻找：", "\n");
         if (value == null) value = between(prompt, "Target:", "\n");
         if (value == null) value = between(prompt, "用户正在找“", "”");
         if (value == null) return null;

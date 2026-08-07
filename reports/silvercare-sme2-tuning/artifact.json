@@ -1,0 +1,521 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "银龄智护 MNN / Arm SME2 调优报告",
+    "description": "vivo V2509A 上 Qwen3-4B 的 MNN/SME2 分档调优、最终验收与安装证据。",
+    "generatedAt": "2026-07-27T04:08:00Z",
+    "cards": [
+      {
+        "id": "selected_config",
+        "description": "最终选中的 SME2 NEON 分配比例；同卡片附带 SME 核数。",
+        "dataset": "acceptance",
+        "sourceId": "final_acceptance",
+        "metrics": [
+          {
+            "label": "SME2 NEON 分配比例",
+            "field": "ratio",
+            "format": "number"
+          },
+          {
+            "label": "SME 核数",
+            "field": "sme_cores",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "final_warm_latency",
+        "description": "最终安装包在升温后的验收轮次耗时。",
+        "dataset": "acceptance",
+        "sourceId": "final_acceptance",
+        "metrics": [
+          {
+            "label": "最终热运行耗时（ms）",
+            "field": "warm_ms",
+            "format": "number"
+          },
+          {
+            "label": "冷启动耗时（ms）",
+            "field": "cold_ms",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "unit_tests",
+        "description": "最终源码的 Gradle 单元测试结果。",
+        "dataset": "verification",
+        "sourceId": "verification_summary",
+        "metrics": [
+          {
+            "label": "通过的测试数",
+            "field": "tests",
+            "format": "number"
+          },
+          {
+            "label": "失败 + 错误",
+            "field": "failed_or_error",
+            "format": "number"
+          }
+        ]
+      },
+      {
+        "id": "backup_files",
+        "description": "调优前完整备份中的文件数；同卡片附带哈希不一致数。",
+        "dataset": "verification",
+        "sourceId": "verification_summary",
+        "metrics": [
+          {
+            "label": "完整备份文件数",
+            "field": "backup_files",
+            "format": "number"
+          },
+          {
+            "label": "SHA-256 不一致",
+            "field": "backup_mismatches",
+            "format": "number"
+          }
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "warm_latency_by_profile",
+        "title": "各 MNN / SME2 配置的 Qwen3-4B 热运行耗时",
+        "subtitle": "同一 vivo V2509A；越低越好。自动档与 MNN 默认各 2 次，其他档各 1 次。",
+        "showDescription": true,
+        "type": "bar",
+        "dataset": "profile_summary",
+        "sourceId": "profile_runs",
+        "encodings": {
+          "x": {
+            "field": "profile",
+            "type": "nominal",
+            "label": "配置"
+          },
+          "y": {
+            "field": "warm_ms",
+            "type": "quantitative",
+            "label": "热运行耗时（ms）",
+            "format": "number"
+          }
+        },
+        "settings": {
+          "orientation": "horizontal"
+        },
+        "yAxisTitle": "热运行耗时（ms）",
+        "valueFormat": "number",
+        "layout": "full"
+      }
+    ],
+    "tables": [
+      {
+        "id": "profile_measurements",
+        "title": "SME2 分档真机测量",
+        "subtitle": "冷/热耗时为各档已有轮次的算术平均；单次档位仅作方向性比较。",
+        "dataset": "profile_summary",
+        "sourceId": "profile_runs",
+        "defaultSort": {
+          "field": "warm_ms",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "columns": [
+          {
+            "field": "profile",
+            "label": "配置",
+            "type": "text"
+          },
+          {
+            "field": "config",
+            "label": "比例 / SME 核",
+            "type": "text"
+          },
+          {
+            "field": "run_count",
+            "label": "轮次",
+            "format": "number"
+          },
+          {
+            "field": "cold_ms",
+            "label": "冷启动平均（ms）",
+            "format": "number"
+          },
+          {
+            "field": "warm_ms",
+            "label": "热运行平均（ms）",
+            "format": "number"
+          },
+          {
+            "field": "semantic_check",
+            "label": "语义校验",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "implementation_matrix",
+        "title": "图片要求与项目实现映射",
+        "subtitle": "逐项核对 Qwen、MNN、Arm SME2、配置时机与安全回退。",
+        "dataset": "implementation",
+        "sourceId": "implementation_evidence",
+        "defaultSort": {
+          "field": "order",
+          "direction": "asc"
+        },
+        "density": "spacious",
+        "columns": [
+          {
+            "field": "order",
+            "label": "序号",
+            "format": "number"
+          },
+          {
+            "field": "requirement",
+            "label": "要求",
+            "type": "text"
+          },
+          {
+            "field": "implementation",
+            "label": "实现",
+            "type": "text"
+          },
+          {
+            "field": "evidence",
+            "label": "验收证据",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "profile_runs",
+        "label": "SME2 分档真机基准汇总",
+        "path": "evidence/profile-summary.json",
+        "query": {
+          "engine": "duckdb",
+          "language": "sql",
+          "description": "从真机基准汇总 JSON 展开四档 MNN / SME2 结果。",
+          "executed_at": "2026-07-27T04:06:00Z",
+          "sql": "SELECT p.profile, p.profile_key, p.config, p.run_count, p.cold_ms, p.warm_ms, p.semantic_check, p.selected FROM read_json_auto('evidence/profile-summary.json') AS r, UNNEST(r.profiles) AS t(p);",
+          "tables_used": [
+            "evidence/profile-summary.json"
+          ],
+          "metric_definitions": [
+            "cold_ms：独立冷进程内首次 Qwen3-4B 推理耗时的算术平均，单位毫秒。",
+            "warm_ms：同进程第二次相同语义负载推理耗时的算术平均，单位毫秒。"
+          ]
+        }
+      },
+      {
+        "id": "final_acceptance",
+        "label": "最终安装包 SME2 验收报告",
+        "path": "evidence/sme2-final-acceptance.json",
+        "query": {
+          "engine": "duckdb",
+          "language": "sql",
+          "description": "读取最终安装包的 SME2 配置与冷、热语义验收结果。",
+          "executed_at": "2026-07-27T04:06:00Z",
+          "sql": "SELECT CAST(json_extract_string(tuning, '$.cpu_sme2_neon_division_ratio') AS INTEGER) AS ratio, CAST(json_extract_string(tuning, '$.cpu_sme_core_num') AS INTEGER) AS sme_cores, cold.elapsed_ms AS cold_ms, warm.elapsed_ms AS warm_ms, sme2_supported, cold.payload_ok AS cold_payload_ok, warm.payload_ok AS warm_payload_ok FROM read_json_auto('evidence/sme2-final-acceptance.json');",
+          "tables_used": [
+            "evidence/sme2-final-acceptance.json"
+          ]
+        }
+      },
+      {
+        "id": "verification_summary",
+        "label": "备份、测试与安装哈希验收",
+        "path": "evidence/verification-summary.json",
+        "query": {
+          "engine": "duckdb",
+          "language": "sql",
+          "description": "读取单元测试、完整备份和 APK 哈希一致性汇总。",
+          "executed_at": "2026-07-27T04:08:00Z",
+          "sql": "SELECT unit_tests.tests, unit_tests.failures + unit_tests.errors AS failed_or_error, unit_tests.skipped, backup.files AS backup_files, backup.bytes AS backup_bytes, backup.sha256_mismatches AS backup_mismatches, installation.built_archived_match AND installation.built_installed_match AS apk_hash_match FROM read_json_auto('evidence/verification-summary.json');",
+          "tables_used": [
+            "evidence/verification-summary.json"
+          ]
+        }
+      },
+      {
+        "id": "implementation_evidence",
+        "label": "Qwen / MNN / SME2 实现证据",
+        "path": "evidence/implementation-evidence.json",
+        "query": {
+          "engine": "duckdb",
+          "language": "sql",
+          "description": "展开 Qwen、MNN、SME2 与安全回退的实现证据。",
+          "executed_at": "2026-07-27T04:08:00Z",
+          "sql": "SELECT i.\"order\", i.requirement, i.implementation, i.evidence FROM read_json_auto('evidence/implementation-evidence.json') AS r, UNNEST(r.items) AS t(i);",
+          "tables_used": [
+            "evidence/implementation-evidence.json"
+          ]
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# 银龄智护 MNN / Arm SME2 调优报告"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "body": "## 结论先行\n\n- **项目已满足图片核心要求。** 手机端使用 Qwen3-4B，MNN Runtime 真机识别为 `mnn-arm64-v8a+sme2`，SME2 参数在 `llm->load()` 前写入。\n- **最终采用 41 / 2。** 两轮对照中，自动档平均冷启动 **5939 ms**、热运行 **871 ms**；相较 MNN 默认，冷启动约快 **7.0%**，热运行约快 **0.7%**。\n- **没有为了“更激进”盲选 49 / 2。** 性能优先档单轮冷启动较快，但热运行 **888 ms**，没有超过 41 / 2 的平均结果。\n- **最终安装和回归均通过。** 97 项单元测试零失败零错误，构建、归档和手机已安装 APK 的 SHA-256 完全一致。"
+      },
+      {
+        "id": "headline_metrics",
+        "type": "metric-strip",
+        "cardIds": [
+          "selected_config",
+          "final_warm_latency",
+          "unit_tests",
+          "backup_files"
+        ]
+      },
+      {
+        "id": "profile_finding",
+        "type": "markdown",
+        "sourceId": "profile_runs",
+        "body": "## 41 / 2 在真机多轮对比中综合最优\n\n下图比较同一台 vivo V2509A 上 Qwen3-4B 的热运行耗时，数值越低越好。自动档 41 / 2 为 **871 ms**，MNN 默认为 **877 ms**，性能优先 49 / 2 为 **888 ms**，省电档 33 / 1 为 **901 ms**。自动档与默认档各有两轮，另外两档各一轮，因此图表支持“41 / 2 是当前综合首选”，但不支持把几毫秒差异解释为跨设备的普遍规律。"
+      },
+      {
+        "id": "profile_chart",
+        "type": "chart",
+        "chartId": "warm_latency_by_profile",
+        "layout": "full"
+      },
+      {
+        "id": "profile_table",
+        "type": "table",
+        "tableId": "profile_measurements",
+        "layout": "full"
+      },
+      {
+        "id": "final_acceptance_finding",
+        "type": "markdown",
+        "sourceId": "final_acceptance",
+        "body": "## 最终安装包确认实际走 SME2\n\n最终验收报告记录 `sme2_supported=true`、运行时为 `mnn-arm64-v8a+sme2`，实际配置包含 `cpu_sme2_neon_division_ratio=41` 与 `cpu_sme_core_num=2`。在设备已经升温到约 **40.8°C** 的情况下，最终冷启动为 **6377 ms**、热运行为 **929 ms**，两次输出都正确解析为 `{\"ok\":true}`。这证明调优参数不只是界面文案，而是进入了最终 APK 的真实 MNN 推理链路。"
+      },
+      {
+        "id": "scope_definitions",
+        "type": "markdown",
+        "body": "## 测量范围与指标定义\n\n- **设备范围：** vivo V2509A，MT6993，arm64-v8a，Android SDK 36。\n- **模型范围：** Qwen3-4B-Instruct-2507-MNN；Qwen2.5-1.5B 只做就绪状态验证，不进入四档性能排名。\n- **冷启动耗时：** 独立冷进程内首次加载并完成规定 JSON 生成的时间。\n- **热运行耗时：** 同一进程、同一模型已经加载后，再次完成同一语义负载的时间。\n- **成功门槛：** 不只看函数返回；输出必须可解析，且包含布尔值 `ok=true`。\n- **比较基线：** 不覆盖 SME2 字段的 MNN 默认档。"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "body": "## 调优方法保证配置在正确时机生效\n\nMNN 头文件将 SME2 NEON 分配比例默认值标为 41、SME 核默认值标为 2。项目并未只依赖该默认值：Java 层提供自动、性能、节能和 MNN 默认四档；native bridge 对调优 JSON 做规范化，并在模型 `load()` 前调用 `set_config()`。若配置发生变化，会重建 LLM 实例，避免沿用旧实例掩盖参数切换。设备能力由 `AT_HWCAP2/HWCAP2_SME2` 检测，并以 `/proc/cpuinfo` 的 `sme2` 特征作兼容回退。"
+      },
+      {
+        "id": "implementation_table",
+        "type": "table",
+        "tableId": "implementation_matrix",
+        "layout": "full"
+      },
+      {
+        "id": "robustness_sampling",
+        "type": "markdown",
+        "sourceId": "profile_runs",
+        "body": "## 样本量限制不会被隐藏\n\n自动档与 MNN 默认各两轮，性能优先和省电档各一轮。四档全部通过语义校验，但单轮数据不足以估计稳定方差，也不能排除调度、后台进程或测试顺序的影响。因此最终选择依据是：41 / 2 在重复档位中表现稳定、冷启动明显优于默认，并且热运行没有被更激进的 49 / 2 超越。"
+      },
+      {
+        "id": "robustness_thermal",
+        "type": "markdown",
+        "sourceId": "final_acceptance",
+        "body": "## 升温后的验收结果是保守值\n\n最终验收发生在连续构建、安装和模型基准之后，电池温度约 40.8°C；此时热运行 929 ms，高于前两轮平均的 871 ms。这更像热状态和系统调度带来的波动，而不是配置失效，因为最终报告仍确认 SME2、41 / 2 和两次正确语义输出。"
+      },
+      {
+        "id": "verification_finding",
+        "type": "markdown",
+        "sourceId": "verification_summary",
+        "body": "## 备份、测试和安装均有独立验收\n\n调优前备份包含 **1534** 个文件、总计 **576616346** 字节，逐文件 SHA-256 不一致数为 **0**。最终单元测试共 **97** 项，失败 **0**、错误 **0**、按设计跳过 **2**。最终 APK 的本地构建、归档副本和手机已安装文件使用同一 SHA-256：`87781525F168981F100CBF5D016D30E00E0FC2DA88254C5B24A38DBC3B789CCE`。"
+      },
+      {
+        "id": "recommendations",
+        "type": "markdown",
+        "body": "## 下一步建议\n\n1. **当前 MT6993 继续使用 41 / 2。** 它是现有真机证据下的综合最优点。\n2. **换用其他 SoC 时重新跑四档基准。** 不把本机结论直接外推到所有 Arm SME2 手机。\n3. **长时间压测时增加温度分层。** 建议记录冷机、35–38°C、38–42°C 三档，并在每档交错测试配置顺序。\n4. **上线版本保留自动回退。** 未检测到 SME2 时不要写入 SME2 专用字段。"
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "body": "## 后续可回答的问题\n\n- 49 / 2 在长提示词或更高 token 数下是否可能反超 41 / 2？\n- 41 / 2 在持续 15–30 分钟推理后的功耗、温升和降频曲线如何？\n- Qwen2.5-1.5B 在相同 SME2 档位下能否形成更低延迟的备用路径？"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-07-27T04:08:00Z",
+    "status": "ready",
+    "datasets": {
+      "profile_summary": [
+        {
+          "profile": "SME2 自动调优",
+          "profile_key": "auto",
+          "config": "41 / 2",
+          "run_count": 2,
+          "cold_ms": 5939,
+          "warm_ms": 871,
+          "semantic_check": "2/2 通过",
+          "selected": true
+        },
+        {
+          "profile": "MNN 默认",
+          "profile_key": "mnn_default",
+          "config": "不覆盖",
+          "run_count": 2,
+          "cold_ms": 6386,
+          "warm_ms": 877,
+          "semantic_check": "2/2 通过",
+          "selected": false
+        },
+        {
+          "profile": "SME2 性能优先",
+          "profile_key": "performance",
+          "config": "49 / 2",
+          "run_count": 1,
+          "cold_ms": 5814,
+          "warm_ms": 888,
+          "semantic_check": "1/1 通过",
+          "selected": false
+        },
+        {
+          "profile": "SME2 省电稳定",
+          "profile_key": "efficiency",
+          "config": "33 / 1",
+          "run_count": 1,
+          "cold_ms": 6196,
+          "warm_ms": 901,
+          "semantic_check": "1/1 通过",
+          "selected": false
+        }
+      ],
+      "acceptance": [
+        {
+          "ratio": 41,
+          "sme_cores": 2,
+          "cold_ms": 6377,
+          "warm_ms": 929,
+          "temperature_c": 40.8,
+          "sme2_supported": true,
+          "cold_payload_ok": true,
+          "warm_payload_ok": true
+        }
+      ],
+      "verification": [
+        {
+          "tests": 97,
+          "failed_or_error": 0,
+          "skipped": 2,
+          "backup_files": 1534,
+          "backup_bytes": 576616346,
+          "backup_mismatches": 0,
+          "apk_hash_match": true
+        }
+      ],
+      "implementation": [
+        {
+          "order": 1,
+          "requirement": "至少一款 Qwen 系列模型",
+          "implementation": "Qwen3-4B 为本地主模型；Qwen2.5-1.5B 为轻量备用。",
+          "evidence": "最终状态报告中两款模型均 ready。"
+        },
+        {
+          "order": 2,
+          "requirement": "MNN 端侧推理",
+          "implementation": "Java bridge 调用 native MNN runtime 执行 LLM 与 DAMO-YOLO。",
+          "evidence": "真机 runtime=mnn-arm64-v8a+sme2。"
+        },
+        {
+          "order": 3,
+          "requirement": "Arm SME2 检测",
+          "implementation": "HWCAP2 检测并以 /proc/cpuinfo sme2 作为兼容回退。",
+          "evidence": "vivo V2509A sme2_supported=true。"
+        },
+        {
+          "order": 4,
+          "requirement": "配置在加载前生效",
+          "implementation": "llm->set_config() 在 llm->load() 前写入 41 / 2。",
+          "evidence": "最终冷/热两次语义基准均通过。"
+        },
+        {
+          "order": 5,
+          "requirement": "安全回退",
+          "implementation": "无 SME2 时不写入专用字段，保留通用 MNN 路径。",
+          "evidence": "单元测试覆盖支持与不支持两条路径。"
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "profile_runs",
+      "label": "SME2 分档真机基准汇总",
+      "path": "evidence/profile-summary.json",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "description": "从真机基准汇总 JSON 展开四档 MNN / SME2 结果。",
+        "executed_at": "2026-07-27T04:06:00Z",
+        "sql": "SELECT p.profile, p.profile_key, p.config, p.run_count, p.cold_ms, p.warm_ms, p.semantic_check, p.selected FROM read_json_auto('evidence/profile-summary.json') AS r, UNNEST(r.profiles) AS t(p);",
+        "tables_used": [
+          "evidence/profile-summary.json"
+        ]
+      }
+    },
+    {
+      "id": "final_acceptance",
+      "label": "最终安装包 SME2 验收报告",
+      "path": "evidence/sme2-final-acceptance.json",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "description": "读取最终安装包的 SME2 配置与冷、热语义验收结果。",
+        "executed_at": "2026-07-27T04:06:00Z",
+        "sql": "SELECT CAST(json_extract_string(tuning, '$.cpu_sme2_neon_division_ratio') AS INTEGER) AS ratio, CAST(json_extract_string(tuning, '$.cpu_sme_core_num') AS INTEGER) AS sme_cores, cold.elapsed_ms AS cold_ms, warm.elapsed_ms AS warm_ms, sme2_supported, cold.payload_ok AS cold_payload_ok, warm.payload_ok AS warm_payload_ok FROM read_json_auto('evidence/sme2-final-acceptance.json');",
+        "tables_used": [
+          "evidence/sme2-final-acceptance.json"
+        ]
+      }
+    },
+    {
+      "id": "verification_summary",
+      "label": "备份、测试与安装哈希验收",
+      "path": "evidence/verification-summary.json",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "description": "读取单元测试、完整备份和 APK 哈希一致性汇总。",
+        "executed_at": "2026-07-27T04:08:00Z",
+        "sql": "SELECT unit_tests.tests, unit_tests.failures + unit_tests.errors AS failed_or_error, unit_tests.skipped, backup.files AS backup_files, backup.bytes AS backup_bytes, backup.sha256_mismatches AS backup_mismatches, installation.built_archived_match AND installation.built_installed_match AS apk_hash_match FROM read_json_auto('evidence/verification-summary.json');",
+        "tables_used": [
+          "evidence/verification-summary.json"
+        ]
+      }
+    },
+    {
+      "id": "implementation_evidence",
+      "label": "Qwen / MNN / SME2 实现证据",
+      "path": "evidence/implementation-evidence.json",
+      "query": {
+        "engine": "duckdb",
+        "language": "sql",
+        "description": "展开 Qwen、MNN、SME2 与安全回退的实现证据。",
+        "executed_at": "2026-07-27T04:08:00Z",
+        "sql": "SELECT i.\"order\", i.requirement, i.implementation, i.evidence FROM read_json_auto('evidence/implementation-evidence.json') AS r, UNNEST(r.items) AS t(i);",
+        "tables_used": [
+          "evidence/implementation-evidence.json"
+        ]
+      }
+    }
+  ],
+  "package_info": {
+    "root": "reports/silvercare-sme2-tuning",
+    "manifestPath": "artifact.json",
+    "snapshotPath": "artifact.json"
+  }
+}

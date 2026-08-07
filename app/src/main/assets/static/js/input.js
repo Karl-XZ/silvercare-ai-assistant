@@ -600,6 +600,16 @@ function stopRecording() {
 
 function stopNativeSpeechInquiry() {
     if (!nativeSpeechActive) return;
+    const latestImageData = captureCurrentFrame();
+    if (latestImageData
+        && window.AndroidSilverCare
+        && typeof window.AndroidSilverCare.updateSpeechInquiryFrame === 'function') {
+        window.AndroidSilverCare.updateSpeechInquiryFrame(latestImageData);
+        logDiagnostic('native_speech_frame_updated', {
+            image_chars: latestImageData.length,
+            elapsed_ms: Date.now() - nativeSpeechStartedAt
+        });
+    }
     logDiagnostic('native_speech_stop', {
         elapsed_ms: Date.now() - nativeSpeechStartedAt
     });

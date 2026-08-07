@@ -20,6 +20,7 @@ def escapedDashScopeApiKey = defaultDashScopeApiKey
 android {
     namespace "com.silvercare.aiassistant"
     compileSdk 35
+    ndkVersion "27.2.12479018"
 
     defaultConfig {
         applicationId "com.medicalinsurance.longtermcare"

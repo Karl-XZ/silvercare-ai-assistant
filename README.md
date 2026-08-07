@@ -74,6 +74,42 @@ Windows PowerShell:
 .\gradlew.bat :app:testDebugUnitTest -Dsilvercare.liveDashScope=true --no-daemon
 ```
 
+## Qwen / MNN / Arm SME2 调优
+
+端侧文本链路至少使用一款 Qwen 系列模型，当前提供两个本地模型角色：
+
+- `Qwen3-4B-Instruct-2507-MNN`：默认本地文本模型，通过 MNN native bridge 推理。
+- `Qwen2.5-1.5B-Instruct-MNN`：轻量备用模型，可在开发基准中单独验证。
+
+应用启动时会通过 Android `HWCAP2` 和 `/proc/cpuinfo` 检测 Arm SME2。检测成功后，所选配置会在 `llm->load()` 之前通过 MNN `set_config()` 写入；不支持 SME2 的设备会自动回退到 MNN 默认执行路径。Qwen3 的 thinking 模式在端侧关闭，以减少无用输出和首轮延迟。
+
+本项目还将高频离线指令改为确定性本地路由，并为仍需 Qwen 理解的复杂请求使用小于 1000 字符的紧凑提示词。这样可避免把找物、通行检查、场景查看等明确意图先送入 4B 模型，同时保留复杂自然语言请求的 Qwen 回退能力。
+
+2026-07-27 在 vivo V2509A（MT6993、arm64-v8a、Android SDK 36、确认支持 SME2）上的真机结果如下。每次运行都验证 Qwen 返回的 `{"ok":true}`，表中的单位为毫秒：
+
+| 配置 | MNN 参数（比例/SME 核） | 次数 | 冷启动平均 | 热运行平均 | 语义校验 |
+|---|---:|---:|---:|---:|---|
+| 自动调优 | 41 / 2 | 2 | 5939 | 871 | 通过 |
+| MNN 默认 | 不覆盖 | 2 | 6386 | 877 | 通过 |
+| 性能优先 | 49 / 2 | 1 | 5814 | 888 | 通过 |
+| 省电稳定 | 33 / 1 | 1 | 6196 | 901 | 通过 |
+
+因此当前默认保留 `41 / 2`：它与 MNN 默认档的热运行相当，同时两轮平均冷启动约快 7%。单次结果会受温度、系统调度和后台负载影响，换用其他 SoC 后应重新运行基准，而不是直接照搬参数。
+
+同一设备上的最终 `text_inquiry` 回归中，能力问答、通行检查、找碗和不支持目标分别耗时 7、299、281、1 毫秒，四项语义校验全部通过。其中明确但不支持的目标由优化前的 23081 毫秒降至 1 毫秒，因为它不再无意义地启动两轮 4B 推理。真实摄像头导航刷新使用 DAMO-YOLO 耗时 374 毫秒。
+
+Debug APK 可用以下命令复测，其中 `tuning_profile` 可取 `auto`、`performance`、`efficiency` 或 `mnn_default`：
+
+```powershell
+adb shell am start -W `
+  -n com.medicalinsurance.longtermcare/com.silvercare.aiassistant.LocalModelBenchmarkActivity `
+  --es benchmark_test sme2_profile `
+  --es tuning_profile auto `
+  --el timeout_ms 180000
+```
+
+结果写入应用外部私有目录的 `files/benchmarks/latest-sme2_profile.json`，报告同时包含 SME2 检测、实际 MNN 配置、冷/热耗时和语义校验结果。
+
 ## Benchmark
 
 公开 benchmark 位于 `public_benchmark_silvercare/`，包含：

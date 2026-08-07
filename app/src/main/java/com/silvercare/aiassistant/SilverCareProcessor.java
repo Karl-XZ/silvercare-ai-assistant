@@ -9,10 +9,11 @@ import java.util.List;
 final class SilverCareProcessor {
     private static final long SPEECH_COOLDOWN_MS = 3000;
     private static final long VOICE_FIRST_SPEECH_COOLDOWN_MS = 1300;
-    private static final int OFFLINE_INQUIRY_MAX_NEW_TOKENS = 24;
+    private static final int OFFLINE_INQUIRY_MAX_NEW_TOKENS = 32;
     private static final int OFFLINE_SMART_REFRESH_MAX_NEW_TOKENS = 48;
     private static final int TASK_PLAN_MAX_NEW_TOKENS = 256;
-    private static final String JSON_OBJECT_END = "}";
+    private static final int SCENE_OBJECT_MIN_CONFIDENCE = 40;
+    private static final int SCENE_OBJECT_MAX_COUNT = 5;
 
     private final SilverCareArtificialIntelligenceClient client;
     private final MessageSink sink;
@@ -36,13 +37,17 @@ final class SilverCareProcessor {
     }
 
     synchronized void processFrame(String imageDataUrl) {
+        processFrame(imageDataUrl, false);
+    }
+
+    synchronized void processFrame(String imageDataUrl, boolean forceRefresh) {
         try {
             if ("micro".equals(mode)) {
                 processMicroFrame(imageDataUrl);
             } else if ("task".equals(mode)) {
                 processTaskFrame(imageDataUrl);
             } else {
-                processNavigationFrame(imageDataUrl);
+                processNavigationFrame(imageDataUrl, forceRefresh);
             }
         } catch (Exception e) {
             sendError("处理画面失败：" + readableError(e));
@@ -106,13 +111,41 @@ final class SilverCareProcessor {
             processMicroFollowUpInquiry(imageDataUrl, transcript, start);
             return;
         }
+        if (isOfflineRuntime() && isSceneInspectionRequest(transcript)) {
+            processSceneInspectionInquiry(imageDataUrl, transcript, start);
+            return;
+        }
 
         JSONObject result = deterministicCareRecord(transcript);
+        if (result == null && isNavigationStartCommand(transcript)) {
+            result = fallbackIntent("nav_check", "正在查看前方是否可以通行。")
+                .put("thinking", "确定性识别开始导航指令");
+        }
+        if (result == null && isOfflineRuntime() && isCapabilityQuestion(transcript)) {
+            result = fallbackIntent("info", offlineCapabilitySpeech(transcript, ""))
+                .put("thinking", "端侧确定性识别能力询问，跳过文本模型");
+        }
+        if (result == null && isOfflineRuntime() && isNavigationSafetyQuestion(transcript)) {
+            result = fallbackIntent("nav_check", "正在查看前方是否可以通行。")
+                .put("thinking", "端侧确定性识别通行和避障询问，跳过文本模型");
+        }
+        if (result == null && isOfflineRuntime() && isSearchIntentRequest(transcript)) {
+            String rawSearchTarget = extractSearchTarget(transcript);
+            String directSearchTarget = exactSupportedSearchTarget(rawSearchTarget);
+            if (!directSearchTarget.isEmpty()) {
+                result = fallbackIntent("search", "好的，正在寻找" + directSearchTarget + "。")
+                    .put("search_target", directSearchTarget)
+                    .put("thinking", "端侧确定性识别可检测找物目标，跳过文本模型");
+            } else if (!rawSearchTarget.isEmpty()) {
+                result = unsupportedOfflineSearchResult(transcript, rawSearchTarget)
+                    .put("thinking", "端侧确定性识别明确但不受支持的找物目标，跳过文本模型");
+            }
+        }
         if (result == null && preferDeterministicFirst) {
             result = applyTranscriptFallback(transcript, null);
         }
         if (result == null) {
-            String prompt = inquiryPrompt(transcript);
+            String prompt = isOfflineRuntime() ? offlineInquiryPrompt(transcript) : inquiryPrompt(transcript);
             String routeModel = isOfflineRuntime() ? client.settings().textModel() : client.settings().visionModel();
             DiagnosticLogger.event("processor_inquiry_model_route", new JSONObject()
                 .put("offline_runtime", isOfflineRuntime())
@@ -121,12 +154,17 @@ final class SilverCareProcessor {
                 .put("prompt_chars", prompt.length())
                 .put("transcript", DiagnosticLogger.excerpt(transcript)));
             String rawResult = isOfflineRuntime()
-                ? client.textJson(prompt, routeModel, OFFLINE_INQUIRY_MAX_NEW_TOKENS, JSON_OBJECT_END)
+                ? client.textJson(prompt, routeModel, OFFLINE_INQUIRY_MAX_NEW_TOKENS)
                 : client.visionJson(prompt, imageDataUrl, routeModel);
             try {
                 result = parseJson(rawResult);
                 result = expandCompactInquiryResult(result);
             } catch (Exception parseError) {
+                DiagnosticLogger.event("processor_inquiry_parse_error", new JSONObject()
+                    .put("error", parseError.getClass().getSimpleName())
+                    .put("message", DiagnosticLogger.excerpt(parseError.getMessage()))
+                    .put("output_chars", rawResult == null ? 0 : rawResult.length())
+                    .put("raw", DiagnosticLogger.excerpt(rawResult)));
                 result = null;
             }
             result = applyTranscriptFallback(transcript, result);
@@ -137,7 +175,7 @@ final class SilverCareProcessor {
                 .put("thinking", DiagnosticLogger.excerpt(result.optString("thinking", ""))));
         }
         if (result == null) {
-            result = fallbackIntent("info", "我暂时没有理解这句话，请再说一遍。")
+            result = fallbackIntent("info", "语音已经识别，但本地文本模型这次没有生成有效回答，请换一种说法再试。")
                 .put("thinking", "模型未返回可解析 JSON，已使用本地兜底回复");
             DiagnosticLogger.event("processor_inquiry_fallback_result");
         }
@@ -223,6 +261,121 @@ final class SilverCareProcessor {
         }
     }
 
+    private void processSceneInspectionInquiry(String imageDataUrl, String transcript, long start) throws Exception {
+        long diagnosticStarted = DiagnosticLogger.start();
+        DiagnosticLogger.event("processor_scene_inquiry_start", new JSONObject()
+            .put("transcript", DiagnosticLogger.excerpt(transcript))
+            .put("image_chars", imageDataUrl == null ? 0 : imageDataUrl.length()));
+
+        if (!hasImageData(imageDataUrl)) {
+            String speech = "没有获取到当前画面，请先打开摄像头并对准要查看的位置。";
+            sendSceneInspectionResult(transcript, speech, new JSONArray(), start, "本次没有可用摄像头画面");
+            DiagnosticLogger.event("processor_scene_inquiry_result", new JSONObject()
+                .put("elapsed_ms", DiagnosticLogger.elapsed(diagnosticStarted))
+                .put("raw_objects", 0)
+                .put("reliable_objects", 0)
+                .put("speech", speech));
+            return;
+        }
+
+        try {
+            JSONObject visual = parseJson(client.visionJson(
+                sceneInspectionPrompt(),
+                imageDataUrl,
+                client.settings().visionModel()
+            ));
+            JSONArray rawObjects = localizedObjects(visual.optJSONArray("objects"));
+            JSONArray reliableObjects = reliableSceneObjects(rawObjects);
+            String speech = sceneInspectionSpeech(reliableObjects);
+            sendSceneInspectionResult(
+                transcript,
+                speech,
+                reliableObjects,
+                start,
+                "本地视觉已直接分析当前画面，未调用文本模型"
+            );
+            DiagnosticLogger.event("processor_scene_inquiry_result", new JSONObject()
+                .put("elapsed_ms", DiagnosticLogger.elapsed(diagnosticStarted))
+                .put("raw_objects", rawObjects.length())
+                .put("reliable_objects", reliableObjects.length())
+                .put("speech", DiagnosticLogger.excerpt(speech)));
+        } catch (Exception error) {
+            String speech = "画面已经获取，但本地视觉这次处理失败，请保持手机稳定后再试一次。";
+            DiagnosticLogger.event("processor_scene_inquiry_error", new JSONObject()
+                .put("elapsed_ms", DiagnosticLogger.elapsed(diagnosticStarted))
+                .put("error", error.getClass().getSimpleName())
+                .put("message", DiagnosticLogger.excerpt(error.getMessage())));
+            sendSceneInspectionResult(transcript, speech, new JSONArray(), start, "本地视觉处理失败");
+        }
+    }
+
+    private void sendSceneInspectionResult(
+        String transcript,
+        String speech,
+        JSONArray objects,
+        long start,
+        String thinking
+    ) throws Exception {
+        long elapsed = System.currentTimeMillis() - start;
+        sink.send(new JSONObject()
+            .put("type", "inquiry_result")
+            .put("thinking", thinking)
+            .put("current_goal", currentGoal == null ? JSONObject.NULL : currentGoal)
+            .put("mode", mode)
+            .put("intent", "info")
+            .put("task_active", "task".equals(mode))
+            .put("speech", speech)
+            .put("transcript", transcript)
+            .put("objects", objects)
+            .put("scene_description", speech)
+            .put("ms", elapsed));
+        speak(speech, true);
+        sink.send(new JSONObject()
+            .put("type", "result")
+            .put("priority", "low")
+            .put("subject", "当前画面")
+            .put("speech", speech)
+            .put("distance", 0)
+            .put("direction", "unknown")
+            .put("target_detected", false)
+            .put("current_goal", currentGoal == null ? JSONObject.NULL : currentGoal)
+            .put("social_cues", new JSONObject())
+            .put("environment", new JSONObject())
+            .put("objects", objects)
+            .put("scene", speech)
+            .put("ms", elapsed)
+            .put("stats", new JSONObject()));
+    }
+
+    private static JSONArray reliableSceneObjects(JSONArray source) throws Exception {
+        JSONArray reliable = new JSONArray();
+        if (source == null) return reliable;
+        ArrayList<String> names = new ArrayList<>();
+        for (int index = 0; index < source.length() && reliable.length() < SCENE_OBJECT_MAX_COUNT; index += 1) {
+            JSONObject item = source.optJSONObject(index);
+            if (item == null || item.optInt("confidence_score", 0) < SCENE_OBJECT_MIN_CONFIDENCE) continue;
+            String name = item.optString("name", item.optString("category", "")).trim();
+            if (name.isEmpty() || "物体".equals(name) || names.contains(name)) continue;
+            names.add(name);
+            reliable.put(new JSONObject(item.toString()));
+        }
+        return reliable;
+    }
+
+    private static String sceneInspectionSpeech(JSONArray objects) {
+        if (objects == null || objects.length() == 0) {
+            return "当前画面没有检测到可可靠识别的常见物品。请对准桌面、保持稳定后再试一次。";
+        }
+        ArrayList<String> names = new ArrayList<>();
+        for (int index = 0; index < objects.length(); index += 1) {
+            JSONObject item = objects.optJSONObject(index);
+            if (item == null) continue;
+            String name = item.optString("name", item.optString("category", "")).trim();
+            if (!name.isEmpty() && !names.contains(name)) names.add(name);
+        }
+        return "当前画面检测到：" + String.join("、", names) + "。未识别到的物品不代表不存在。";
+    }
+
     private void closeMicroGuidance(String transcript, long start) throws Exception {
         mode = "nav";
         microTarget = null;
@@ -247,8 +400,7 @@ final class SilverCareProcessor {
                 : client.textJson(
                     prompt,
                     client.settings().textModel(),
-                    OFFLINE_INQUIRY_MAX_NEW_TOKENS,
-                    JSON_OBJECT_END
+                    OFFLINE_INQUIRY_MAX_NEW_TOKENS
                 );
             result = parseJson(rawResult);
         } catch (Exception error) {
@@ -367,14 +519,7 @@ final class SilverCareProcessor {
 
         String target = resolveOfflineSearchTargetWithAi(transcript, rawTarget);
         if (target.isEmpty()) {
-            mode = "nav";
-            currentGoal = null;
-            return fallbackIntent(
-                "info",
-                "我听到你可能想找“" + (rawTarget.isEmpty() ? "某个东西" : rawTarget)
-                    + "”，但它不在当前离线视觉可稳定识别的目标清单里。"
-                    + "你可以改说：找杯子、碗、手机、椅子、桌子、行李箱等，或者直接问我问题。"
-            ).put("thinking", "离线找物目标未通过可检测目标校验，未进入搜索模式。原始 ASR：" + transcript);
+            return unsupportedOfflineSearchResult(transcript, rawTarget);
         }
 
         result.put("intent", "search");
@@ -388,6 +533,17 @@ final class SilverCareProcessor {
             )
         );
         return result;
+    }
+
+    private JSONObject unsupportedOfflineSearchResult(String transcript, String rawTarget) throws Exception {
+        mode = "nav";
+        currentGoal = null;
+        return fallbackIntent(
+            "info",
+            "我听到你可能想找“" + (rawTarget.isEmpty() ? "某个东西" : rawTarget)
+                + "”，但它不在当前离线视觉可稳定识别的目标清单里。"
+                + "你可以改说：找杯子、碗、手机、椅子、桌子、行李箱等，或者直接问我问题。"
+        ).put("thinking", "离线找物目标未通过可检测目标校验，未进入搜索模式。原始 ASR：" + transcript);
     }
 
     private static String resultSearchGoal(JSONObject result) {
@@ -432,8 +588,7 @@ final class SilverCareProcessor {
             String raw = client.textJson(
                 offlineSearchTargetCorrectionPrompt(transcript, rawTarget),
                 client.settings().textModel(),
-                OFFLINE_INQUIRY_MAX_NEW_TOKENS,
-                JSON_OBJECT_END
+                OFFLINE_INQUIRY_MAX_NEW_TOKENS
             );
             JSONObject parsed = parseJson(raw);
             String target = exactSupportedSearchTarget(parsed.optString("target", ""));
@@ -462,13 +617,7 @@ final class SilverCareProcessor {
         if (normalized.isEmpty() || "none".equalsIgnoreCase(normalized) || "null".equalsIgnoreCase(normalized)) {
             return "";
         }
-        String[] supported = OfflineVisionInterpreter.supportedSearchTargetList().split("、");
-        for (String name : supported) {
-            if (normalizeText(name).equals(normalized)) {
-                return name;
-            }
-        }
-        return "";
+        return OfflineVisionInterpreter.canonicalSearchTarget(value);
     }
 
     private static String normalizeText(String value) {
@@ -708,6 +857,60 @@ final class SilverCareProcessor {
         return asksFront && asksSafety && !containsAny(value, "找我的", "找到我的", "帮我找", "寻找", "找一下");
     }
 
+    private static boolean isNavigationStartCommand(String text) {
+        String value = text == null ? "" : text
+            .replaceAll("[\\s，。！？,.!?]+", "")
+            .trim();
+        return "开始寻路".equals(value)
+            || "继续寻路".equals(value)
+            || "开始看路".equals(value)
+            || "继续看路".equals(value)
+            || "开始导航".equals(value)
+            || "继续导航".equals(value);
+    }
+
+    private static boolean isSceneInspectionRequest(String text) {
+        String value = text == null ? "" : text
+            .replaceAll("[\\s，。！？,.!?]+", "")
+            .trim();
+        if (value.isEmpty() || isNavigationSafetyQuestion(value) || isCapabilityQuestion(value)) return false;
+        if (containsAny(value, "帮我找", "帮我找到", "寻找", "找一下", "找找", "在哪里", "在哪", "哪里", "哪儿", "定位")) {
+            return false;
+        }
+        boolean hasSceneAnchor = containsAny(
+            value,
+            "画面",
+            "镜头",
+            "眼前",
+            "周围",
+            "桌上",
+            "桌面",
+            "桌子上",
+            "前面",
+            "前方",
+            "当前",
+            "这里",
+            "这个",
+            "那个"
+        );
+        boolean asksWhat = containsAny(
+            value,
+            "有什么",
+            "有哪些",
+            "有个什么",
+            "有一个什么",
+            "什么东西",
+            "什么物品",
+            "哪些东西",
+            "哪些物品",
+            "是什么",
+            "看到什么"
+        );
+        boolean asksToLook = containsAny(value, "看看", "看一下", "看下", "帮我看", "描述");
+        return (hasSceneAnchor && asksWhat)
+            || (asksToLook && containsAny(value, "什么东西", "什么物品", "哪些东西", "哪些物品", "看到什么"));
+    }
+
     private static boolean isSearchIntentRequest(String text) {
         String value = text == null ? "" : text.trim();
         if (value.isEmpty()) return false;
@@ -903,8 +1106,12 @@ final class SilverCareProcessor {
             memoryStore.logObject(subject, result.optString("current_location_tag", ""), scene);
         }
 
-        if (!speech.isEmpty() && distance > 0 && !speech.contains("米") && !speech.contains("厘米")) {
-            speech = speech + "，距离" + formatDistance(distance) + "。";
+        if (!speech.isEmpty()
+            && distance > 0
+            && !speech.contains("米")
+            && !speech.contains("厘米")
+            && !"通行空间".equals(subject)) {
+            speech = speech.replaceFirst("[。！？!?]+$", "") + "，距离" + formatDistance(distance) + "。";
         }
 
         String semanticText = navigationSemanticText(speech, scene, subject, direction, distance);
@@ -987,8 +1194,7 @@ final class SilverCareProcessor {
             String raw = client.textJson(
                 smartNavigationConsistencyPrompt(lastNavigationSemanticText, semanticText),
                 client.settings().textModel(),
-                OFFLINE_SMART_REFRESH_MAX_NEW_TOKENS,
-                JSON_OBJECT_END
+                OFFLINE_SMART_REFRESH_MAX_NEW_TOKENS
             );
             JSONObject judgement = parseJson(raw);
             boolean consistent = judgement.optBoolean("consistent", false);
@@ -1390,6 +1596,14 @@ final class SilverCareProcessor {
             """.formatted(task, context, memoryStore.historyContext(), memoryStore.locationSummary(), missingTargetRule);
     }
 
+    private static String sceneInspectionPrompt() {
+        return """
+            Current task: 场景查看
+            Detect visible common objects in the current camera frame.
+            Return the detector result with objects. Do not infer whether an object is physically on a table.
+            """;
+    }
+
     private String microPrompt() {
         return """
             You are 多模态长护精确引导模式, a high-speed precision guidance system.
@@ -1514,6 +1728,23 @@ final class SilverCareProcessor {
             Output JSON:
             {"thinking":"中文推理","intent":"一个具体枚举值","search_target":null,"target":null,"tag_name":null,"task_name":null,"scene_description":null,"record_type":null,"record_text":null,"speech":"中文回答"}
             """.formatted(transcript, memoryStore.historyContext(), taskStateText());
+    }
+
+    private String offlineInquiryPrompt(String transcript) {
+        return """
+            你是银龄智护的端侧 Qwen 指令路由器。用户是盲人或低视力老人。
+            只输出一个紧凑 JSON 对象，不要 Markdown、解释、思考过程或额外文字。
+
+            字段：i=意图代码，s=不超过30字的中文朗读；按需使用 q=找物目标、t=精确引导目标、tag=地点、task=任务。
+            意图代码：S找物，N通行检查，M精确引导，L地点标记，P步骤任务，D完成当前步骤，K跳过，B上一步，R重复，U任务状态，C照护记录，X停止，I普通问答。
+            规则：只有用户明确说“引导”才用 M；普通问题用 I 并直接在 s 回答；找物用 S 并填写 q；不适用字段不要输出。
+
+            用户：%s
+            当前任务：%s
+            本地记忆：%s
+
+            JSON：
+            """.formatted(transcript, taskStateText(), memoryStore.historyContext());
     }
 
     private String offlineSearchTargetCorrectionPrompt(String transcript, String rawTarget) {

@@ -152,7 +152,7 @@ function tick(options = {}) {
     ctx.drawImage(UI.cam, 0, 0, cvs.width, cvs.height);
 
     cvs.toBlob(blob => {
-        sendFrame(blob);
+        sendFrame(blob, { force: Boolean(options.force) });
     }, 'image/jpeg', CONFIG.jpegQuality);
 }
 

@@ -1,0 +1,55 @@
+{
+  "test": "scene_inquiry",
+  "timestamp_ms": 1785099653437,
+  "device": "vivo V2509A",
+  "sdk": 36,
+  "package": "com.medicalinsurance.longtermcare",
+  "ready": true,
+  "status": "端侧离线模型已就绪\n\n模型目录：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\n离线文本模型：Qwen3-4B-Instruct-2507-MNN\n文本模型文件：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/Qwen3-4B-Instruct-2507-MNN\/config.json\nDAMO-YOLO：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/damo-yolo.mnn\nMNN Native Runtime：已加载",
+  "success": true,
+  "run": {
+    "success": true,
+    "semantic_ok": true,
+    "expected_intent": "info",
+    "actual_intent": "info",
+    "spoken": "当前画面没有检测到可可靠识别的常见物品。请对准桌面、保持稳定后再试一次。",
+    "elapsed_ms": 343,
+    "input_transcript": "嗯桌子上面有什么",
+    "name": "offline_scene_detector_pipeline",
+    "messages": [
+      {
+        "type": "inquiry_result",
+        "thinking": "本地视觉已直接分析当前画面，未调用文本模型",
+        "current_goal": null,
+        "mode": "nav",
+        "intent": "info",
+        "task_active": false,
+        "speech": "当前画面没有检测到可可靠识别的常见物品。请对准桌面、保持稳定后再试一次。",
+        "transcript": "嗯桌子上面有什么",
+        "objects": [],
+        "scene_description": "当前画面没有检测到可可靠识别的常见物品。请对准桌面、保持稳定后再试一次。",
+        "ms": 340
+      },
+      {
+        "type": "speak",
+        "text": "当前画面没有检测到可可靠识别的常见物品。请对准桌面、保持稳定后再试一次。"
+      },
+      {
+        "type": "result",
+        "priority": "low",
+        "subject": "当前画面",
+        "speech": "当前画面没有检测到可可靠识别的常见物品。请对准桌面、保持稳定后再试一次。",
+        "distance": 0,
+        "direction": "unknown",
+        "target_detected": false,
+        "current_goal": null,
+        "social_cues": {},
+        "environment": {},
+        "objects": [],
+        "scene": "当前画面没有检测到可可靠识别的常见物品。请对准桌面、保持稳定后再试一次。",
+        "ms": 340,
+        "stats": {}
+      }
+    ]
+  }
+}

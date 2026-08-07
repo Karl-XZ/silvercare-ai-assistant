@@ -9,6 +9,7 @@ captures/
 
 app/build/
 app/.cxx/
+**/.cxx/
 *.apk
 *.aab
 
@@ -17,6 +18,7 @@ coverage/
 dist/
 __pycache__/
 *.py[cod]
+tmp/
 
 .env
 .env.*

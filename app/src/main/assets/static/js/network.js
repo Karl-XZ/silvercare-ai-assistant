@@ -424,10 +424,16 @@ function speak(text) {
     window.speechSynthesis.speak(utterance);
 }
 
-export function sendFrame(blob) {
+export function sendFrame(blob, options = {}) {
     if (STATE.nativeMode && hasNativeBridge()) {
         const reader = new FileReader();
-        reader.onloadend = () => window.AndroidSilverCare.sendFrame(reader.result);
+        reader.onloadend = () => {
+            if (typeof window.AndroidSilverCare.sendFrameWithOptions === 'function') {
+                window.AndroidSilverCare.sendFrameWithOptions(reader.result, Boolean(options.force));
+                return;
+            }
+            window.AndroidSilverCare.sendFrame(reader.result);
+        };
         reader.readAsDataURL(blob);
         return;
     }

@@ -61,6 +61,17 @@ const std::vector<std::string> kTextConfigCandidates15B = {
     "text-1.5b/config.json"
 };
 
+// The published Qwen2.5-1.5B package uses MNN's legacy prompt_template field.
+// MNN 3.5 routes string prompts through the tokenizer's Jinja template instead,
+// so provide the equivalent ChatML wrapper before loading this legacy model.
+const char* kQwen25LegacyChatTemplateConfig = R"json({
+    "reuse_kv": false,
+    "jinja": {
+        "chat_template": "{%- for message in messages %}{{- '<|im_start|>' + message.role + '\\n' + message.content + '<|im_end|>\\n' }}{%- endfor %}{%- if add_generation_prompt %}{{- '<|im_start|>assistant\\n' }}{%- endif %}",
+        "eos": "<|im_end|>"
+    }
+})json";
+
 const std::vector<std::string> kYoloModelCandidates = {
     "damo-yolo.mnn",
     "damo_yolo.mnn",
@@ -488,6 +499,9 @@ std::string runLlm(
         );
         if (!next) {
             throw std::runtime_error("Failed to create MNN LLM.");
+        }
+        if (isTextModel15B(role)) {
+            applyLlmTuningConfig(next.get(), kQwen25LegacyChatTemplateConfig);
         }
         applyLlmTuningConfig(next.get(), normalizedTuningConfig);
         if (!next->load()) {

@@ -1,0 +1,41 @@
+{
+  "test": "sme2_profile",
+  "timestamp_ms": 1785125178573,
+  "device": "vivo V2509A",
+  "sdk": 36,
+  "package": "com.medicalinsurance.longtermcare",
+  "ready": true,
+  "status": "端侧离线模型已就绪\n\n模型目录：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\n离线文本模型：Qwen3-4B-Instruct-2507-MNN\n文本模型文件：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/Qwen3-4B-Instruct-2507-MNN\/config.json\nDAMO-YOLO：\/storage\/emulated\/0\/Android\/data\/com.medicalinsurance.longtermcare\/files\/multimodal_care_models\/damo-yolo.mnn\nMNN Native Runtime：已加载",
+  "sme2_supported": true,
+  "runtime": "mnn-arm64-v8a+sme2 · SME2 可用",
+  "profile": "auto",
+  "profile_label": "SME2 自动调优",
+  "tuning": "{\"jinja\":{\"context\":{\"enable_thinking\":false}},\"cpu_sme2_neon_division_ratio\":41,\"cpu_sme_core_num\":2}",
+  "success": true,
+  "cold": {
+    "name": "cold_qwen4b_sme2_auto",
+    "success": true,
+    "elapsed_ms": 6377,
+    "output_excerpt": "{\"ok\":true}",
+    "json_valid": true,
+    "parsed_intent": "info",
+    "semantic_ok": true,
+    "parsed_json": {
+      "ok": true
+    },
+    "payload_ok": true
+  },
+  "warm": {
+    "name": "warm_qwen4b_sme2_auto",
+    "success": true,
+    "elapsed_ms": 929,
+    "output_excerpt": "{\"ok\":true}",
+    "json_valid": true,
+    "parsed_intent": "info",
+    "semantic_ok": true,
+    "parsed_json": {
+      "ok": true
+    },
+    "payload_ok": true
+  }
+}

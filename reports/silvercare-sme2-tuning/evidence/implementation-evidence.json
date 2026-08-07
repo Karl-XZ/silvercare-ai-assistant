@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-07-27T12:08:00+08:00",
+  "items": [
+    {
+      "order": 1,
+      "requirement": "至少一款 Qwen 系列模型",
+      "implementation": "Qwen3-4B-Instruct-2507-MNN 为本地主模型；Qwen2.5-1.5B-Instruct-MNN 为轻量备用模型。",
+      "evidence": "最终状态报告中 qwen4b 与 qwen15b 均为 ready。"
+    },
+    {
+      "order": 2,
+      "requirement": "MNN 端侧推理",
+      "implementation": "Java MnnNativeBridge 调用 silvercare_mnn_runtime.cpp；LLM、DAMO-YOLO 均通过 MNN native runtime。",
+      "evidence": "真机 runtime 为 mnn-arm64-v8a+sme2。"
+    },
+    {
+      "order": 3,
+      "requirement": "Arm SME2 检测",
+      "implementation": "Android arm64 下读取 AT_HWCAP2/HWCAP2_SME2，并以 /proc/cpuinfo 的 sme2 特征作为兼容性回退。",
+      "evidence": "vivo V2509A 真机 sme2_supported=true。"
+    },
+    {
+      "order": 4,
+      "requirement": "SME2 参数在加载前生效",
+      "implementation": "native bridge 在 llm->load() 前调用 llm->set_config() 写入 cpu_sme2_neon_division_ratio 与 cpu_sme_core_num。",
+      "evidence": "最终基准报告记录实际配置为 41 / 2，并成功完成冷、热两次语义校验。"
+    },
+    {
+      "order": 5,
+      "requirement": "不支持 SME2 时安全回退",
+      "implementation": "未检测到 SME2 时不写入 SME2 专用字段，只保留 Qwen3 禁用 thinking 的通用 MNN 配置。",
+      "evidence": "MnnLlmTuningProfile 单元测试覆盖 SME2 支持与不支持两条路径。"
+    }
+  ]
+}

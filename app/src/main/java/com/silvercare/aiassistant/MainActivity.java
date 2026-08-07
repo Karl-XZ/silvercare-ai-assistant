@@ -136,7 +136,7 @@ public class MainActivity extends Activity
     private MnnRuntimeBridge mnnRuntimeBridge;
     private LocalTtsRuntimeBridge localTtsRuntimeBridge;
     private AudioRecord audioRecord;
-    private String pendingSpeechImageDataUrl;
+    private volatile String pendingSpeechImageDataUrl;
     private AtomicBoolean modelDownloadInFlight;
     private AtomicBoolean asrDownloadInFlight;
     private AtomicBoolean ttsDownloadInFlight;
@@ -1512,6 +1512,10 @@ public class MainActivity extends Activity
     }
 
     private void submitFrame(String imageDataUrl) {
+        submitFrame(imageDataUrl, false);
+    }
+
+    private void submitFrame(String imageDataUrl, boolean forceRefresh) {
         if (!ensureAiRuntimeReady()) {
             return;
         }
@@ -1520,7 +1524,7 @@ public class MainActivity extends Activity
         }
         executor.execute(() -> {
             try {
-                processor.processFrame(imageDataUrl);
+                processor.processFrame(imageDataUrl, forceRefresh);
             } finally {
                 frameInFlight.set(false);
             }
@@ -1758,7 +1762,7 @@ public class MainActivity extends Activity
                 status.textModel,
                 tuning,
                 32,
-                "}"
+                null
             );
             putPrewarm(report, "text", System.currentTimeMillis() - startedAt);
         } catch (Exception error) {
@@ -2860,6 +2864,15 @@ public class MainActivity extends Activity
         });
     }
 
+    private void updateSpeechInquiryFrame(String imageDataUrl) {
+        if (imageDataUrl == null || imageDataUrl.trim().isEmpty()) return;
+        pendingSpeechImageDataUrl = imageDataUrl;
+        DiagnosticLogger.eventPairs(
+            "speech_frame_updated",
+            "image_chars", imageDataUrl.length()
+        );
+    }
+
     private void stopDashScopeWavRecordingOnly() {
         if (wavRecording != null) {
             wavRecording.set(false);
@@ -3314,6 +3327,11 @@ public class MainActivity extends Activity
         }
 
         @JavascriptInterface
+        public void sendFrameWithOptions(String imageDataUrl, boolean forceRefresh) {
+            submitFrame(imageDataUrl, forceRefresh);
+        }
+
+        @JavascriptInterface
         public void sendInquiryData(String imageDataUrl, String audioDataUrl) {
             submitInquiry(imageDataUrl, audioDataUrl);
         }
@@ -3321,6 +3339,11 @@ public class MainActivity extends Activity
         @JavascriptInterface
         public void startSpeechInquiry(String imageDataUrl) {
             MainActivity.this.startSpeechInquiry(imageDataUrl);
+        }
+
+        @JavascriptInterface
+        public void updateSpeechInquiryFrame(String imageDataUrl) {
+            MainActivity.this.updateSpeechInquiryFrame(imageDataUrl);
         }
 
         @JavascriptInterface

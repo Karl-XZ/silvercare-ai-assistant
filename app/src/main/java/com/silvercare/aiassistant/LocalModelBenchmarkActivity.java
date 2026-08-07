@@ -38,6 +38,7 @@ public class LocalModelBenchmarkActivity extends Activity {
     private static final String TAG = "LocalModelBenchmark";
     private static final String EXTRA_TEST = "benchmark_test";
     private static final String EXTRA_TIMEOUT_MS = "timeout_ms";
+    private static final String EXTRA_TUNING_PROFILE = "tuning_profile";
     private static final long DEFAULT_TIMEOUT_MS = 120_000L;
     private static final boolean LOCAL_MNN_TTS_VOICE_QUALITY_ENABLED = false;
 
@@ -84,9 +85,13 @@ public class LocalModelBenchmarkActivity extends Activity {
             case "asr" -> benchmarkAsr();
             case "vision" -> benchmarkVision();
             case "text" -> benchmarkText();
+            case "text_1_5b" -> benchmarkText15B();
+            case "sme2_profile" -> benchmarkSme2Profile();
             case "text_suite" -> benchmarkTextSuite();
             case "text_inquiry" -> benchmarkTextInquiry();
+            case "scene_inquiry" -> benchmarkSceneInquiry();
             case "tts" -> benchmarkTts();
+            case "tts_disabled_development_only" -> benchmarkDisabledMnnTtsForDevelopmentOnly();
             case "scenario" -> benchmarkManualScenario();
             default -> benchmarkStatus();
         };
@@ -98,6 +103,11 @@ public class LocalModelBenchmarkActivity extends Activity {
         OfflineModelStatus offlineStatus = new OfflineModelManager().inspect(
             modelRoot().getAbsolutePath(),
             OfflineAiClient.TEXT_MODEL_4B,
+            mnn.isAvailable()
+        );
+        OfflineModelStatus offline15BStatus = new OfflineModelManager().inspect(
+            modelRoot().getAbsolutePath(),
+            OfflineAiClient.TEXT_MODEL_1_5B,
             mnn.isAvailable()
         );
         LocalAsrModelStatus asrStatus = new LocalAsrModelManager().inspect(this);
@@ -114,6 +124,8 @@ public class LocalModelBenchmarkActivity extends Activity {
         putQuietly(report, "mnn_sme2_supported", mnn.supportsSme2());
         putQuietly(report, "offline_ready", offlineStatus.ready());
         putQuietly(report, "offline_status", offlineStatus.detailText());
+        putQuietly(report, "offline_1_5b_ready", offline15BStatus.ready());
+        putQuietly(report, "offline_1_5b_status", offline15BStatus.detailText());
         putQuietly(report, "local_asr_ready", asrStatus.ready);
         putQuietly(report, "local_asr_status", asrStatus.detailText());
         putQuietly(report, "local_tts_ready", LOCAL_MNN_TTS_VOICE_QUALITY_ENABLED && ttsStatus.ready);
@@ -207,7 +219,7 @@ public class LocalModelBenchmarkActivity extends Activity {
             OfflineAiClient.TEXT_MODEL_4B,
             tuning,
             64,
-            "}"
+            null
         )));
         runs.put(timed("warm_qwen4b_short_json", () -> bridge.textJson(
             status.modelDir,
@@ -215,12 +227,150 @@ public class LocalModelBenchmarkActivity extends Activity {
             OfflineAiClient.TEXT_MODEL_4B,
             tuning,
             48,
-            "}"
+            null
         )));
         putQuietly(report, "success", true);
         putQuietly(report, "tuning", tuning);
         putQuietly(report, "runs", runs);
         return report;
+    }
+
+    private JSONObject benchmarkText15B() throws Exception {
+        if (!BuildConfig.DEBUG) {
+            throw new SecurityException("development-only Qwen 1.5B benchmark requires a debug build");
+        }
+        String model = OfflineAiClient.TEXT_MODEL_1_5B;
+        JSONObject report = baseReport("text_1_5b");
+        MnnNativeBridge bridge = new MnnNativeBridge();
+        OfflineModelStatus status = new OfflineModelManager().inspect(
+            modelRoot().getAbsolutePath(),
+            model,
+            bridge.isAvailable()
+        );
+        boolean ready = status.nativeRuntimeAvailable && status.directoryReadable && status.textReady;
+        putQuietly(report, "ready", ready);
+        putQuietly(report, "status", status.detailText());
+        putQuietly(report, "model_role", model);
+        putQuietly(report, "model_label", OfflineAiClient.textModelLabel(model));
+        putQuietly(report, "model_root", status.modelDir);
+        putQuietly(report, "text_config", describeFile(status.textConfig));
+        if (!ready) {
+            putQuietly(report, "success", false);
+            putQuietly(report, "error", !bridge.isAvailable()
+                ? bridge.runtimeSummary()
+                : !status.directoryReadable
+                    ? "模型目录不可读：" + status.modelDir
+                    : OfflineAiClient.textModelLabel(model) + " config.json 未找到");
+            return report;
+        }
+        String tuning = MnnLlmTuningProfile.DEFAULT.nativeConfigJson(bridge.supportsSme2());
+        JSONArray runs = new JSONArray();
+        JSONObject cold = timedRouterJson("cold_qwen2_5_1_5b_short_json", null, () -> bridge.textJson(
+            status.modelDir,
+            "你是适老化居家辅助系统。只输出 JSON：{\"reply\":\"请停下，前方可能有障碍。\"}",
+            model,
+            tuning,
+            64,
+            null
+        ));
+        JSONObject warm = timedRouterJson("warm_qwen2_5_1_5b_short_json", null, () -> bridge.textJson(
+            status.modelDir,
+            "只输出 JSON：{\"same\":true,\"tip\":\"向右慢慢绕开。\"}",
+            model,
+            tuning,
+            48,
+            null
+        ));
+        JSONObject coldJson = cold.optJSONObject("parsed_json");
+        boolean coldSemanticOk = coldJson != null
+            && "请停下，前方可能有障碍。".equals(coldJson.optString("reply"));
+        putQuietly(cold, "semantic_ok", coldSemanticOk);
+        if (!coldSemanticOk) {
+            putQuietly(cold, "success", false);
+            putQuietly(cold, "error", "unexpected reply payload");
+        }
+        JSONObject warmJson = warm.optJSONObject("parsed_json");
+        boolean warmSemanticOk = warmJson != null
+            && warmJson.optBoolean("same", false)
+            && "向右慢慢绕开。".equals(warmJson.optString("tip"));
+        putQuietly(warm, "semantic_ok", warmSemanticOk);
+        if (!warmSemanticOk) {
+            putQuietly(warm, "success", false);
+            putQuietly(warm, "error", "unexpected same/tip payload");
+        }
+        runs.put(cold);
+        runs.put(warm);
+        putQuietly(report, "success", cold.optBoolean("success") && warm.optBoolean("success"));
+        putQuietly(report, "tuning", tuning);
+        putQuietly(report, "runs", runs);
+        return report;
+    }
+
+    private JSONObject benchmarkSme2Profile() throws Exception {
+        if (!BuildConfig.DEBUG) {
+            throw new SecurityException("development-only SME2 benchmark requires a debug build");
+        }
+        JSONObject report = baseReport("sme2_profile");
+        MnnNativeBridge bridge = new MnnNativeBridge();
+        OfflineModelStatus status = new OfflineModelManager().inspect(
+            modelRoot().getAbsolutePath(),
+            OfflineAiClient.TEXT_MODEL_4B,
+            bridge.isAvailable()
+        );
+        String requestedProfile = clean(getIntent().getStringExtra(EXTRA_TUNING_PROFILE));
+        MnnLlmTuningProfile profile = MnnLlmTuningProfile.from(requestedProfile);
+        boolean sme2Supported = bridge.supportsSme2();
+        String tuning = profile.nativeConfigJson(sme2Supported);
+        putQuietly(report, "ready", status.ready());
+        putQuietly(report, "status", status.detailText());
+        putQuietly(report, "sme2_supported", sme2Supported);
+        putQuietly(report, "runtime", bridge.runtimeSummary());
+        putQuietly(report, "profile", profile.value);
+        putQuietly(report, "profile_label", profile.label);
+        putQuietly(report, "tuning", tuning);
+        if (!status.ready() || !sme2Supported) {
+            putQuietly(report, "success", false);
+            putQuietly(report, "error", !status.ready()
+                ? status.shortText()
+                : "当前设备未检测到 Arm SME2，无法执行 SME2 对照基准");
+            return report;
+        }
+
+        String prompt = "只输出一个JSON对象，不要解释：{\"ok\":true}";
+        JSONObject cold = timedRouterJson("cold_qwen4b_sme2_" + profile.value, null, () -> bridge.textJson(
+            status.modelDir,
+            prompt,
+            OfflineAiClient.TEXT_MODEL_4B,
+            tuning,
+            16,
+            null
+        ));
+        requireBenchmarkOkPayload(cold);
+        JSONObject warm = timedRouterJson("warm_qwen4b_sme2_" + profile.value, null, () -> bridge.textJson(
+            status.modelDir,
+            prompt,
+            OfflineAiClient.TEXT_MODEL_4B,
+            tuning,
+            16,
+            null
+        ));
+        requireBenchmarkOkPayload(warm);
+
+        putQuietly(report, "success", cold.optBoolean("success") && warm.optBoolean("success"));
+        putQuietly(report, "cold", cold);
+        putQuietly(report, "warm", warm);
+        return report;
+    }
+
+    private static void requireBenchmarkOkPayload(JSONObject run) {
+        JSONObject parsed = run.optJSONObject("parsed_json");
+        boolean payloadOk = parsed != null && parsed.optBoolean("ok", false);
+        putQuietly(run, "payload_ok", payloadOk);
+        putQuietly(run, "semantic_ok", payloadOk);
+        if (!payloadOk) {
+            putQuietly(run, "success", false);
+            putQuietly(run, "error", "expected JSON payload {\"ok\":true}");
+        }
     }
 
     private JSONObject benchmarkTextSuite() throws Exception {
@@ -299,7 +449,7 @@ public class LocalModelBenchmarkActivity extends Activity {
             JSONObject run = timedWithTimeout(
                 name,
                 300_000L,
-                () -> bridge.textJson(status.modelDir, prompt, OfflineAiClient.TEXT_MODEL_4B, tuning, 96, "}")
+                () -> bridge.textJson(status.modelDir, prompt, OfflineAiClient.TEXT_MODEL_4B, tuning, 96, null)
             );
             putQuietly(run, "prompt_chars", prompt.length());
             putQuietly(run, "max_new_tokens", 96);
@@ -376,6 +526,34 @@ public class LocalModelBenchmarkActivity extends Activity {
         return report;
     }
 
+    private JSONObject benchmarkSceneInquiry() throws Exception {
+        JSONObject report = baseReport("scene_inquiry");
+        MnnNativeBridge bridge = new MnnNativeBridge();
+        OfflineModelStatus status = new OfflineModelManager().inspect(
+            modelRoot().getAbsolutePath(),
+            OfflineAiClient.TEXT_MODEL_4B,
+            bridge.isAvailable()
+        );
+        putQuietly(report, "ready", status.ready());
+        putQuietly(report, "status", status.detailText());
+        if (!status.ready()) {
+            putQuietly(report, "success", false);
+            putQuietly(report, "error", status.shortText());
+            return report;
+        }
+        JSONObject run = runProcessorScenario(
+            syntheticRoomImageDataUrl(),
+            "嗯桌子上面有什么",
+            bridge,
+            "info",
+            "当前画面",
+            "offline_scene_detector_pipeline"
+        );
+        putQuietly(report, "success", run.optBoolean("success") && run.optBoolean("semantic_ok"));
+        putQuietly(report, "run", run);
+        return report;
+    }
+
     private JSONObject benchmarkTts() throws Exception {
         JSONObject report = baseReport("tts");
         putQuietly(report, "success", true);
@@ -387,6 +565,9 @@ public class LocalModelBenchmarkActivity extends Activity {
     }
 
     private JSONObject benchmarkDisabledMnnTtsForDevelopmentOnly() throws Exception {
+        if (!BuildConfig.DEBUG) {
+            throw new SecurityException("development-only MNN TTS benchmark requires a debug build");
+        }
         JSONObject report = baseReport("tts_disabled_development_only");
         MnnTtsRuntimeBridge bridge = new MnnTtsRuntimeBridge();
         LocalTtsModelStatus status = new LocalTtsModelManager().inspect(
@@ -491,12 +672,27 @@ public class LocalModelBenchmarkActivity extends Activity {
         putQuietly(report, "vision", visionRun);
 
         if (!transcript.trim().isEmpty()) {
-            JSONObject pipelineRun = runProcessorScenario(imageDataUrl, transcript, bridge);
+            JSONObject pipelineRun = runProcessorScenario(
+                imageDataUrl,
+                transcript,
+                bridge,
+                "nav_check",
+                "查看前方",
+                "real_voice_navigation_pipeline"
+            );
             putQuietly(report, "pipeline", pipelineRun);
+            putQuietly(
+                report,
+                "success",
+                asrRun.optBoolean("success")
+                    && visionRun.optBoolean("success")
+                    && pipelineRun.optBoolean("success")
+                    && pipelineRun.optBoolean("semantic_ok")
+            );
         } else {
             putQuietly(report, "pipeline_skipped", "ASR did not produce a transcript");
+            putQuietly(report, "success", false);
         }
-        putQuietly(report, "success", asrRun.optBoolean("success") && visionRun.optBoolean("success"));
         return report;
     }
 
@@ -641,9 +837,14 @@ public class LocalModelBenchmarkActivity extends Activity {
     }
 
     private JSONObject timedRouterJson(String name, String expectedIntent, Callable<String> callable) {
-        JSONObject item = timed(name, callable);
-        String output = item.optString("output_excerpt", "");
+        JSONObject item = new JSONObject();
+        putQuietly(item, "name", name);
+        long started = SystemClock.elapsedRealtimeNanos();
         try {
+            String output = callable.call();
+            putQuietly(item, "success", true);
+            putQuietly(item, "elapsed_ms", elapsedMs(started));
+            putQuietly(item, "output_excerpt", excerpt(output));
             JSONObject parsed = parseFirstJsonObject(output);
             String compactIntent = parsed.optString("i", parsed.optString("intent", ""));
             String normalizedIntent = normalizeCompactIntent(compactIntent);
@@ -657,6 +858,7 @@ public class LocalModelBenchmarkActivity extends Activity {
                 putQuietly(item, "error", "intent " + normalizedIntent + " != expected " + expectedIntent);
             }
         } catch (Throwable throwable) {
+            putQuietly(item, "elapsed_ms", elapsedMs(started));
             putQuietly(item, "json_valid", false);
             putQuietly(item, "semantic_ok", false);
             putQuietly(item, "success", false);
@@ -828,10 +1030,12 @@ public class LocalModelBenchmarkActivity extends Activity {
     private long defaultTimeoutFor(String test) {
         return switch (test) {
             case "text" -> 240_000L;
+            case "text_1_5b" -> 240_000L;
+            case "sme2_profile" -> 180_000L;
             case "text_suite" -> 360_000L;
             case "text_inquiry" -> 180_000L;
             case "asr" -> 120_000L;
-            case "tts" -> 180_000L;
+            case "tts", "tts_disabled_development_only" -> 180_000L;
             case "vision" -> 120_000L;
             default -> DEFAULT_TIMEOUT_MS;
         };

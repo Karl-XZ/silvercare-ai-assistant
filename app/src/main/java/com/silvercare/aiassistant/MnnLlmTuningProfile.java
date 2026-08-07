@@ -4,7 +4,7 @@ enum MnnLlmTuningProfile {
     AUTO(
         "auto",
         "SME2 自动调优",
-        "检测到 SME2 时使用 MNN 推荐的 41/2 配置；否则使用 MNN 默认路径。",
+        "检测到 SME2 时使用本项目在 MT6993 真机基准中选出的 41/2 配置；否则使用 MNN 默认路径。",
         41,
         2,
         true

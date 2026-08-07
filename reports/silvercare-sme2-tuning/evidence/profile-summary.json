@@ -1,0 +1,58 @@
+{
+  "generated_at": "2026-07-27T12:08:00+08:00",
+  "device": "vivo V2509A",
+  "soc": "MT6993",
+  "abi": "arm64-v8a",
+  "android_sdk": 36,
+  "metric_definition": "每个档位在独立冷进程中先执行一次 Qwen3-4B 冷启动推理，再在同一进程执行一次热推理；耗时单位为毫秒。",
+  "profiles": [
+    {
+      "profile": "SME2 自动调优",
+      "profile_key": "auto",
+      "config": "41 / 2",
+      "run_count": 2,
+      "cold_ms": 5939,
+      "warm_ms": 871,
+      "cold_runs_ms": [5668, 6209],
+      "warm_runs_ms": [855, 887],
+      "semantic_check": "2/2 通过",
+      "selected": true
+    },
+    {
+      "profile": "MNN 默认",
+      "profile_key": "mnn_default",
+      "config": "不覆盖",
+      "run_count": 2,
+      "cold_ms": 6386,
+      "warm_ms": 877,
+      "cold_runs_ms": [6759, 6013],
+      "warm_runs_ms": [849, 905],
+      "semantic_check": "2/2 通过",
+      "selected": false
+    },
+    {
+      "profile": "SME2 性能优先",
+      "profile_key": "performance",
+      "config": "49 / 2",
+      "run_count": 1,
+      "cold_ms": 5814,
+      "warm_ms": 888,
+      "cold_runs_ms": [5814],
+      "warm_runs_ms": [888],
+      "semantic_check": "1/1 通过",
+      "selected": false
+    },
+    {
+      "profile": "SME2 省电稳定",
+      "profile_key": "efficiency",
+      "config": "33 / 1",
+      "run_count": 1,
+      "cold_ms": 6196,
+      "warm_ms": 901,
+      "cold_runs_ms": [6196],
+      "warm_runs_ms": [901],
+      "semantic_check": "1/1 通过",
+      "selected": false
+    }
+  ]
+}

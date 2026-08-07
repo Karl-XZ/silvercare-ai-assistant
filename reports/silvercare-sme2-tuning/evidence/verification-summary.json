@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-07-27T12:08:00+08:00",
+  "unit_tests": {
+    "tests": 97,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 2
+  },
+  "backup": {
+    "path": "C:\\silvercare-backups\\silvercare-ai-assistant-20260727-040047",
+    "files": 1534,
+    "bytes": 576616346,
+    "sha256_mismatches": 0
+  },
+  "installation": {
+    "apk_sha256": "87781525F168981F100CBF5D016D30E00E0FC2DA88254C5B24A38DBC3B789CCE",
+    "built_archived_match": true,
+    "built_installed_match": true,
+    "package": "com.medicalinsurance.longtermcare"
+  }
+}

@@ -33,6 +33,30 @@ public class OfflineVisionInterpreterTest {
     }
 
     @Test
+    public void findsCupFromProductionSearchPrompt() throws Exception {
+        String result = OfflineVisionInterpreter.interpret(
+            "Current task: 找物目标：杯子\nTemporal context: 无\n",
+            """
+            {
+              "image_width": 480,
+              "image_height": 853,
+              "detections": [
+                {"class":"bowl","score":0.60,"box":[302,300,348,353]},
+                {"class":"cup","score":0.52,"box":[180,310,245,430]}
+              ]
+            }
+            """,
+            "damo-yolo-mnn"
+        );
+
+        JSONObject json = new JSONObject(result);
+        assertThat(json.optBoolean("target_detected"), equalTo(true));
+        assertThat(json.optString("category"), equalTo("target"));
+        assertThat(json.optString("subject"), equalTo("杯子"));
+        assertThat(json.optString("speech"), containsString("杯子在"));
+    }
+
+    @Test
     public void producesObstacleNavigationFromLargestAheadObject() throws Exception {
         String result = OfflineVisionInterpreter.interpret(
             "Current task: 通用导航\n",

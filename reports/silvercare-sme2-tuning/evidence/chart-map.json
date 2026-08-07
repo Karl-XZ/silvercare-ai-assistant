@@ -1,0 +1,12 @@
+{
+  "chart_id": "warm_latency_by_profile",
+  "section": "41/2 在真机多轮对比中综合最优",
+  "question": "不同 MNN/SME2 配置下，Qwen3-4B 的热运行耗时如何比较？",
+  "family": "Comparison & Ranking",
+  "type": "horizontal bar",
+  "x_field": "profile",
+  "y_field": "warm_ms",
+  "claim": "自动档 41/2 的平均热运行耗时最低，但档位样本数不完全一致。",
+  "palette_policy": "single-root preferred",
+  "delivery": "artifact.json -> portable HTML"
+}
