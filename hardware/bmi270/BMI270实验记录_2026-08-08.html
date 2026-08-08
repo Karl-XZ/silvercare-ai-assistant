@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>BMI270 ESP32-S3 实验记录</title>
+<style>
+body{font-family:Arial,"Microsoft YaHei";max-width:1000px;margin:auto;padding:30px;line-height:1.7}
+.card{border:1px solid #ddd;border-radius:10px;padding:20px;margin:20px 0}
+code{background:#eee;padding:3px}
+</style>
+</head>
+<body>
+<h1>BMI270 + ESP32-S3 六轴传感器实验记录</h1>
+<div class="card">
+<h2>实验目标</h2>
+<p>验证 BMI270 IMU 在银龄智护智能眼镜中的可用性。</p>
+</div>
+<div class="card">
+<h2>连接</h2>
+<ul>
+<li>GPIO41 → SDA</li>
+<li>GPIO42 → SCL</li>
+<li>3.3V → VCC</li>
+<li>GND → GND</li>
+</ul>
+</div>
+<div class="card">
+<h2>验证结果</h2>
+<p>I2C 地址：<code>0x68</code></p>
+<p>六轴读取成功。</p>
+<p>Python完成实时可视化。</p>
+</div>
+<div class="card">
+<h2>下一阶段</h2>
+<ul>
+<li>跌倒数据采集</li>
+<li>BLE传输</li>
+<li>手机端融合</li>
+</ul>
+</div>
+</body>
+</html>
