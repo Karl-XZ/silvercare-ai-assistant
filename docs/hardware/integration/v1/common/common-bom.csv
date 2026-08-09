@@ -1,0 +1,15 @@
+类别,功能,器件/方案,数量,两方案共用,接口/电源,当前状态,优先级,必须确认
+Camera,第一视角摄像头,OV5640 DVP模组,1,是,8-bit DVP + SCCB；2.8V + 1.2/1.5V,链路已验证,P0,最终FPC脚位/供电/电平/镜头
+IMU,六轴运动感知,BMI270,1,是,I2C + INT；1.7~3.6V,六轴读取已验证,P1,INT1/初始化/手机闭环
+MIC,语音输入,INMP441,1,是,I2S RX；3.3V实验已验证,录音已验证,P1,实时音频流/全功能并发
+Haptic Driver,LRA驱动,DRV2605L,1,是,I2C；2~5.2V,实机已验证,P1,LRA额定参数/最终供电
+Haptic,触觉执行器,0809 X轴 LRA,1,是,DRV2605L OUT+/OUT-,实机已验证,P1,阻抗/谐振频率/额定及过驱电压
+Audio OUT,骨传导功放,I2S Class-D功放（待选）,1或2,尽量是,I2S TX + 功率电源,未冻结,P0,骨传导阻抗/额定功率/声道数
+Transducer,骨传导输出,现有骨传导单元,2,是,功放差分输出,单元已有,P0,阻抗/额定功率/最大功率
+Battery,主电池,1S LiPo,1,是,约3.0~4.2V,未冻结,P0,容量/尺寸/最大持续及峰值电流
+Charger,充电/Power Path,1S锂电充电管理IC（待选）,1,是,5V输入→BAT/SYS,未冻结,P0,边充边用/充电电流/保护
+Connector,磁吸接口,4Pin磁吸触点,1,是,5V/GND/USB D+/USB D-,方向冻结,P1,额定电流/机械尺寸/ESD
+Regulator,系统3.3V,3.3V稳压器（待选）,1,大部分共用,BAT→3V3,未冻结,P0,峰值电流/效率/尺寸
+Regulator,Camera 2.8V,低噪声LDO（待选）,1,是,3V3/BAT→2.8V,路径已知,P0,电流/压差/启动时序
+Regulator,Camera Core,1.2V或1.5V LDO（按最终模组）,1,是,3V3→DVDD,路径已知,P0,最终电压/电流
+Protection,接口保护,USB/磁吸口ESD器件（待选）,若干,是,VBUS/USB D+/D-,未冻结,P1,低电容USB ESD
