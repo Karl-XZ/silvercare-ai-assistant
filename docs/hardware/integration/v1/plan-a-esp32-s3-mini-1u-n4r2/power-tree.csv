@@ -1,0 +1,8 @@
+电源节点,来源,目标电压,主要负载,状态,优先级,待确认
+MAG_5V,4Pin磁吸接口,5V,充电/Power Path + USB VBUS,未冻结,P0,输入保护/ESD/额定电流
+BAT_1S,充电管理+LiPo,约3.0~4.2V,系统能源,未冻结,P0,容量/最大持续及峰值电流
+SYS_3V3,BAT_1S经稳压,3.3V,ESP32-S3-MINI-1U-N4R2 + INMP441 + BMI270 + DRV2605L,未冻结,P0,稳压器拓扑/峰值电流/效率
+CAM_2V8,SYS_3V3/BAT,2.8V,OV5640 AVDD/DOVDD,未冻结,P0,LDO电流/纹波/启动时序
+CAM_CORE,SYS_3V3,1.2V或1.5V,OV5640 DVDD,未冻结,P0,按最终Camera模组确认
+AUDIO_PWR,BAT_1S或系统电源,由功放决定,Class-D + 骨传导,未冻结,P0,先确定骨传导阻抗/功率和功放
+USB_VBUS_SENSE,MAG_5V,安全逻辑电平,ESP32 USB/充电状态检测,未冻结,P1,不可将5V直接输入普通GPIO
