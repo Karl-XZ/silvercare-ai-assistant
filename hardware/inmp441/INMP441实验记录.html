@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>INMP441实验记录</title>
+<style>body{font-family:Arial;padding:30px;line-height:1.6}table{border-collapse:collapse}td,th{border:1px solid #aaa;padding:8px}</style></head>
+<body>
+<h1>INMP441 + ESP32-S3 数字麦克风实验</h1>
+<h2>实验结果</h2>
+<p>I²S音频输入、USB WAV回传链路已经验证成功。</p>
+<table><tr><th>模块</th><th>结果</th></tr>
+<tr><td>INMP441供电</td><td>正常</td></tr>
+<tr><td>I²S时钟</td><td>正常</td></tr>
+<tr><td>PCM采集</td><td>正常</td></tr>
+<tr><td>USB WAV输出</td><td>正常</td></tr>
+</table>
+<h2>系统结构</h2>
+<pre>INMP441 → I²S → ESP32-S3 → USB → PC → WAV</pre>
+<h2>下一步</h2>
+<ul><li>VAD</li><li>语音识别</li><li>蓝牙传输</li><li>Android集成</li></ul>
+</body></html>
