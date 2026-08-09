@@ -1,0 +1,9 @@
+Level,Block,Voltage,Notes,Status
+Input,Magnetic Charging,5V,Charging input candidate,To verify
+Battery,LiPo,3.7V nominal,System battery,To select
+Power IC,Charger/BMS,VBAT,Charge and protection,To select
+Main SoC,ESP32-S3/BK7258,3.3V or integrated rail,Needs verification
+Camera,OV5640,Multiple rails,Needs sensor datasheet design
+Sensor,BMI270,Low voltage rail,Existing module validated
+Sensor,DRV2605L,Low voltage rail,Existing module validated
+Audio,AMP,VBAT/5V/3.3V,Depends on amplifier,To select
