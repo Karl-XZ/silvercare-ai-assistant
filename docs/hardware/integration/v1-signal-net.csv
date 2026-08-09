@@ -1,0 +1,11 @@
+Module,Device,Interface,Signal,Connection,Status
+Camera,OV5640,DVP,D0-D7,MCU Camera Interface,To be mapped
+Camera,OV5640,SCCB,SDA/SCL,MCU I2C,Confirmed concept
+Microphone,INMP441,I2S,BCLK WS DATA,MCU I2S RX,Validated
+Audio Output,Digital AMP,I2S,BCLK WS DATA,MCU I2S TX,To verify
+IMU,BMI270,I2C,SDA SCL,MCU I2C Bus,Validated
+Haptic,DRV2605L,I2C,SDA SCL,MCU I2C Bus,Validated
+Haptic,LRA,Motor Drive,DRV output,DRV2605L,Validated
+Power,Battery,Power,VBAT,Power Management,To design
+Debug,USB,USB,D+ D-,MCU USB,To design
+Wireless,Phone,BLE/WiFi,Wireless Link,MCU SoC,Required
