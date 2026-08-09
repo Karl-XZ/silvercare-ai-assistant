@@ -1,0 +1,39 @@
+功能,信号,方向,GPIO/Group,固定/可映射,冲突检查,状态,备注
+Camera,D0,IN,TBD,DVP PinMux,待查官方PinMux,P0,8-bit CIS DVP
+Camera,D1,IN,TBD,DVP PinMux,待查,P0,
+Camera,D2,IN,TBD,DVP PinMux,待查,P0,
+Camera,D3,IN,TBD,DVP PinMux,待查,P0,
+Camera,D4,IN,TBD,DVP PinMux,待查,P0,
+Camera,D5,IN,TBD,DVP PinMux,待查,P0,
+Camera,D6,IN,TBD,DVP PinMux,待查,P0,
+Camera,D7,IN,TBD,DVP PinMux,待查,P0,
+Camera,PCLK,IN,TBD,DVP PinMux,待查,P0,
+Camera,HREF,IN,TBD,DVP PinMux,待查,P0,
+Camera,VSYNC,IN,TBD,DVP PinMux,待查,P0,
+Camera,XCLK,OUT,TBD,Clock/PinMux,待查,P0,
+Camera,SCCB_SDA,I/O,TBD,I2C PinMux,待查,P0,
+Camera,SCCB_SCL,OUT,TBD,I2C PinMux,待查,P0,
+Camera,RESET,OUT,TBD,GPIO,待查,P1,按模组需要
+Camera,PWDN,OUT,TBD,GPIO,待查,P1,按模组需要
+MIC,BCLK,OUT,TBD,I2S Group 0/1/2,必须避免与Camera/USB冲突,P0,
+MIC,WS,OUT,TBD,I2S Group 0/1/2,待查,P0,
+MIC,DATA,IN,TBD,I2S Group 0/1/2,待查,P0,
+Audio,BCLK,OUT,TBD,I2S Group 0/1/2,待查,P0,可评估与MIC共享时钟
+Audio,LRCLK,OUT,TBD,I2S Group 0/1/2,待查,P0,
+Audio,DATA,OUT,TBD,I2S Group 0/1/2,待查,P0,
+Sensor,SDA,I/O,TBD,I2C,待查,P0,BMI270+DRV2605L
+Sensor,SCL,OUT,TBD,I2C,待查,P0,BMI270+DRV2605L
+BMI270,INT1,IN,TBD,GPIO,待查,P1,
+USB,D-,I/O,TBD,USB HS,必须保留,P0,按Beken USB参考设计
+USB,D+,I/O,TBD,USB HS,必须保留,P0,按Beken USB参考设计
+Audio,AMP_EN,OUT,TBD,GPIO,待查,P1,
+Debug,UART_DOWNLOAD,I/O,TBD,UART,必须正确,P0,固件下载
+Debug,SWDIO,I/O,TBD,SWD,必须正确,P0,
+Debug,SWCLK,IN,TBD,SWD,必须正确,P0,
+Debug,RESET/BOOT,IN,TBD,启动控制,必须正确,P0,
+RF,ANT,RF,TBD,RF专用,必须按参考设计,P0,
+Reserve,SPARE1,I/O,TBD,GPIO,待查,P0,目标总余量≥5
+Reserve,SPARE2,I/O,TBD,GPIO,待查,P0,
+Reserve,SPARE3,I/O,TBD,GPIO,待查,P0,
+Reserve,SPARE4,I/O,TBD,GPIO,待查,P0,
+Reserve,SPARE5,I/O,TBD,GPIO,待查,P0,
