@@ -1,0 +1,36 @@
+功能,信号,方向,GPIO,固定/可映射,冲突检查,状态,备注
+Camera,D0,IN,TBD,可映射,待查N4R2/USB/strapping,P0,8-bit DVP
+Camera,D1,IN,TBD,可映射,待查,P0,
+Camera,D2,IN,TBD,可映射,待查,P0,
+Camera,D3,IN,TBD,可映射,待查,P0,
+Camera,D4,IN,TBD,可映射,待查,P0,
+Camera,D5,IN,TBD,可映射,待查,P0,
+Camera,D6,IN,TBD,可映射,待查,P0,
+Camera,D7,IN,TBD,可映射,待查,P0,
+Camera,PCLK,IN,TBD,可映射,待查,P0,
+Camera,HREF,IN,TBD,可映射,待查,P0,
+Camera,VSYNC,IN,TBD,可映射,待查,P0,
+Camera,XCLK,OUT,TBD,可映射,待查,P0,
+Camera,SCCB_SDA,I/O,TBD,可映射,待查,P0,
+Camera,SCCB_SCL,OUT,TBD,可映射,待查,P0,
+Camera,RESET,OUT,TBD,可选,待查,P1,按模组需要
+Camera,PWDN,OUT,TBD,可选,待查,P1,按模组需要
+MIC,BCLK,OUT,TBD,I2S Matrix,待查,P0,
+MIC,WS,OUT,TBD,I2S Matrix,待查,P0,
+MIC,DATA,IN,TBD,I2S Matrix,待查,P0,
+Audio,BCLK,OUT,TBD,I2S Matrix,待查,P0,可评估与MIC共享时钟
+Audio,LRCLK,OUT,TBD,I2S Matrix,待查,P0,可评估与MIC共享时钟
+Audio,DATA,OUT,TBD,I2S Matrix,待查,P0,
+Sensor,SDA,I/O,TBD,I2C Matrix,待查,P0,BMI270+DRV2605L
+Sensor,SCL,OUT,TBD,I2C Matrix,待查,P0,BMI270+DRV2605L
+BMI270,INT1,IN,TBD,GPIO,待查,P1,
+USB,D-,I/O,TBD,USB固定能力,必须保留,P0,按官方模组/SoC USB脚确认
+USB,D+,I/O,TBD,USB固定能力,必须保留,P0,按官方模组/SoC USB脚确认
+Audio,AMP_EN,OUT,TBD,GPIO,待查,P1,
+Debug,BOOT,IN,TBD,Strapping,必须正确,P0,
+Debug,EN,IN,TBD,专用/控制,必须正确,P0,
+Reserve,SPARE1,I/O,TBD,GPIO,待查,P0,目标总余量≥5
+Reserve,SPARE2,I/O,TBD,GPIO,待查,P0,
+Reserve,SPARE3,I/O,TBD,GPIO,待查,P0,
+Reserve,SPARE4,I/O,TBD,GPIO,待查,P0,
+Reserve,SPARE5,I/O,TBD,GPIO,待查,P0,
