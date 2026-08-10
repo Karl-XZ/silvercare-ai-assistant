@@ -54,14 +54,17 @@ IMU         BMI270 ×1
 MIC         ICS-43434 ×1
 Audio AMP   MAX98357A ×1
 Bone        8Ω ×2（并联、相同单声道）
+Haptic MUX  PCA9540B ×1
 Haptic      DRV2605L ×2 + 0809 LRA ×2（左右独立控制）
 Battery     1S LiPo ×1
 Connector   4Pin Magnetic：5V / GND / USB D+ / USB D-
 ```
 
-开发阶段要求保留最少但可救板的测试 / 恢复点：`GND`、`3V3`、`EN/RESET`、`BOOT/DOWNLOAD` 为必需，UART TX/RX 推荐保留。
+双 Haptic 地址隔离已经冻结为：`SENSOR_I2C → PCA9540B @0x70 → CH0/CH1 → 两颗 DRV2605L @0x5A`。左右 DRV2605L 另各有一根独立 `IN/TRIG` GPIO，用于预配置波形后的左右独立/近同步触发。
 
-两颗 DRV2605L 地址均为 `0x5A`，双路独立控制的 I²C 隔离方式（独立总线或 I²C MUX/Switch 等）是重新绘制原理图前必须解决的 P0 项。
+Plan A / Plan B 的当前 V1 **业务 GPIO / Pin Matrix 已完成分配**。BK7258 QFN88 的 Reset / Boot / RF / 下载等封装级专用脚仍需在正式原理图阶段按 Beken Hardware Reference Design 逐 Pin 复核。
+
+开发阶段要求保留最少但可救板的测试 / 恢复点：`GND`、`3V3`、`EN/RESET`、`BOOT/DOWNLOAD` 为必需，UART TX/RX 推荐保留。
 
 完整硬件事实源、BOM、Signal Net、Power Tree、Pin Matrix 和问题台账位于：
 
@@ -74,8 +77,11 @@ docs/hardware/integration/v1/
 - `docs/hardware/integration/v1/common/design-requirements.md`
 - `docs/hardware/integration/v1/common/decision-log.md`
 - `docs/hardware/integration/v1/common/common-bom.csv`
+- 对应 Plan 的 `pin-matrix.csv`
 
 `hardware/` 目录主要保存历史单模块实验，实验器件不自动等于当前 V1 最终 BOM。
+
+**当前下一步已经从“总线 / GPIO 规划”进入“按冻结基线更新两套原理图 → Live Netlist 审计”。**
 
 ## 模型与资源策略
 
