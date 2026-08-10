@@ -2,102 +2,105 @@
 
 ## 定位
 
-这是 V1 的**高资源 / 高集成度方案**。
+Plan B 是 V1 的**高资源 / 高集成度方案**。当前采购候选为供应商标注的 `BK7258QN88616（8+16）`，暂按 8 MB Flash + 16 MB PSRAM 做资源预算；完整订货码和存储配置仍需采购前确认。
 
-当前采购候选为供应商页面标注的 `BK7258QN88616（8+16）`，暂按 **8 MB Flash + 16 MB PSRAM** 做资源预算；完整订货编码、实际存储配置、封装和温度等级必须在 BOM 锁定 / 下单前向供应商或原厂确认。
+当前文件已从逻辑占位升级为实际 GPIO / GPIO Group 分配基线。
 
-## BK7258 当前用于方案评估的公开能力
-
-- ARMv8-M Star (M33F) MCU，最高 480 MHz；
-- Flash / PSRAM 最高 16 MB；
-- 56 GPIO；
-- 2× I²C；
-- 3× I²S；
-- 8-bit CIS DVP；
-- JPEG 编解码；
-- 720p H.264 编码；
-- Audio ADC / DAC / DMIC；
-- USB 2.0 High-Speed；
-- Wi-Fi 6 + BLE 5.4；
-- VBAT 2.0~4.35V；
-- QFN88 9×9 mm。
-
-## V1 当前连接架构
+## 总体结构
 
 ```text
-OV5640 ──8-bit DVP/SCCB──┐
-ICS-43434 ───I²S RX──────┤
-BMI270 ──────I²C + INT───┤
-                         ▼
-                  BK7258QN88616
-                         │
-                         ├── Wi-Fi / BLE → Android
-                         ├── USB → 4Pin磁吸接口
-                         ├── I²S TX → MAX98357A
-                         │               │
-                         │          SPK+ / SPK-
-                         │          ├→ Bone LEFT  8Ω
-                         │          └→ Bone RIGHT 8Ω
-                         │
-                         ├── Haptic Control → DRV2605L LEFT  → LRA LEFT
-                         └── Haptic Control → DRV2605L RIGHT → LRA RIGHT
+OV5640 ── DVP + Camera SCCB ──┐
+ICS-43434 ── I²S Group0 RX ───┤
+MAX98357A ←─ I²S Group2 TX ───┤
+BMI270 ───── I2C0 ────────────┤
+PCA9540B ─── I2C0 ────────────┤
+BMI270 INT1 ─ GPIO ───────────┤
+HAPTIC_L_TRIG ─ GPIO ─────────┤
+HAPTIC_R_TRIG ─ GPIO ─────────┤
+                              ▼
+                         BK7258
+                              │
+                              ├── USB → 4Pin Magnetic
+                              ├── Wi-Fi / BLE → Android
+                              └── DL_UART / Reset → TP Recovery
 ```
 
-## 为什么 V1 仍采用独立 I²S MIC / I²S Class-D
+## 双 Haptic 总线
 
-BK7258 虽然公开能力中包含 Audio ADC / DAC / DMIC，但 V1 不主动拆分共同技术路径：
+BK7258 的两套 I²C 保持清晰分工：
 
-- MIC 使用 `ICS-43434`；
-- Audio OUT 使用 `MAX98357A`；
-- Bone ×2 并联播放相同单声道；
-- 这样 Plan A / Plan B 的外设和 Android 功能定义更容易直接对比。
+```text
+I2C1 / GPIO0-1
+→ OV5640 SCCB
 
-BK7258 内置 Audio 能力作为后续降 BOM / 缩面积方向，不在当前重新绘图阶段强制引入。
+I2C0 / GPIO20-21
+→ BMI270 @0x68
+→ PCA9540B @0x70
+      ├── CH0 → DRV2605L LEFT @0x5A → LRA LEFT
+      └── CH1 → DRV2605L RIGHT@0x5A → LRA RIGHT
 
-## 双路触觉约束
+GPIO23 → DRV LEFT  IN/TRIG
+GPIO24 → DRV RIGHT IN/TRIG
+```
 
-需求：`DRV2605L ×2 + LRA ×2`，左右独立控制。
+因此不消耗第三套 I²C，也不需要把 Camera 和 Sensor 混到一个电压域。
 
-两颗 DRV2605L 固定地址都为 `0x5A`。Plan B 也必须在最终 Pin Matrix 中明确采用独立 I²C 段、I²C MUX/Switch 或其它有依据的地址隔离方案，不能简单同段并联。
+## Camera 固定 GPIO 区
 
-BK7258 虽有 2× I²C 和更多 GPIO，但 Camera SCCB、BMI270、双 Haptic 都需要进入同一套资源规划，不能只根据“GPIO总数够”判断设计成立。
+依据 BK7258 官方 GPIO map，V1 使用 JPEG/CIS 接口对应组：
 
-## Development / Recovery
+```text
+GPIO27  XCLK / JPEG_MCLK
+GPIO29  PCLK
+GPIO30  HREF / JPEG_HSYNC
+GPIO31  VSYNC
+GPIO32  D0
+GPIO33  D1
+GPIO34  D2
+GPIO35  D3
+GPIO36  D4
+GPIO37  D5
+GPIO38  D6
+GPIO39  D7
+```
 
-Plan B 必须根据 Beken 参考设计保留可用的：
+Camera SCCB：GPIO0 SCL / GPIO1 SDA。
 
-- 下载 / Boot；
-- Reset；
-- UART；
-- SWD；
-- USB（如采用）。
+## Audio GPIO 策略
 
-开发阶段统一测试点策略：
+BK7258 GPIO余量充足，首版不强制 MIC 与 AMP 共用同一 I²S Group：
 
-Mandatory：TP_GND、TP_3V3、TP_RESET/EN、TP_BOOT/DOWNLOAD。
+### ICS-43434 — I²S Group0
 
-Recommended：TP_UART_TX、TP_UART_RX；SWD 按实际调试方式以测试焊盘或小型接口实现。
+```text
+GPIO6 BCLK
+GPIO7 WS
+GPIO8 DIN
+```
 
-## 方案特有风险
+### MAX98357A — I²S Group2
 
-### 原理图级 P0
+```text
+GPIO44 BCLK
+GPIO45 LRCLK
+GPIO47 DOUT
+```
 
-1. `BK7258QN88616` 最终器件形态和完整参考设计；
-2. 双 DRV2605L 地址隔离；
-3. DVP / I²S / I²C / USB / Debug / RF 的完整 Pin Matrix；
-4. RF、时钟、下载、SWD、Flash/PSRAM/封装相关必需外围。
+GPIO46（Group2 DIN）保持空闲；GPIO9（Group0 DOUT）保持空闲。
 
-### 系统验证项
+这样减少 SDK 首版全双工共时钟配置风险，后续若确有必要再优化。
 
-1. 固定 SDK 后 Camera + Audio + Wi-Fi + BLE 并发；
-2. 当前供应商 8+16 配置的真实可用内存；
-3. 双 Bone 实际响度/功率/温升；
-4. 整机峰值电流与温升。
+## 其它 GPIO
 
-## 原理图阶段目标
+- USB：GPIO12 D+ / GPIO13 D-；
+- BMI270 INT1：GPIO22；
+- Haptic Trigger：GPIO23 / GPIO24；
+- MAX98357A SD_MODE：GPIO25；
+- 调试串口预留：GPIO10 RX / GPIO11 TX（按 BK7258 GPIO map 的 UART 功能，最终下载口名称以 Beken Hardware Reference Design 为准）；
+- 其余仍有大量 GPIO 可作为扩展，不需要占用 Camera/I²S 固定组。
 
-- 以 `../common/design-requirements.md` 为需求事实源；
-- Camera、MIC、IMU、Audio、双 Haptic 与 Plan A 使用相同功能定义；
-- 先按原厂参考设计完成最小启动、电源、时钟、RF、下载/调试；
-- 完成 Pin Matrix 后才锁定 GPIO；
-- 原理图完成后从 EDA 实时导出 Netlist 做独立审计。
+## 调试注意
+
+BK7258 官方调试文档说明 CPU0/CPU1 日志默认经 `DL_UART0` 输出。本版保留 UART Recovery/Test 点，但在正式原理图中还应依据 Beken QFN88 Hardware Reference Design 再核对下载、Reset、Boot、RF、晶振与电源外围的**封装引脚级**定义。
+
+这项不改变已经冻结的业务 GPIO 分配。
