@@ -13,15 +13,15 @@ VSYNC
 
 主控 → OV5640
 XCLK
-RESET（如使用）
-PWDN（如使用）
+RESET
+PWDN
 
 主控 ↔ OV5640
 SCCB SDA
 SCCB SCL
 ```
 
-Camera SCCB 优先保持独立逻辑域；最终总线、电平和 PinMux 以具体主控与模组数据手册为准。
+Camera SCCB 保持独立 I²C/SCCB 总线，避免占用双 Haptic 的 Sensor I²C 地址隔离资源。最终上拉电压与控制电平以模组资料为准。
 
 ## Audio Input — ICS-43434 ×1
 
@@ -31,11 +31,9 @@ Camera SCCB 优先保持独立逻辑域；最终总线、电平和 PinMux 以具
 ICS-43434 SD → 主控 I²S RX DATA
 ```
 
-当前 V1 接受 ICS-43434 作为采购与原理图器件。INMP441 仅保留为历史实验验证资料。
+ICS-43434 为 24-bit 标准 I²S 数字麦克风。当前 V1 接受该器件作为采购与原理图基线；INMP441 仅作为历史实验资料。
 
 ## Audio Output — MAX98357A + Bone ×2
-
-当前 V1 是**单声道、双骨传导**，两只播放完全相同的音频，不做左右立体声。
 
 ```text
 主控 I²S TX
@@ -50,54 +48,47 @@ SPK+ / SPK-
   └─ BONE_RIGHT 8Ω
 ```
 
-两只 8Ω Bone 并联后等效约 4Ω。MAX98357A 为 BTL / 差分输出，两个 Bone 都必须跨接 `SPK+ / SPK-`，禁止任一端接 GND。
+- 两只 Bone 播放完全相同的单声道；
+- 两只 8Ω 并联后等效约 4Ω；
+- MAX98357A 为 BTL / 差分输出，两只 Bone 均跨接 `SPK+ / SPK-`，禁止任一端接 GND；
+- `SD_MODE/EN` 的具体偏置与关断控制按 MAX98357A 数据手册和各方案 Pin Matrix 处理。
 
-Bone 当前输入参数：每只 8Ω、标称约 1~1.5 W。实际响度、功率和温升在后续系统验证中实测。
+## IMU + Dual Haptic — 公共总线方案
 
-## IMU — BMI270 ×1
+V1 已冻结 `PCA9540B` 作为两个固定地址 DRV2605L 的地址隔离器。
 
 ```text
-主控 ↔ BMI270
-I²C SDA
-I²C SCL
+MCU SENSOR_I2C
+   │
+   ├── BMI270 @0x68
+   │
+   └── PCA9540B @0x70
+          ├── CH0 → DRV2605L LEFT  @0x5A → LRA LEFT
+          └── CH1 → DRV2605L RIGHT @0x5A → LRA RIGHT
 
 BMI270 INT1 → MCU GPIO
+
+MCU HAPTIC_L_TRIG → DRV2605L LEFT  IN/TRIG
+MCU HAPTIC_R_TRIG → DRV2605L RIGHT IN/TRIG
 ```
 
-当前 I²C 地址按现有验证方案为 `0x68`。
+### I²C 物理要求
 
-## Haptic — DRV2605L ×2 + LRA ×2
+- PCA9540B VDD：`SYS_3V3`；
+- upstream `SENSOR_I2C`：一组 SDA/SCL 上拉；
+- CH0：独立 SDA/SCL 上拉；
+- CH1：独立 SDA/SCL 上拉；
+- 两颗 DRV2605L VDD 均按当前 3.3V 逻辑域设计；
+- DRV2605L EN 不作为地址隔离手段。
 
-需求：左右两个 LRA，分别独立控制。
+### 同步触觉策略
 
-```text
-主控 → DRV2605L LEFT  → LRA LEFT
-主控 → DRV2605L RIGHT → LRA RIGHT
-```
+PCA9540B 是 1-of-2 MUX，I²C 同一时刻只访问一侧。因此：
 
-每个驱动器分别输出：
-
-```text
-OUT+ → 对应 LRA +
-OUT- → 对应 LRA -
-```
-
-必须存在两个明确的物理输出接口：
-
-- `J_LRA_LEFT`；
-- `J_LRA_RIGHT`。
-
-### I²C 地址约束
-
-两颗 DRV2605L 固定地址均为 `0x5A`。因此不能直接在同一未隔离 I²C 段上并联后宣称可分别控制。
-
-各主控方案必须在自己的 Pin Matrix / Signal Net 中明确采用：
-
-- 独立 I²C 总线；或
-- I²C Multiplexer / Switch；或
-- 其它可证明的地址隔离方式。
-
-在该选择冻结前统一标记 `TBD / P0`。
+1. 选择 CH0，配置 LEFT 波形/模式；
+2. 选择 CH1，配置 RIGHT 波形/模式；
+3. 使用两个独立 `IN/TRIG` GPIO 产生边沿，可实现左右预配置效果近同时启动；
+4. 如果后续必须做严格同步、持续高更新率的双路 RTP，则列为系统架构升级项，而不是在当前 V1 内强行实现。
 
 ## USB / Magnetic Connector
 
@@ -110,11 +101,9 @@ Pin 3: USB D+
 Pin 4: GND
 ```
 
-目标：同时承担充电、Native USB 烧录、日志、故障恢复和必要时有线数据。
+目标：充电、Native USB 烧录、日志、故障恢复和必要时有线数据。
 
 ## Development Test / Recovery
-
-开发阶段采用最少测试点策略。
 
 Mandatory：
 
@@ -144,10 +133,9 @@ Optional：
 
 ## 原理图约束
 
-1. 两套方案的功能名、接口名和 Channel 语义保持一致；
-2. Bone 必须是 LEFT / RIGHT 两个物理输出，但播放同一单声道；
-3. Haptic 必须是 LEFT / RIGHT 两个独立驱动通道；
-4. Connector 不能只显示 J1/J2/J3，必须同时标注功能；
-5. 两套方案共同器件尽量使用相同连接方式；
-6. 不因为 BK7258 有 Audio DAC 就在 V1 主动切换模拟音频路线；
-7. 系统压力测试与原理图网络审查分开记录。
+1. 两套方案功能名、接口名和 Channel 语义保持一致；
+2. Bone 必须有 LEFT / RIGHT 两个物理输出，但播放同一单声道；
+3. Haptic 必须有 LEFT / RIGHT 两个独立 Driver + LRA；
+4. 原理图必须明确画出 PCA9540B 的 upstream / CH0 / CH1 三个 I²C 段；
+5. Connector 不能只显示 J1/J2/J3，必须同时标注功能；
+6. 系统压力测试与原理图网络审查分开记录。
