@@ -2,16 +2,17 @@
 主控平台,ESP32-S3双核Xtensa LX7最高240MHz,BK7258 ARMv8-M Star M33F最高480MHz,眼镜端主要采集/媒体/传输而非完整AI,两者算力方向都可行
 Flash/PSRAM,4MB Flash + 2MB PSRAM,供应商标注8MB Flash + 16MB PSRAM（采购前需核对完整订货码）,Camera缓冲和多媒体并发关键,BK余量明显更大；ESP的2MB PSRAM属于系统验证项
 模组/封装,MINI-1U模组15.4×15.4×2.4mm + 外置天线,BK7258芯片QFN88 9×9mm + 外围/Flash/PSRAM依准确料号,决定PCB占用与设计难度,ESP集成简单；BK芯片本体小但板级设计更复杂
-GPIO,39 GPIO（N4R2有嵌入PSRAM占用限制需看具体Pin）,56 GPIO,决定DVP/音频/USB/IRQ/双Haptic/预留,BK明显更宽裕
-I2C,2路,2路,Camera SCCB+BMI270+双DRV2605L需要重新规划,两颗DRV2605L固定同为0x5A；不能简单同段并联，需独立总线或I2C MUX
-I2S,2路,3路,ICS-43434 RX + MAX98357A TX,BK余量更大；ESP现有开发基础更成熟
-Camera,8~16-bit DVP LCD_CAM,8-bit CIS DVP + JPEG硬编解码 + 720p H.264编码,OV5640第一视角,BK媒体硬件更强；ESP验证基础更好
-USB,USB2.0 Full-Speed OTG/Serial-JTAG,USB2.0 High-Speed,4Pin磁吸数据/调试,ESP开发成熟；BK带宽更高
+GPIO,实际业务矩阵已冻结；4路clean spare + 3路strapping restricted reserve,实际业务矩阵已冻结且仍有大量spare,决定DVP/音频/USB/IRQ/双Haptic/预留,两套均已满足当前V1资源要求；BK余量更大
+I2C,Camera独立SCCB + Sensor I2C；Sensor侧经PCA9540B隔离双DRV,Camera I2C1 + Sensor I2C0；Sensor侧经PCA9540B隔离双DRV,双DRV2605L固定0x5A,公共架构已冻结：PCA9540B@0x70 CH0/CH1隔离左右DRV
+I2S,一个控制器标准全双工共享BCLK/WS；另一路I2S保留,3组；MIC使用Group0、AMP使用Group2、Group1整组保留,ICS-43434 RX + MAX98357A TX,ESP更省GPIO但需全双工实测；BK首版配置更直观且余量大
+Camera,8~16-bit DVP LCD_CAM；GPIO4~17业务区 + GPIO1/2 SCCB,8-bit CIS/JPEG DVP固定组GPIO27/29~39 + I2C1 GPIO0/1,OV5640第一视角,两套Camera GPIO均已完成规划
+USB,GPIO19 D- / GPIO20 D+ Native USB,GPIO12 DP / GPIO13 DN USB0,4Pin磁吸数据/调试,ESP开发成熟；BK按Beken USB参考设计落图
 无线,2.4GHz Wi-Fi 4 + BLE5,2.4GHz Wi-Fi6 + BLE5.4,手机通信,BK规格高；ESP生态成熟
-天线,外置2.4GHz天线,按最终BK参考设计/方案确定,3D打印眼镜空间,ESP 1U可把天线与主PCB分离
+天线,MINI-1U外置2.4GHz天线,BK QFN88 RF专用路径按原厂参考设计,3D打印眼镜空间,ESP RF集成风险低；BK需板级RF设计
 电源,3.0~3.6V模组供电,BK7258 VBAT 2.0~4.35V且片内Buck/LDO,电池与Power Tree,BK主控电源有潜在简化；外设电源仍需独立
 开发生态,ESP-IDF/Arduino且已有实验代码,Armino/AI/AVDK SDK,比赛周期与调试效率,ESP低风险；BK需迁移
-开发恢复,Native USB + EN/BOOT + 推荐UART TP,UART/SWD/USB按Beken参考设计,首板烧录/救砖,两套都必须保留最小恢复路径
-主要原理图风险,双DRV2605L地址隔离 + 最新Pin Matrix,双DRV2605L地址隔离 + 最新Pin Matrix,决定新版原理图能否成立,两套都必须先解决
-主要系统验证风险,2MB PSRAM并发余量,准确料号+SDK/Media/BLE并发,不应混同为原理图网络错误,原理图完成后分别实测
-路线定位,保底低风险方案,高资源高集成方案,下一步并行更新原理图,两套保留
+开发恢复,Native USB + GPIO0 Boot + EN + UART0 GPIO43/44 TP,BK UART/Reset/Boot/USB按原厂QFN88参考设计；业务UART预留GPIO10/11,首板烧录/救砖,ESP恢复链已明确；BK封装级下载/Reset仍需原厂参考设计复核
+Haptic,PCA9540B + DRV2605L×2 + 独立GPIO34/35 Trigger,PCA9540B + DRV2605L×2 + 独立GPIO23/24 Trigger,左右独立和近同步预设触觉,总线方案已关闭P0；严格双路高频RTP不是V1硬要求
+主要原理图剩余项,按已冻结Pin Matrix重绘；MAX98357A SD_MODE网络；Camera控制电平；TP/Recovery,按已冻结业务Pin Matrix重绘；QFN88 Reset/Boot/RF/下载/晶振/电源封装级参考设计,决定新版原理图能否放行,已从资源规划阶段进入原理图实现/审计阶段
+主要系统验证风险,2MB PSRAM并发余量 + 共时钟I2S全双工实测,准确料号 + SDK/Media/BLE并发,不应混同为原理图网络错误,原理图完成后分别实测
+路线定位,保底低风险方案,高资源高集成方案,下一步并行更新原理图,两套继续保留
