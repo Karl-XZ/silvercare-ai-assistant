@@ -37,6 +37,46 @@ SilverCareProcessor
 Captions / Speech / Care records / Diagnostics
 ```
 
+## V1 可穿戴硬件集成
+
+项目当前正在从“单模块硬件实验”进入“统一原理图 / BOM / PCB”阶段。眼镜端主要承担第一视角采集、运动感知、语音输入、触觉/骨传导反馈、无线与供电；Android 手机继续承担主要 AI 计算和任务闭环。
+
+当前并行两套主控：
+
+- **Plan A：ESP32-S3-MINI-1U-N4R2**；
+- **Plan B：BK7258QN88616（8+16 供应商候选，采购前需再次核对完整料号）**。
+
+当前 V1 核心硬件基线：
+
+```text
+Camera      OV5640 ×1
+IMU         BMI270 ×1
+MIC         ICS-43434 ×1
+Audio AMP   MAX98357A ×1
+Bone        8Ω ×2（并联、相同单声道）
+Haptic      DRV2605L ×2 + 0809 LRA ×2（左右独立控制）
+Battery     1S LiPo ×1
+Connector   4Pin Magnetic：5V / GND / USB D+ / USB D-
+```
+
+开发阶段要求保留最少但可救板的测试 / 恢复点：`GND`、`3V3`、`EN/RESET`、`BOOT/DOWNLOAD` 为必需，UART TX/RX 推荐保留。
+
+两颗 DRV2605L 地址均为 `0x5A`，双路独立控制的 I²C 隔离方式（独立总线或 I²C MUX/Switch 等）是重新绘制原理图前必须解决的 P0 项。
+
+完整硬件事实源、BOM、Signal Net、Power Tree、Pin Matrix 和问题台账位于：
+
+```text
+docs/hardware/integration/v1/
+```
+
+其中重新绘制原理图时优先读取：
+
+- `docs/hardware/integration/v1/common/design-requirements.md`
+- `docs/hardware/integration/v1/common/decision-log.md`
+- `docs/hardware/integration/v1/common/common-bom.csv`
+
+`hardware/` 目录主要保存历史单模块实验，实验器件不自动等于当前 V1 最终 BOM。
+
 ## 模型与资源策略
 
 仓库内包含 Android 工程、MNN native bridge、DAMO-YOLO 端侧视觉模型和公开 benchmark 样例数据。较大的 Qwen 文本模型、ASR 模型和 TTS 模型由应用内下载器按需下载到应用私有目录，避免把大模型权重直接提交到仓库。
@@ -133,7 +173,8 @@ app/                              Android 应用源码
 app/src/main/assets/              WebView UI、离线视觉模型和前端逻辑
 app/src/main/java/                Android bridge、业务处理器、模型下载与推理入口
 app/src/main/cpp/                 MNN native runtime bridge
-docs/                             功能架构、日志和离线对话能力说明
+docs/                             功能架构、硬件集成、日志和离线对话能力说明
+hardware/                         单模块硬件实验记录（不等同于V1最终BOM）
 public_benchmark_silvercare/      可复用 benchmark、样例数据和评分脚本
 third_party/mnn/                  MNN 运行依赖和 mnn_tts Android 子工程
 ```
