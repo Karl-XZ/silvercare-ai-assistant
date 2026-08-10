@@ -1,6 +1,6 @@
 # 银龄智护 V1 设计决策记录
 
-本文件记录已经由项目负责人明确确认的决定，用于防止后续 Skill / Codex 继续重复旧问题或读取过期设计结论。
+本文件记录已经由项目负责人明确确认或在原厂资料基础上完成工程冻结的决定，用于防止后续 Skill / Codex 重复读取过期结论。
 
 ## 2026-08-10 当前有效决策
 
@@ -40,13 +40,24 @@ INMP441 保留为历史实验验证资料，不要求当前版本换回 INMP441�
 
 状态：`CONFIRMED`。
 
-### D-005 DRV2605L 地址问题
+### D-005 双 DRV2605L 总线架构
 
-两颗 DRV2605L 地址均为 `0x5A`。不能简单同段并联后宣称独立控制。
+两颗 DRV2605L 均使用固定 `0x5A` 地址。V1 两套主控统一增加：
 
-独立 I²C Bus / I²C MUX / Switch 的最终实现尚未冻结。
+- `PCA9540B ×1`，上游固定地址 `0x70`；
+- 上游接 `SENSOR_I2C`；
+- CH0 接 `DRV2605L LEFT @0x5A`；
+- CH1 接 `DRV2605L RIGHT @0x5A`；
+- BMI270 `0x68` 留在 MUX 上游；
+- 左右 DRV 的 `IN/TRIG` 分别连接独立 MCU GPIO。
 
-状态：`OPEN_P0`。
+这样 Camera 可以继续占用另一套独立 SCCB/I²C，Plan A / Plan B 使用同一外围架构。
+
+PCA9540B 同一时刻只选通一个下游 I²C 通道，因此 V1 的同步触觉策略为：先分别配置 LEFT / RIGHT，再通过两个 `IN/TRIG` GPIO 触发预设波形。严格双路高频 RTP 同步更新不作为 V1 硬要求。
+
+DRV2605L EN 不用于地址隔离。
+
+状态：`CONFIRMED / SCHEMATIC_REQUIRED`。
 
 ### D-006 TP / Recovery
 
@@ -106,6 +117,25 @@ ESP32-S3-MINI-1U-N4R2 为 4 MB Flash + 2 MB PSRAM；两者不是 6 MB 通用 RAM
 可以做 Datasheet 估算，但暂不作为重新绘制原理图的硬阻塞项；首板阶段再结合实测峰值电流、压降和温升验证。
 
 状态：`SYSTEM_VALIDATION_PENDING`。
+
+### D-012 Plan A 音频引脚策略
+
+ESP32-S3 采用一个 I²S 控制器的标准全双工结构，让 ICS-43434 与 MAX98357A 共享 BCLK / WS，使用独立 DIN / DOUT。两者均采用标准 I²S，当前按相同采样率 / frame timing 设计。
+
+目的：减少 GPIO 占用，同时保留第二套 I²S 控制器作为扩展余量。
+
+状态：`PIN_MATRIX_FROZEN / BENCH_VALIDATION_PENDING`。
+
+### D-013 Plan B 音频引脚策略
+
+BK7258 为降低首版 SDK 配置风险，MIC 与 AMP 暂使用不同 I²S Group：
+
+- ICS-43434 → I²S Group 0；
+- MAX98357A → I²S Group 2。
+
+BK7258 GPIO 余量足够，不需要为了省 2 个 GPIO 强制共用同一组时钟。
+
+状态：`PIN_MATRIX_FROZEN`。
 
 ## 规则
 
