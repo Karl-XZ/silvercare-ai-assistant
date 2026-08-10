@@ -6,28 +6,75 @@
 
 本轮 Revision 已经把很多电气需求补进现有工程，但当前工程仍然不适合直接进入 PCB。
 
-当前应区分两类状态：
+应区分：
 
 - **电气网络层**：大部分核心功能已经能从 Live Netlist 中闭环；
 - **工程表达 / 双板实现层**：仍未完成。
 
-当前最大的工程问题不是“又少了一根线”，而是：
+当前主要问题：
 
 1. A/B 仍然存在于同一个板级连接图中；
-2. `J_INTER_A` 与 `J_INTER_B` 被当成同一电气网络的两个节点，而不是两个 PCB 之间的线束/FPC 边界；
+2. `J_INTER_A` 与 `J_INTER_B` 被当成同一连续电气 NetGraph 的两个节点，而不是两个 PCB 之间的 Harness/FPC 边界；
 3. 如果直接从当前工程更新 PCB，EDA 会继续把所有器件视为同一个 PCB 设计目标；
-4. 大量 R/C/L/TP 没有显式的核心器件归属，人工无法快速判断哪些外围应随 A 板、哪些随 B 板移动；
-5. 当前单页原理图存在文字重叠、长距离连线、网络标签不可读等问题，不能作为后续 PCB 的可靠人工审核文档。
+4. 大量 R/C/L/TP 没有显式核心器件归属；
+5. 当前单页原理图存在文字重叠、长距离连线、网络标签不可读等问题。
 
-因此下一步不是“直接自动布 PCB”，而是先把现有工程改造成真正的 **Multi-board Design**。
+因此下一步不是直接自动布 PCB，而是把当前工程**增量改造成真正的 Multi-board Design**。
 
 ---
 
-## 2. 双 PCB 的正确建模方式
+## 2. 非常重要：继续修改当前工程，不从零重建
 
-### 2.1 推荐结构
+下一轮的默认策略必须是：
 
-把系统分成三个逻辑层：
+```text
+当前已验证 Working Project
+        ↓
+创建 immutable checkpoint / backup
+        ↓
+在同一个工程谱系上做 Minimal Diff
+        ↓
+拆出 Board A / Board B design units
+        ↓
+重新组织已有对象和网络边界
+        ↓
+Live Readback / Netlist / Visual QA
+```
+
+禁止默认采用：
+
+```text
+新建文件夹
+→ 复制工程
+→ 重新把所有器件从头摆一遍
+→ 重新连所有已经验证过的网络
+```
+
+`runs/`、`revision/`、`backup/` 只保存：
+
+- immutable checkpoint；
+- trace；
+- diff；
+- netlist；
+- screenshot；
+- audit/report。
+
+它们不能变成新的设计起点。
+
+只有以下情况才允许另建 working copy：
+
+- 用户明确要求分支版本；
+- 当前工程损坏；
+- 高风险 destructive migration；
+- disposable API smoke test / regression fixture。
+
+下一轮应尽量**复用当前已经存在的 U/R/C/J/TP 和已经验证的电气网络**，通过 move、sheet reassignment、net boundary split、connector termination、label cleanup 等操作完成双板化，而不是重放全部设计工作。
+
+---
+
+## 3. 双 PCB 的正确建模方式
+
+推荐三层：
 
 ```text
 SYSTEM / HARNESS OVERVIEW
@@ -47,9 +94,7 @@ BOARD_B J_INTER_B
 
 - `BOARD_A` 拥有自己的器件、局部网络和 PCB；
 - `BOARD_B` 拥有自己的器件、局部网络和 PCB；
-- `SYSTEM / HARNESS` 只描述 `J_INTER_A.PinN ↔ J_INTER_B.PinN`，**不参与任何单块 PCB Netlist 生成**。
-
-### 2.2 禁止的结构
+- `SYSTEM / HARNESS` 只描述 `J_INTER_A.PinN ↔ J_INTER_B.PinN`，不参与任何单块 PCB Netlist 生成。
 
 禁止继续：
 
@@ -59,33 +104,30 @@ BOARD A 元件 ── J_INTER_A ── J_INTER_B ── BOARD B 元件
                  全部仍在同一板级 NetGraph
 ```
 
-因为这种结构对 EDA 来说仍然只是“一张完整电路板”。
+因为这种结构对 EDA 来说仍是一张完整 PCB。
 
-### 2.3 板级 Net 必须是 Board-scoped
-
-跨板连接应先在各自板内终止于 Connector：
+跨板连接必须先在各自板内终止于 Connector：
 
 ```text
 BOARD_A:
-U1 / U10 / U6 ... → J_INTER_A
+core / local support → J_INTER_A
+
+HARNESS:
+J_INTER_A.PinN ↔ FPC conductor N ↔ J_INTER_B.PinN
 
 BOARD_B:
-J_INTER_B → Battery / U11 / Bone B ...
+J_INTER_B → core / local support
 ```
 
-两端的物理连接关系只存在于：
+详细硬门禁见：
 
-`inter-temple-fpc.csv / Harness Map`
-
-而不是让一条 Wire 或全局 Net Label 直接跨两个 PCB 设计单元。
-
-如果 EasyEDA 在同一项目内对多页 Net Label 使用全局作用域，则必须使用 board-scoped net IDs，或直接建立两个独立 schematic/PCB document，避免同名 Net 绕过 Connector 自动合并。
+`common/two-board-netlist-boundary.md`
 
 ---
 
-## 3. 下一版原理图建议结构
+## 4. 下一版原理图建议结构
 
-建议至少建立：
+建议：
 
 ```text
 00_SYSTEM_OVERVIEW        不转 PCB，仅系统框图 / Harness
@@ -105,58 +147,73 @@ BOARD_B/
 04_B_INTERCONNECT
 ```
 
-如果 EasyEDA 工程模型不方便使用上述目录，可用等效多页结构，但必须满足：
+但这里的“建立页面”不等于重新建一套器件。
+
+优先方式：
+
+- 把当前已有器件移动/重分配到目标页；
+- 保留已经验证的 Part Identity / Reference；
+- 保留正确局部网络；
+- 只切断真正跨 Board Boundary 的连续 Net；
+- 在 J_INTER_A / J_INTER_B 终止；
+- 建立 Harness Map。
+
+最终必须满足：
 
 - Board A 和 Board B 可分别导出独立 Netlist；
 - 可分别生成两个 PCB；
-- 删除 Harness 文档不会改变任一板内部 Connectivity；
-- A/B 之间不存在绕过 `J_INTER_A/J_INTER_B` 的直接电气连接。
+- A/B 不存在绕过 `J_INTER_A/J_INTER_B` 的电气连接。
 
 ---
 
-## 4. 外围器件归属必须先完成
+## 5. 外围器件归属必须先完成
 
 下一轮操作前必须读取：
 
 `common/component-ownership.csv`
 
-所有生产器件必须至少具有：
+所有生产器件至少具有：
 
 ```text
 Reference
 Board
 Owner_Core
-Function
+Functional_Block
+Purpose
 Local_Nets
 Placement_Class
 Status
 ```
 
-尤其 R/C/L/D/F/TP 不允许再作为“散落的小器件”单独布局。
+尤其 R/C/L/D/F/TP 不允许再作为散落的小器件单独布局。
 
-布局顺序必须是：
+布局/移动单位应是：
 
 ```text
 Core IC
-→ Local Support Group
-→ Connector / Endpoint
-→ Cross-module Net Label
++
+Local Support Group
 ```
 
-而不是：
+例如：
 
 ```text
-先摆所有 IC
-→ 再把所有 R/C 填空式塞进去
+U2 TPS63021
+├── L1
+├── C5/C6/C7
+├── C8/C9/C10
+└── R6
 ```
+
+这些器件必须作为一组留在 Board A，并在原理图/PCB 中靠近核心芯片。
 
 ---
 
-## 5. 当前外围归属中的两个已发现问题
+## 6. 当前外围归属中的两个已发现问题
 
-### 5.1 C32 在 ProjectSpec 中存在，但最终 Live BOM / Netlist 中缺失
+### 6.1 C32：SSOT 与 Live 不一致
 
-当前 `projectspec.json` 和 `connection-table-target.csv` 仍要求：
+`projectspec.json` / `connection-table-target.csv` 要求：
 
 ```text
 C32
@@ -164,40 +221,31 @@ SYS_3V3 ↔ GND
 BOARD_B_POWER
 ```
 
-但最终 Live BOM / Live Netlist 中没有 C32。
+但最终 Live BOM / Netlist 没有 C32。
 
-因此当前“Requirement = Schematic = BOM 全部 PASS”并不真实。
+下一轮必须确认：
 
-下一轮必须人工确认：
+- 如果 C32 是 B 侧 3V3 高频旁路，则在当前工程中补回；
+- 如果确定不需要，则从 SSOT 删除并记录理由。
 
-- 如果 C32 是 B 侧本地 3V3 高频旁路，则补回；
-- 如果确定不需要，则从 ProjectSpec / Connection Table 删除并记录设计理由。
+当前不能继续判 Quantity/Requirement 全 PASS。
 
-不能继续保持“SSOT 有，实物没有，但 Regression PASS”。
+### 6.2 C29 / C30：BOM Comment 与实际 Net 相反
 
-### 5.2 C29 / C30 的 BOM Comment 与实际网络相反
-
-当前实际网络：
+实际网络：
 
 ```text
-C29: SYS_3V3 ↔ GND        → DRV_B VDD bypass
-C30: DRV_B_REG ↔ GND      → DRV_B REG bypass
+C29: SYS_3V3 ↔ GND   → DRV_B VDD bypass
+C30: DRV_B_REG ↔ GND → DRV_B REG bypass
 ```
 
-但最终 BOM Comment 写成：
+最终 BOM Comment 写反。
 
-```text
-C29 = DRV_B_REG_1UF
-C30 = DRV_B_VDD_1UF
-```
-
-下一轮应修正 Comment / Description，避免 PCB Placement 按错误外围语义放置。
+下一轮只需要修改属性/说明，不需要删除并重放器件。
 
 ---
 
-## 6. 双板切断检查（P0）
-
-在允许生成 PCB 前，必须通过以下 Gate：
+## 7. 双板切断检查（P0）
 
 ### BOARD_A_NETLIST
 
@@ -218,16 +266,13 @@ C30 = DRV_B_VDD_1UF
 
 不得包含：
 
-- U1~U10 中属于 A 的器件；
-- Camera；
-- MCU；
-- USB；
-- MAX98357A；
-- J_INTER_A。
+- MCU / Camera / USB / MAX98357A；
+- J_INTER_A；
+- A 侧 R/C/TP。
 
 ### HARNESS_MAP
 
-逐 Pin 检查：
+逐 Pin 单独验证：
 
 ```text
 J_INTER_A.1 ↔ J_INTER_B.1
@@ -235,15 +280,15 @@ J_INTER_A.1 ↔ J_INTER_B.1
 J_INTER_A.12 ↔ J_INTER_B.12
 ```
 
-Harness Mapping PASS 不能通过“同一个 Net 名存在于两边”来证明，必须通过 Connector Pin Mapping 单独证明。
+Harness PASS 不能靠“两个页面里 Net 名相同”来证明。
 
 ---
 
-## 7. 当前建议的 PCB A/B 器件划分
+## 8. 当前 PCB A/B 器件划分
 
-完整列表见 `common/component-ownership.csv`。
+完整列表：
 
-概要：
+`common/component-ownership.csv`
 
 ### Board A
 
@@ -251,7 +296,7 @@ Harness Mapping PASS 不能通过“同一个 Net 名存在于两边”来证明
 - U2 TPS63021 + buck-boost 外围；
 - U3 ESP32-S3 + Boot/EN/UART/去耦；
 - U4/U5 Camera LDO + 外围；
-- U6 MAX98357A + 本地 Audio 外围；
+- U6 MAX98357A + Audio 外围；
 - U7 ICS-43434 + 外围；
 - U8 BMI270 + 外围；
 - U9 DRV2605L A + 外围；
@@ -273,25 +318,29 @@ Harness Mapping PASS 不能通过“同一个 Net 名存在于两边”来证明
 
 ---
 
-## 8. 视觉原理图必须重做，而不是只移动现有对象
+## 9. 视觉原理图采用“重排”，不是“重建”
 
-当前 Revision 的 Live Connectivity 可以作为电气参考，但当前单页 Layout 不应直接继承为最终图。
+当前 Live Connectivity 可以继续作为电气参考。
 
-下一轮建议：
+下一轮应：
 
-1. 保留已经验证的 NetGraph / Pin Matrix；
-2. 按 Owner Group 重排组件；
-3. 每个功能块只画短本地 Wire；
-4. 跨模块使用**可见且有文字的 Named Net Label**；
-5. 禁止大量长斜线；
-6. 禁止文字与 Symbol / Wire / Label 重叠；
-7. 每一页完成后生成截图做 Visual QA；
-8. 最终必须有 after-overview，不允许只有 before screenshot。
+1. 保留已验证 Part / Reference / Net Intent；
+2. 按 Owner Group 移动/重排当前器件；
+3. 将一张拥挤单页拆成明确功能页；
+4. 局部 R/C/L 只使用短线；
+5. 跨模块使用**可见且有文字的 Named Net Label**；
+6. 删除/替换无可见名称的无效 NetPort 表达；
+7. 禁止大量长斜线；
+8. 每页完成后 Render 做 Visual QA；
+9. Final 必须存在 after-overview。
 
-最终状态应分别输出：
+只有当当前对象本身已经损坏或无法可靠移动时，才局部 delete/recreate；不得因为页面不好看就整图从零重建。
+
+最终状态分别输出：
 
 ```text
 ELECTRICAL_STATUS
+REVISION_LINEAGE_STATUS
 BOARD_PARTITION_STATUS
 HARNESS_STATUS
 SCHEMATIC_READABILITY_STATUS
@@ -301,20 +350,22 @@ PCB_B_HANDOFF_STATUS
 
 ---
 
-## 9. 下一步执行顺序
+## 10. 下一步执行顺序
 
 ```text
+P0-0  锁定当前 accepted working project，创建 immutable checkpoint
+↓
 P0-1  冻结 Component Ownership
 ↓
-P0-2  将现有单板 NetGraph 拆为 Board A / Board B / Harness 三层
+P0-2  将当前 NetGraph 增量拆为 Board A / Board B / Harness 三层
 ↓
-P0-3  修正 C29/C30 语义并处理 C32 SSOT mismatch
+P0-3  修正 C29/C30 属性并处理 C32 mismatch
 ↓
-P0-4  生成 BOARD_A 独立原理图
+P0-4  复用并重排现有器件形成 BOARD_A 独立原理图
 ↓
-P0-5  生成 BOARD_B 独立原理图
+P0-5  复用并重排现有器件形成 BOARD_B 独立原理图
 ↓
-P0-6  生成 SYSTEM/HARNESS 页面
+P0-6  建立 SYSTEM/HARNESS 页面
 ↓
 P0-7  分别导出 A/B Live Netlist
 ↓
@@ -327,4 +378,4 @@ P1-2  分别生成 PCB A / PCB B
 P1-3  PCB 前再次验证器件数量、Footprint 和 Board Ownership
 ```
 
-在 `BOARD_A_NETLIST`、`BOARD_B_NETLIST`、`HARNESS_MAP` 三项都 PASS 以前，不建议让 EDA 自动更新/生成最终 PCB。
+在 `REVISION_LINEAGE`、`BOARD_A_NETLIST`、`BOARD_B_NETLIST`、`HARNESS_MAP` 四项都 PASS 以前，不允许进入最终 PCB 自动生成。
