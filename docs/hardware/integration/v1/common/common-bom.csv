@@ -7,10 +7,13 @@ Haptic Driver,双路LRA独立驱动,DRV2605L,2,是,各在PCA9540B独立下游段
 Haptic,左右触觉执行器,0809 X轴 LRA,2,是,各自由一颗DRV2605L OUT+/OUT-驱动,单路实机已验证/P0双路待实现,P0,阻抗/谐振频率/额定及过驱电压/左右安装位置
 Audio OUT,单声道骨传导功放,MAX98357A,1,尽量是,I2S TX + 功率电源；单声道同信号驱动两只骨传导,当前原理图采用/P0待双单元验证,P0,两只8Ω单元并联等效4Ω；每只标称约1~1.5W；需限制最大输出并验证温升/响度
 Transducer,左右骨传导输出,8Ω骨传导单元（标称约1~1.5W）,2,是,两只并联跨接MAX98357A BTL SPK+/SPK-；播放相同单声道,数量/技术路径冻结,P0,确认实际额定功率与最大允许功率；禁止任一端接GND
-Battery,主电池,1S LiPo,1,是,约3.0~4.2V,未冻结,P0,容量/尺寸/最大持续及峰值电流
-Charger,充电/Power Path,1S锂电充电管理IC（待选）,1,是,5V输入→BAT/SYS,未冻结,P0,边充边用/充电电流/保护
-Connector,磁吸接口,4Pin磁吸触点,1,是,5V/GND/USB D+/USB D-,方向冻结,P1,额定电流/机械尺寸/ESD
-Regulator,系统3.3V,3.3V稳压器（待选）,1,大部分共用,BAT→3V3,未冻结,P0,峰值电流/效率/尺寸
-Regulator,Camera 2.8V,低噪声LDO（待选）,1,是,3V3/BAT→2.8V,路径已知,P0,电流/压差/启动时序
-Regulator,Camera Core,1.2V或1.5V LDO（按最终模组）,1,是,3V3→DVDD,路径已知,P0,最终电压/电流
-Protection,接口保护,USB/磁吸口ESD器件（待选）,若干,是,VBUS/USB D+/D-,未冻结,P1,低电容USB ESD
+Battery,主电池,1S LiPo,1,是,约3.0~4.2V；物理放B镜腿,未冻结,P0,容量/尺寸/最大持续及峰值电流/重量
+Battery Interface,B侧电池连接与温度接口,Battery connector + NTC interface,1,是,BAT+/GND/BAT_NTC→跨镜腿FPC,双镜腿架构新增,P1,最终电池插座/NTC形式/机械固定
+Charger,充电/Power Path,1S锂电充电管理IC（待选）,1,是,5V输入→BAT/SYS；物理放A镜腿,未冻结,P0,边充边用/充电电流/保护
+Connector,磁吸接口,4Pin磁吸触点,1,是,5V/GND/USB D+/USB D-；物理放A镜腿,方向冻结,P1,额定电流/机械尺寸/ESD
+Interconnect,跨镜腿FPC连接器,12Pin FPC connector（baseline）,2,是,J_INTER_A + J_INTER_B,架构基线,P0,最终Pitch/高度/锁扣方向/动态弯折结构
+Interconnect,跨镜腿FPC/排线,12 conductor FPC（baseline）,1,是,BAT/GND/3V3/Haptic/远端Bone等,架构基线,P0,最终长度/铜厚/电流能力/弯折半径/寿命
+Regulator,系统3.3V,3.3V稳压器（待选）,1,大部分共用,BAT→3V3；物理放A镜腿,未冻结,P0,峰值电流/效率/尺寸
+Regulator,Camera 2.8V,低噪声LDO（待选）,1,是,3V3/BAT→2.8V；物理放A镜腿,路径已知,P0,电流/压差/启动时序
+Regulator,Camera Core,1.2V或1.5V LDO（按最终模组）,1,是,3V3→DVDD；物理放A镜腿,路径已知,P0,最终电压/电流
+Protection,接口保护,USB/磁吸口ESD器件（待选）,若干,是,VBUS/USB D+/D-；物理放A镜腿,未冻结,P1,低电容USB ESD
