@@ -129,6 +129,76 @@ ESP32-S3-MINI-1U-N4R2 为 4 MB Flash + 2 MB PSRAM。两者不是 6 MB 通用 RAM
 
 峰值功耗建议做 Datasheet 预算，但当前不作为重新绘制原理图的硬阻塞项。
 
+## 双镜腿物理架构 — 原理图阶段必须考虑
+
+整机电子系统必须从原理图阶段就划分为 A/B 两个物理板区，并通过正式 FPC Connector 连接；禁止先按“单板”生成原理图，再在 PCB 阶段临时拆成两块。
+
+### A 区：MAIN / SENSING TEMPLE
+
+A 区放置：
+
+- MCU / SoC 及其 RF / 启动 / 下载 / 本地去耦；
+- OV5640 + Camera FPC；
+- Camera 2.8V / Core LDO；
+- ICS-43434；
+- BMI270；
+- PCA9540B；
+- DRV2605L A + LRA A；
+- MAX98357A + Bone A；
+- 4Pin Magnetic USB；
+- USB ESD / input protection；
+- Charger / Power Path；
+- SYS_3V3 regulator；
+- BOOT / EN / UART / 主要 TP；
+- `J_INTER_A`。
+
+原则：Camera DVP、I²S、USB、RF 等高速/敏感信号不跨镜腿。
+
+### B 区：BATTERY / REMOTE ACTUATOR TEMPLE
+
+B 区放置：
+
+- 1S LiPo Battery；
+- Battery connector / NTC interface；
+- DRV2605L B + LRA B；
+- Bone B；
+- HAPTIC CH1 下游 pull-up / 本地去耦；
+- 本地 TP_GND_B / TP_3V3_B；
+- `J_INTER_B`。
+
+A/B 当前只是工程分区名，不强制绑定左/右镜腿；最终左右方向由机械设计确定。
+
+### Inter-Temple FPC 基线
+
+当前按 12 conductor baseline 进入下一版原理图，核心网络为：
+
+- BAT+（建议物理并联 Pin）；
+- GND（建议物理并联 Pin）；
+- SYS_3V3；
+- HAPTIC_B_SCL；
+- HAPTIC_B_SDA；
+- HAPTIC_B_TRIG；
+- SPK_P；
+- SPK_N；
+- BAT_NTC（条件使用）；
+- Spare。
+
+详细分区与 Pin baseline：
+
+- `dual-temple-partition.md`
+- `temple-partition.csv`
+- `inter-temple-fpc.csv`
+
+该 12Pin 是首版工程基线，不等于最终机械连接器已经冻结。电源峰值和 FPC 铜宽确认后才允许进一步减 Pin。
+
+### 双板测试点
+
+A 板 Mandatory：TP_GND_A、TP_3V3_A、TP_EN、TP_BOOT；UART TX/RX Recommended。
+
+B 板 Mandatory：TP_GND_B、TP_3V3_B。
+
+原因：FPC/远端电源故障时必须能够独立确认 B 板是否真正获得供电。
+
 ## 原理图必须表达的通道
 
 必须能直接看到并审计：
@@ -137,14 +207,14 @@ ESP32-S3-MINI-1U-N4R2 为 4 MB Flash + 2 MB PSRAM。两者不是 6 MB 通用 RAM
 - MIC；
 - IMU；
 - AUDIO_MONO；
-- BONE_LEFT；
-- BONE_RIGHT；
+- BONE_A / BONE_B；
 - HAPTIC_MUX；
-- HAPTIC_LEFT；
-- HAPTIC_RIGHT；
+- HAPTIC_A / HAPTIC_B；
 - MAG_USB；
 - BATTERY；
 - DEBUG / RECOVERY；
-- POWER RAILS。
+- POWER RAILS；
+- A/B BOARD BOUNDARY；
+- INTER_TEMPLE_FPC。
 
 所有 Connector 除位号外必须有功能语义，禁止只依靠 J1/J2/J3 猜用途。
