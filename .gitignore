@@ -12,8 +12,6 @@ app/.cxx/
 **/.cxx/
 *.apk
 *.aab
-!releases/
-!releases/*.apk
 
 node_modules/
 coverage/
