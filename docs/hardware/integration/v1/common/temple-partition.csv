@@ -1,0 +1,26 @@
+分区,功能块,器件/模块,数量,外围器件/本地网络,是否跨FPC,跨FPC网络,放置理由,状态
+A,Main Controller,ESP32-S3-MINI-1U-N4R2 或 BK7258 主控方案,1,主控去耦/启动/复位/下载/RF或模组外围,否,,所有高速接口与系统控制集中在A侧,FROZEN_ARCH
+A,RF,外置天线接口/匹配网络（按主控方案）,1,RF matching/connector/keepout,否,,RF不跨镜腿；降低馈线和EMI复杂度,FROZEN_ARCH
+A,Camera,OV5640 DVP模组,1,Camera FPC connector/SCCB pull-up/local decoupling,否,,DVP数据线数量多且高速；必须靠近MCU,FROZEN_ARCH
+A,Camera Power,2.8V LDO + 1.2/1.5V Core LDO,各1,输入输出电容/去耦/EN网络,否,,避免多路Camera电源跨FPC,FROZEN_ARCH
+A,MIC,ICS-43434,1,去耦/LR选择/本地I2S,否,,I2S RX保持本地,FROZEN_ARCH
+A,IMU,BMI270,1,去耦/CSB和SDO配置/INT1,否,,姿态数据直接进入主控；与SENSOR_I2C同侧,FROZEN_ARCH
+A,Haptic MUX,PCA9540B,1,upstream pull-up/CH0 pull-up/去耦,部分,CH1_SDA;CH1_SCL,MUX靠近MCU；只将远端Haptic低速I2C分支跨FPC,FROZEN_ARCH
+A,Haptic Driver A,DRV2605L A,1,去耦/REG电容/本地EN默认态/IN-TRIG,否,,本侧LRA就近驱动,FROZEN_ARCH
+A,Haptic A,0809 X轴 LRA A,1,本地2Pin连接/焊盘,否,,左右各一执行器；避免本侧电机线跨FPC,FROZEN_ARCH
+A,Audio AMP,MAX98357A,1,去耦/SD_MODE偏置/本地I2S,部分,SPK_P;SPK_N,I2S留在A；只跨一对远端Bone差分输出,FROZEN_ARCH
+A,Bone A,8Ω骨传导单元 A,1,本地2Pin差分连接,否,,本侧Bone就近连接功放,FROZEN_ARCH
+A,Magnetic USB,4Pin磁吸接口,1,5V/GND/USB D+/D-,否,,让Native USB不跨镜腿；充电和调试入口集中A侧,FROZEN_ARCH
+A,USB Protection,低电容USB ESD/输入保护,若干,USB D+/D-/VBUS保护,否,,紧贴磁吸接口与MCU USB路径,FROZEN_ARCH
+A,Charge / Power Path,1S锂电充电/Power Path IC,1,输入输出电容/电流设定/状态网络,是,BAT+;GND;BAT_NTC(如使用),磁吸5V与充电管理同侧；电池本体放B配重,FROZEN_ARCH
+A,System 3V3 Regulator,SYS_3V3稳压器,1,输入输出电容/EN/补偿,是,SYS_3V3;GND,主要逻辑电源集中管理；B侧只取少量3V3,FROZEN_ARCH
+A,Debug / Recovery,TP_GND_A;TP_3V3_A;TP_EN;TP_BOOT;TP_UART_TX/RX,最少6点,必要串阻/上拉/下载网络,否,,主控烧录与救砖只需A侧,FROZEN_ARCH
+A,Inter-Temple Connector,J_INTER_A,1,FPC connector/必要固定与ESD评估,是,见inter-temple-fpc.csv,明确A/B板边界,FROZEN_ARCH
+B,Battery,1S LiPo,1,电池本体/保护（若电芯自带）,是,BAT+;GND;BAT_NTC(如使用),电池为主要质量块；与主逻辑分居两侧实现配重,FROZEN_ARCH
+B,Battery Interface,Battery connector + NTC接口,1,NTC/温度检测或电池识别网络,是,BAT+;GND;BAT_NTC,电池线最短；便于B侧装配,FROZEN_ARCH
+B,Haptic Driver B,DRV2605L B,1,去耦/REG电容/CH1 pull-up/EN默认态,是,CH1_SDA;CH1_SCL;HAPTIC_B_TRIG;SYS_3V3;GND,Driver与远端LRA就近，跨FPC只走低速数字控制,FROZEN_ARCH
+B,Haptic B,0809 X轴 LRA B,1,本地2Pin连接/焊盘,否,,远端执行器就地连接Driver,FROZEN_ARCH
+B,Bone B,8Ω骨传导单元 B,1,本地2Pin连接,是,SPK_P;SPK_N,物理位置必须在另一镜腿；仅跨一对差分功放线,FROZEN_ARCH
+B,Local Power Decoupling,3V3 bulk + bypass,若干,靠近DRV2605L B和FPC电源入口,否,,降低跨FPC供电瞬态和噪声,FROZEN_ARCH
+B,Local Test Points,TP_GND_B;TP_3V3_B,2,可选TP_BAT_B,否,,双板bring-up必须能独立确认B侧供电,FROZEN_ARCH
+B,Inter-Temple Connector,J_INTER_B,1,FPC connector/必要固定与ESD评估,是,见inter-temple-fpc.csv,明确A/B板边界,FROZEN_ARCH
