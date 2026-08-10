@@ -73,6 +73,22 @@ ICS-43434 是 24-bit 标准 I²S；MAX98357A 支持标准 I²S 及 24-bit 数据
 - GPIO0 专用于 BOOT/DOWNLOAD；
 - N4R2 的 GPIO26 连接模块内 PSRAM，不分配给外设。
 
+## 双镜腿物理分区
+
+Plan A 必须遵循 `../common/dual-temple-partition.md`，不能按单板原理图生成后再在 PCB 阶段临时拆板。
+
+### A — MAIN / SENSING TEMPLE
+
+放置：ESP32-S3、RF、OV5640、Camera LDO、ICS-43434、BMI270、PCA9540B、DRV A + LRA A、MAX98357A + Bone A、4Pin Magnetic、USB ESD、Charger/Power Path、SYS_3V3、Debug/Recovery。
+
+### B — BATTERY / REMOTE ACTUATOR TEMPLE
+
+放置：1S LiPo、Battery/NTC interface、DRV B + LRA B、Bone B、本地去耦和最小 TP。
+
+跨镜腿 FPC 当前按 12 conductor baseline：BAT+/GND 并联承流、SYS_3V3、HAPTIC_B SDA/SCL/TRIG、SPK_P/N、可选 BAT_NTC、Spare。
+
+目的：Camera DVP、I²S、Native USB 和 RF 不跨镜腿；利用 B 侧 Battery 作为主要配重。
+
 ## 原理图阶段注意
 
 1. `GPIO0 / EN / GPIO43 / GPIO44` 保留为恢复链路；
@@ -82,4 +98,5 @@ ICS-43434 是 24-bit 标准 I²S；MAX98357A 支持标准 I²S 及 24-bit 数据
 5. PCA9540B upstream / CH0 / CH1 均要正确上拉；
 6. MAX98357A `SD_MODE` 的偏置/关断网络按 ADI 数据手册实现，GPIO40 不应被简单视为普通高低电平 EN 而忽略其模式选择要求；
 7. 外置天线按 MINI-1U RF 要求布局；
-8. 2 MB PSRAM 是否足够整机并发属于后续 System Validation，不重开 Pin Matrix。
+8. 2 MB PSRAM 是否足够整机并发属于后续 System Validation，不重开 Pin Matrix；
+9. 原理图中必须明确 A/B Board Boundary、J_INTER_A/J_INTER_B 与 FPC Pin Map。
