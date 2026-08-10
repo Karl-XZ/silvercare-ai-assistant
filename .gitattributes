@@ -1,0 +1,2 @@
+# Distribute Android installation packages through Git LFS to keep normal Git history lightweight.
+releases/*.apk filter=lfs diff=lfs merge=lfs -text
