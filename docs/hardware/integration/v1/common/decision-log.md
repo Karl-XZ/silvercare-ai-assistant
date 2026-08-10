@@ -137,6 +137,55 @@ BK7258 GPIO 余量足够，不需要为了省 2 个 GPIO 强制共用同一组�
 
 状态：`PIN_MATRIX_FROZEN`。
 
+### D-014 双镜腿 A/B 物理分区
+
+产品最终为眼镜形态，电子器件必须分布在两个镜腿，通过跨镜框 FPC / 排线互连。该约束从原理图阶段开始执行，不允许等到 PCB 阶段再把“单板原理图”临时拆开。
+
+当前冻结首版分区：
+
+**A — MAIN / SENSING TEMPLE**
+
+- MCU / SoC + RF / 启动 /下载；
+- OV5640 + Camera FPC；
+- Camera 2.8V / Core LDO；
+- ICS-43434；
+- BMI270；
+- PCA9540B；
+- DRV2605L A + LRA A；
+- MAX98357A + Bone A；
+- 4Pin Magnetic USB + ESD；
+- Charger / Power Path；
+- SYS_3V3 regulator；
+- 主 Debug / Recovery TP；
+- Inter-temple connector A。
+
+**B — BATTERY / REMOTE ACTUATOR TEMPLE**
+
+- 1S LiPo；
+- Battery connector / NTC；
+- DRV2605L B + LRA B；
+- Bone B；
+- CH1 downstream pull-up / local decoupling；
+- TP_GND_B / TP_3V3_B；
+- Inter-temple connector B。
+
+核心理由：
+
+1. Battery 与主逻辑分居两侧，改善单边重量；
+2. Camera DVP、I²S、USB、RF 不跨镜腿；
+3. 只让低速 Haptic 控制、主电源和远端 Bone 差分输出跨 FPC；
+4. A/B 只是工程分区，不提前绑定左/右镜腿。
+
+Inter-temple FPC 当前采用 **12 conductor baseline**，包括并联 BAT+/GND、SYS_3V3、HAPTIC_B SDA/SCL/TRIG、SPK_P/N、可选 BAT_NTC 和 Spare。最终 FPC 型号、Pitch、Pin Order、铜宽、弯折寿命在机械/PCB阶段冻结。
+
+状态：`ARCHITECTURE_BASELINE / MECHANICAL_VALIDATION_PENDING`。
+
+详细文件：
+
+- `dual-temple-partition.md`
+- `temple-partition.csv`
+- `inter-temple-fpc.csv`
+
 ## 规则
 
 1. 新决策如果替代旧决策，必须新增条目并注明 `Supersedes`；
