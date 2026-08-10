@@ -21,6 +21,7 @@
 | MIC | ICS-43434 | 1 | I²S 数字音频输入 |
 | Audio AMP | MAX98357A | 1 | 单声道 I²S Class-D |
 | Bone | 8Ω 骨传导单元 | 2 | 两只播放完全相同的单声道 |
+| Haptic MUX | PCA9540B | 1 | 隔离两颗固定 0x5A 的 DRV2605L |
 | Haptic Driver | DRV2605L | 2 | 左右分别独立控制 |
 | Haptic Actuator | 0809 X轴 LRA | 2 | 左右各一个 |
 | Battery | 1S LiPo | 1 | 主电池 |
@@ -40,19 +41,30 @@ MCU I²S TX → MAX98357A → SPK+ / SPK-
 - MAX98357A 为 BTL / 差分输出，Bone 任一端禁止接 GND；
 - 最大音量、实际功率、响度与温升通过后续实测确认。
 
-## Haptic
+## Haptic — 已冻结总线架构
+
+V1 两套主控统一使用 PCA9540B 做双 DRV2605L 的地址隔离：
 
 ```text
-MCU → DRV2605L LEFT  → LRA LEFT
-MCU → DRV2605L RIGHT → LRA RIGHT
+MCU SENSOR_I2C
+   ├── BMI270 @0x68
+   └── PCA9540B @0x70
+          ├── CH0 → DRV2605L LEFT  @0x5A → LRA LEFT
+          └── CH1 → DRV2605L RIGHT @0x5A → LRA RIGHT
+
+MCU HAPTIC_L_TRIG ─────────→ DRV2605L LEFT  IN/TRIG
+MCU HAPTIC_R_TRIG ─────────→ DRV2605L RIGHT IN/TRIG
 ```
 
-- Driver ×2；
-- LRA ×2；
-- LEFT / RIGHT 必须可以分别触发，也允许同时触发；
-- 两颗 DRV2605L 地址均为 `0x5A`；
-- 必须通过独立 I²C 段、I²C MUX/Switch 或其它有依据方案处理地址冲突；
-- 未冻结前不得直接把两颗同地址器件并到同一 I²C 段。
+要求：
+
+- PCA9540B ×1，VDD = SYS_3V3；
+- 上游 SENSOR_I2C 及两个下游通道分别设置合适的 I²C 上拉；
+- PCA9540B 上电默认两个下游通道均断开；
+- LEFT / RIGHT 可分别配置、分别触发，也允许同时触发；
+- 同步 ROM/预设波形：分别经 MUX 配置左右 DRV，再通过两个独立 `IN/TRIG` GPIO 触发；
+- PCA9540B 是 1-of-2 MUX，同一时刻只有一个下游 I²C 通道选通。因此严格的双路高频 RTP 同步更新不作为 V1 硬要求；如后续需要，重新评估独立总线或其它驱动架构；
+- DRV2605L EN 不作为地址隔离手段。
 
 ## Development Test / Recovery
 
@@ -110,6 +122,7 @@ ESP32-S3-MINI-1U-N4R2 为 4 MB Flash + 2 MB PSRAM。两者不是 6 MB 通用 RAM
 - 5V 磁吸输入；
 - 1S LiPo 充电 / Power Path；
 - SYS_3V3；
+- PCA9540B + BMI270 + DRV2605L ×2；
 - Camera 2.8V；
 - Camera Core 1.2V / 1.5V（以最终模组为准）；
 - MAX98357A Audio Power。
@@ -126,6 +139,7 @@ ESP32-S3-MINI-1U-N4R2 为 4 MB Flash + 2 MB PSRAM。两者不是 6 MB 通用 RAM
 - AUDIO_MONO；
 - BONE_LEFT；
 - BONE_RIGHT；
+- HAPTIC_MUX；
 - HAPTIC_LEFT；
 - HAPTIC_RIGHT；
 - MAG_USB；
