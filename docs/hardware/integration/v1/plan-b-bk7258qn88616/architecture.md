@@ -99,8 +99,26 @@ GPIO46（Group2 DIN）保持空闲；GPIO9（Group0 DOUT）保持空闲。
 - 调试串口预留：GPIO10 RX / GPIO11 TX（按 BK7258 GPIO map 的 UART 功能，最终下载口名称以 Beken Hardware Reference Design 为准）；
 - 其余仍有大量 GPIO 可作为扩展，不需要占用 Camera/I²S 固定组。
 
+## 双镜腿物理分区
+
+Plan B 与 Plan A 使用同一物理架构基线，详见 `../common/dual-temple-partition.md`。
+
+### A — MAIN / SENSING TEMPLE
+
+放置：BK7258 主控及其 RF/启动/下载外围、OV5640、Camera Power、ICS-43434、BMI270、PCA9540B、DRV A + LRA A、MAX98357A + Bone A、4Pin Magnetic、USB保护、Charger/Power Path、SYS_3V3 和主要调试点。
+
+### B — BATTERY / REMOTE ACTUATOR TEMPLE
+
+放置：1S LiPo、Battery/NTC、DRV B + LRA B、Bone B、本地去耦与最小 TP。
+
+跨镜腿 FPC 当前按 12 conductor baseline，仅承载主电源、远端 Haptic 低速控制与远端 Bone 差分输出。BK7258 的 Camera CIS/JPEG、I²S、USB、RF 全部保持在 A 区，不跨镜腿。
+
+该分区不改变已经冻结的 BK7258 业务 GPIO 分配。
+
 ## 调试注意
 
 BK7258 官方调试文档说明 CPU0/CPU1 日志默认经 `DL_UART0` 输出。本版保留 UART Recovery/Test 点，但在正式原理图中还应依据 Beken QFN88 Hardware Reference Design 再核对下载、Reset、Boot、RF、晶振与电源外围的**封装引脚级**定义。
+
+此外，下一版原理图必须明确 A/B Board Boundary、`J_INTER_A/J_INTER_B` 与 FPC Pin Map，不能生成单板原理图后在 PCB 阶段临时拆分。
 
 这项不改变已经冻结的业务 GPIO 分配。
