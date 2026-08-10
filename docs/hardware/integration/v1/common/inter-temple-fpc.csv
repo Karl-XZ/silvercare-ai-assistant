@@ -1,0 +1,13 @@
+物理Pin基线,网络,方向,类型,源,目的,是否必须,设计说明
+1,BAT+,B→A,POWER_HIGH_CURRENT,B Battery,A Charger/Power Path,是,与Pin2并联承载电池充放电电流；最终铜宽按峰值电流核算
+2,BAT+,B→A,POWER_HIGH_CURRENT,B Battery,A Charger/Power Path,是,与Pin1并联；首版不为了省Pin单线承载未知峰值
+3,GND,B↔A,POWER_RETURN,System Ground,System Ground,是,与Pin4并联作为主回流
+4,GND,B↔A,POWER_RETURN,System Ground,System Ground,是,与Pin3并联；同时为I2C/Trigger提供参考回流
+5,SYS_3V3,A→B,POWER_LOW_CURRENT,A 3V3 Regulator,B DRV2605L/local logic,是,B侧低功耗逻辑电源；B侧需本地bulk/decoupling
+6,HAPTIC_B_SCL,A→B,I2C_LOW_SPEED,PCA9540B CH1,DRV2605L B,是,CH1独立I2C段；B侧设置该段pull-up
+7,HAPTIC_B_SDA,A↔B,I2C_LOW_SPEED,PCA9540B CH1,DRV2605L B,是,CH1独立I2C段；B侧设置该段pull-up
+8,HAPTIC_B_TRIG,A→B,GPIO,MCU,DRV2605L B IN/TRIG,是,用于远端预设波形触发；需明确默认态
+9,SPK_P,A→B,CLASS_D_DIFFERENTIAL,MAX98357A,Bone B,是,与SPK_N成对；禁止接GND；远离I2C长距离平行
+10,SPK_N,A→B,CLASS_D_DIFFERENTIAL,MAX98357A,Bone B,是,与SPK_P成对；禁止接GND
+11,BAT_NTC,A↔B,ANALOG_SENSE,B Battery NTC,A Charger/MCU,条件必需,若最终充电管理需要电池温度采样则使用；否则可转为Spare
+12,SPARE,A↔B,RESERVED,TBD,TBD,预留,可用于DRV EN/板识别/额外GND；不得在未更新文档时静默占用
