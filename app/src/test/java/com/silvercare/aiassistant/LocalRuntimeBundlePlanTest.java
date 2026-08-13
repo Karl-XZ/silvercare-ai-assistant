@@ -72,10 +72,10 @@ public class LocalRuntimeBundlePlanTest {
     private static LocalAsrModelStatus asrStatus(boolean ready) {
         return new LocalAsrModelStatus(
             new File("/tmp/asr"),
-            new File("/tmp/asr/vosk"),
+            new File("/tmp/asr/" + LocalAsrModelManager.SENSEVOICE_MODEL_DIR),
             true,
             ready,
-            ready ? Collections.emptyList() : Collections.singletonList("vosk")
+            ready ? Collections.emptyList() : Collections.singletonList("sensevoice")
         );
     }
 

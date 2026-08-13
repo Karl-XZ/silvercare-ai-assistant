@@ -82,7 +82,11 @@ dependencies {
     implementation project(":mnn_tts")
     implementation "androidx.core:core:1.13.1"
     implementation "androidx.webkit:webkit:1.12.1"
-    implementation "com.alphacephei:vosk-android:0.3.75"
+    // SenseVoiceSmall is the Alibaba/FunAudioLLM on-device ASR model.
+    implementation("com.github.k2-fsa.sherpa-onnx:sherpa-onnx:1.13.5@aar") {
+        transitive = false
+    }
+    implementation "org.apache.commons:commons-compress:1.27.1"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
 
     testImplementation "junit:junit:4.13.2"

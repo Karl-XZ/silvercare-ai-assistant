@@ -15,10 +15,15 @@ import java.util.Locale;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+
 final class LocalAsrDownloader {
-    static final long VOSK_CN_ZIP_BYTES = 43_898_754L;
-    static final String VOSK_CN_ZIP_URL =
-        "https://alphacephei.com/vosk/models/vosk-model-small-cn-0.22.zip";
+    static final long SENSEVOICE_ARCHIVE_BYTES = 163_002_883L;
+    static final String SENSEVOICE_ARCHIVE_URL =
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/"
+            + "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17.tar.bz2";
 
     private static final long MIN_FREE_SPACE_BUFFER = 256L * 1024L * 1024L;
     private static final int CONNECT_TIMEOUT_MS = 30_000;
@@ -51,32 +56,32 @@ final class LocalAsrDownloader {
         LocalAsrModelManager manager = new LocalAsrModelManager();
         LocalAsrModelStatus status = manager.inspect(root);
         if (status.ready) {
-            notify(listener, "本地 ASR 模型已存在", VOSK_CN_ZIP_BYTES, VOSK_CN_ZIP_BYTES);
-            return new DownloadResult(root, status.modelDir, VOSK_CN_ZIP_BYTES);
+            notify(listener, "SenseVoice 本地 ASR 模型已存在", SENSEVOICE_ARCHIVE_BYTES, SENSEVOICE_ARCHIVE_BYTES);
+            return new DownloadResult(root, status.modelDir, SENSEVOICE_ARCHIVE_BYTES);
         }
 
-        ensureFreeSpace(root, VOSK_CN_ZIP_BYTES);
+        ensureFreeSpace(root, SENSEVOICE_ARCHIVE_BYTES);
 
-        File zip = new File(root, LocalAsrModelManager.VOSK_CN_MODEL_DIR + ".zip");
-        if (!isComplete(zip, VOSK_CN_ZIP_BYTES)) {
-            downloadZip(zip, listener);
+        File archive = new File(root, LocalAsrModelManager.SENSEVOICE_MODEL_DIR + ".tar.bz2");
+        if (!isComplete(archive, SENSEVOICE_ARCHIVE_BYTES)) {
+            downloadArchive(archive, listener);
         } else {
-            notify(listener, "本地 ASR 压缩包已存在", VOSK_CN_ZIP_BYTES, VOSK_CN_ZIP_BYTES);
+            notify(listener, "SenseVoice ASR 压缩包已存在", SENSEVOICE_ARCHIVE_BYTES, SENSEVOICE_ARCHIVE_BYTES);
         }
 
-        notify(listener, "正在解压本地 ASR 模型", VOSK_CN_ZIP_BYTES, VOSK_CN_ZIP_BYTES);
-        extractModelZip(zip, root);
+        notify(listener, "正在解压 SenseVoice 本地 ASR 模型", SENSEVOICE_ARCHIVE_BYTES, SENSEVOICE_ARCHIVE_BYTES);
+        extractModelArchive(archive, root);
 
         status = manager.inspect(root);
         if (!status.ready) {
             throw new IllegalStateException(status.shortText());
         }
-        notify(listener, "本地 ASR 模型下载完成", VOSK_CN_ZIP_BYTES, VOSK_CN_ZIP_BYTES);
-        return new DownloadResult(root, status.modelDir, VOSK_CN_ZIP_BYTES);
+        notify(listener, "SenseVoice 本地 ASR 模型下载完成", SENSEVOICE_ARCHIVE_BYTES, SENSEVOICE_ARCHIVE_BYTES);
+        return new DownloadResult(root, status.modelDir, SENSEVOICE_ARCHIVE_BYTES);
     }
 
     static long expectedTotalBytes() {
-        return VOSK_CN_ZIP_BYTES;
+        return SENSEVOICE_ARCHIVE_BYTES;
     }
 
     private static void ensureFreeSpace(File root, long missingBytes) {
@@ -91,16 +96,16 @@ final class LocalAsrDownloader {
         }
     }
 
-    private static void downloadZip(File target, ProgressListener listener) throws Exception {
+    private static void downloadArchive(File target, ProgressListener listener) throws Exception {
         File part = new File(target.getAbsolutePath() + ".part");
         if (target.isFile() && target.length() > 0L) target.delete();
-        if (part.isFile() && part.length() > VOSK_CN_ZIP_BYTES) part.delete();
+        if (part.isFile() && part.length() > SENSEVOICE_ARCHIVE_BYTES) part.delete();
 
         long existing = part.isFile() ? part.length() : 0L;
-        long countedExisting = Math.min(existing, VOSK_CN_ZIP_BYTES);
-        notify(listener, "正在下载本地 ASR 模型", countedExisting, VOSK_CN_ZIP_BYTES);
+        long countedExisting = Math.min(existing, SENSEVOICE_ARCHIVE_BYTES);
+        notify(listener, "正在下载 SenseVoice 本地 ASR 模型", countedExisting, SENSEVOICE_ARCHIVE_BYTES);
 
-        HttpURLConnection connection = (HttpURLConnection) new URL(VOSK_CN_ZIP_URL).openConnection();
+        HttpURLConnection connection = (HttpURLConnection) new URL(SENSEVOICE_ARCHIVE_URL).openConnection();
         connection.setInstanceFollowRedirects(true);
         connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
         connection.setReadTimeout(READ_TIMEOUT_MS);
@@ -117,7 +122,7 @@ final class LocalAsrDownloader {
             countedExisting = 0L;
             append = false;
         }
-        if (code == 416 && isComplete(part, VOSK_CN_ZIP_BYTES)) {
+        if (code == 416 && isComplete(part, SENSEVOICE_ARCHIVE_BYTES)) {
             replaceFile(part, target);
             return;
         }
@@ -136,42 +141,44 @@ final class LocalAsrDownloader {
             int read;
             while ((read = input.read(buffer)) >= 0) {
                 output.write(buffer, 0, read);
-                done = Math.min(VOSK_CN_ZIP_BYTES, done + read);
+                done = Math.min(SENSEVOICE_ARCHIVE_BYTES, done + read);
                 sinceProgress += read;
                 if (sinceProgress >= PROGRESS_STEP_BYTES) {
                     sinceProgress = 0L;
-                    notify(listener, "正在下载本地 ASR 模型", done, VOSK_CN_ZIP_BYTES);
+                    notify(listener, "正在下载 SenseVoice 本地 ASR 模型", done, SENSEVOICE_ARCHIVE_BYTES);
                 }
             }
         } finally {
             connection.disconnect();
         }
 
-        if (!isComplete(part, VOSK_CN_ZIP_BYTES)) {
+        if (!isComplete(part, SENSEVOICE_ARCHIVE_BYTES)) {
             throw new IllegalStateException(
                 "本地 ASR 模型下载不完整，已下载 "
-                    + humanBytes(part.length()) + " / " + humanBytes(VOSK_CN_ZIP_BYTES)
+                    + humanBytes(part.length()) + " / " + humanBytes(SENSEVOICE_ARCHIVE_BYTES)
             );
         }
         replaceFile(part, target);
-        notify(listener, "本地 ASR 模型下载完成", VOSK_CN_ZIP_BYTES, VOSK_CN_ZIP_BYTES);
+        notify(listener, "SenseVoice 本地 ASR 模型下载完成", SENSEVOICE_ARCHIVE_BYTES, SENSEVOICE_ARCHIVE_BYTES);
     }
 
-    private static void extractModelZip(File zip, File root) throws Exception {
-        File modelDir = new File(root, LocalAsrModelManager.VOSK_CN_MODEL_DIR);
-        File tempDir = new File(root, LocalAsrModelManager.VOSK_CN_MODEL_DIR + ".tmp");
+    private static void extractModelArchive(File archive, File root) throws Exception {
+        File modelDir = new File(root, LocalAsrModelManager.SENSEVOICE_MODEL_DIR);
+        File tempDir = new File(root, LocalAsrModelManager.SENSEVOICE_MODEL_DIR + ".tmp");
         safeDeleteRecursively(tempDir, root);
         if (!tempDir.mkdirs()) {
             throw new IllegalStateException("无法创建本地 ASR 解压目录：" + tempDir.getAbsolutePath());
         }
 
-        String prefix = LocalAsrModelManager.VOSK_CN_MODEL_DIR + "/";
+        String prefix = LocalAsrModelManager.SENSEVOICE_MODEL_DIR + "/";
         byte[] buffer = new byte[BUFFER_SIZE];
         try (
-            ZipInputStream input = new ZipInputStream(new BufferedInputStream(new FileInputStream(zip), BUFFER_SIZE))
+            TarArchiveInputStream input = new TarArchiveInputStream(new BZip2CompressorInputStream(
+                new BufferedInputStream(new FileInputStream(archive), BUFFER_SIZE)
+            ))
         ) {
-            ZipEntry entry;
-            while ((entry = input.getNextEntry()) != null) {
+            TarArchiveEntry entry;
+            while ((entry = input.getNextTarEntry()) != null) {
                 String name = entry.getName().replace('\\', '/');
                 if (!name.startsWith(prefix)) continue;
                 String relative = name.substring(prefix.length());

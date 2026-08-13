@@ -371,9 +371,9 @@ export function updateRuntimeUI(data = {}) {
     STATE.aiRuntimeMode = mode;
     STATE.runtimeLabel = label;
     STATE.offlineReady = Boolean(data.offline_ready);
-    STATE.asrRuntimeMode = data.asr_runtime_mode || (data.local_asr_enabled ? 'local_vosk' : 'dashscope');
-    STATE.asrRuntimeLabel = data.asr_runtime_label || (STATE.asrRuntimeMode === 'local_vosk' ? '本地内置 ASR' : '联网 DashScope');
-    STATE.localAsrEnabled = STATE.asrRuntimeMode === 'local_vosk';
+    STATE.asrRuntimeMode = data.asr_runtime_mode || (data.local_asr_enabled ? 'local_sensevoice' : 'dashscope');
+    STATE.asrRuntimeLabel = data.asr_runtime_label || (STATE.asrRuntimeMode === 'local_sensevoice' ? '本地 SenseVoice' : '联网 DashScope');
+    STATE.localAsrEnabled = STATE.asrRuntimeMode === 'local_sensevoice';
     STATE.localAsrReady = Boolean(data.local_asr_ready);
     STATE.mnnLlmTuningLabel = data.mnn_llm_tuning_label || STATE.mnnLlmTuningLabel || 'SME2 自动调优';
     STATE.mnnSme2Supported = Boolean(data.mnn_sme2_supported);
@@ -388,8 +388,8 @@ export function updateRuntimeUI(data = {}) {
     setCaptionVisibility(data.captions_enabled !== false);
 
     const offlineLabel = data.offline_text_model_label || 'Qwen 文本模型';
-    const asrLabel = STATE.asrRuntimeMode === 'local_vosk'
-        ? (STATE.localAsrReady ? ' · 本地内置ASR' : ' · 本地内置ASR未就绪')
+    const asrLabel = STATE.asrRuntimeMode === 'local_sensevoice'
+        ? (STATE.localAsrReady ? ' · 本地SenseVoice' : ' · 本地SenseVoice未就绪')
         : ' · 联网ASR';
     const tuningLabel = mode === 'offline_mnn'
         ? ` · ${STATE.mnnLlmTuningLabel}${STATE.mnnSme2Supported ? '' : '（回退）'}`

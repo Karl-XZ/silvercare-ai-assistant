@@ -1,7 +1,7 @@
 package com.silvercare.aiassistant;
 
 enum AsrRuntimeMode {
-    LOCAL_VOSK("local_vosk", "本地内置 ASR"),
+    LOCAL_SENSEVOICE("local_sensevoice", "本地 SenseVoice"),
     DASHSCOPE("dashscope", "联网 DashScope");
 
     static final AsrRuntimeMode DEFAULT = DASHSCOPE;
@@ -15,12 +15,12 @@ enum AsrRuntimeMode {
     }
 
     boolean isLocal() {
-        return this == LOCAL_VOSK;
+        return this == LOCAL_SENSEVOICE;
     }
 
     static AsrRuntimeMode from(String value) {
         if (DASHSCOPE.value.equals(value)) return DASHSCOPE;
-        if (LOCAL_VOSK.value.equals(value)) return LOCAL_VOSK;
+        if (LOCAL_SENSEVOICE.value.equals(value) || "local_vosk".equals(value)) return LOCAL_SENSEVOICE;
         return DEFAULT;
     }
 }

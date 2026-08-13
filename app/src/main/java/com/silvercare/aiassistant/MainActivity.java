@@ -39,6 +39,7 @@ import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.CheckBox;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -132,7 +133,7 @@ public class MainActivity extends Activity
     private OfflineModelManager offlineModelManager;
     private LocalAsrModelManager localAsrModelManager;
     private LocalTtsModelManager localTtsModelManager;
-    private VoskLocalAsrEngine localAsrEngine;
+    private SenseVoiceLocalAsrEngine localAsrEngine;
     private MnnRuntimeBridge mnnRuntimeBridge;
     private LocalTtsRuntimeBridge localTtsRuntimeBridge;
     private AudioRecord audioRecord;
@@ -190,7 +191,7 @@ public class MainActivity extends Activity
         offlineModelManager = new OfflineModelManager();
         localAsrModelManager = new LocalAsrModelManager();
         localTtsModelManager = new LocalTtsModelManager();
-        localAsrEngine = new VoskLocalAsrEngine();
+        localAsrEngine = new SenseVoiceLocalAsrEngine();
         mnnRuntimeBridge = new MnnNativeBridge();
         localTtsRuntimeBridge = LOCAL_MNN_TTS_VOICE_QUALITY_ENABLED ? new MnnTtsRuntimeBridge() : null;
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -628,7 +629,7 @@ public class MainActivity extends Activity
             .putString(KEY_AI_RUNTIME_MODE, AiRuntimeMode.OFFLINE_MNN.value)
             .putString(KEY_OFFLINE_MODEL_DIR, targetDir.getAbsolutePath())
             .putString(KEY_OFFLINE_TEXT_MODEL, OfflineAiClient.TEXT_MODEL_4B)
-            .putString(KEY_ASR_RUNTIME_MODE, AsrRuntimeMode.LOCAL_VOSK.value)
+            .putString(KEY_ASR_RUNTIME_MODE, AsrRuntimeMode.LOCAL_SENSEVOICE.value)
             .putString(KEY_TTS_RUNTIME_MODE, TtsRuntimeMode.SYSTEM.value)
             .apply();
         rebuildProcessor();
@@ -932,7 +933,7 @@ public class MainActivity extends Activity
     private void showAsrRuntimeDialog() {
         LocalAsrModelStatus status = localAsrStatus();
         AsrRuntimeMode current = currentAsrRuntimeMode();
-        String localText = "本地内置 ASR：" + (status.ready ? "已就绪" : "未下载，需要下载中文 ASR 模型");
+        String localText = "本地 SenseVoice：" + (status.ready ? "已就绪" : "未下载，需要下载 SenseVoice 中文 ASR 模型");
         String dashScopeText = hasDashScopeKeyInternal()
             ? "联网 DashScope：已配置 Key"
             : "联网 DashScope：需要 DashScope Key";
@@ -944,7 +945,7 @@ public class MainActivity extends Activity
         TextView message = new TextView(this);
         message.setText("ASR 可以独立选择本地或联网，不跟随 AI 运行方案。\n\n"
             + localAsrDetailText(status)
-            + "\n\n本地内置 ASR 使用应用下载的中文模型在手机端离线转文字，不依赖 Google、GMS 或 Android 系统语音服务；识别结果会再由本地 Qwen 文本模型校对一次。"
+            + "\n\n本地 SenseVoice 使用阿里达摩院中文语音模型在手机端离线转文字，不依赖 Google、GMS 或 Android 系统语音服务；识别结果会再由本地 Qwen 文本模型校对一次。"
             + "\n联网 DashScope 会上传录音到 DashScope ASR。"
             + "\n\n当前选择：" + current.label);
         message.setTextSize(14);
@@ -952,12 +953,17 @@ public class MainActivity extends Activity
 
         RadioGroup group = new RadioGroup(this);
         group.setOrientation(RadioGroup.VERTICAL);
-        RadioButton local = asrModeRadio(3001, AsrRuntimeMode.LOCAL_VOSK, localText);
+        RadioButton local = asrModeRadio(3001, AsrRuntimeMode.LOCAL_SENSEVOICE, localText);
         RadioButton dashScope = asrModeRadio(3002, AsrRuntimeMode.DASHSCOPE, dashScopeText);
         group.addView(local);
         group.addView(dashScope);
         group.check(current.isLocal() ? local.getId() : dashScope.getId());
         layout.addView(group);
+
+        Button download = new Button(this);
+        download.setText(status.ready ? "重新下载 SenseVoice 模型" : "下载 SenseVoice 本地模型（约155MB）");
+        download.setOnClickListener(view -> startLocalAsrDownload());
+        layout.addView(download);
 
         speakIfVoiceFirst("语音识别方案设置已打开。当前是" + current.label + "。" + status.shortText());
 
@@ -978,7 +984,7 @@ public class MainActivity extends Activity
                     showApiKeyDialog();
                 }
             })
-            .setNeutralButton("下载本地 ASR 模型", (dialog, which) -> startLocalAsrDownload())
+            .setNeutralButton("测试本地语音转文字", (dialog, which) -> openLocalAsrTest())
             .setNegativeButton("关闭", null)
             .show();
     }
@@ -989,6 +995,10 @@ public class MainActivity extends Activity
         button.setTag(mode);
         button.setText(text);
         return button;
+    }
+
+    private void openLocalAsrTest() {
+        startActivity(new Intent(this, LocalAsrTestActivity.class));
     }
 
     private void showTtsRuntimeDialog() {
@@ -1092,8 +1102,8 @@ public class MainActivity extends Activity
 
         long total = LocalAsrDownloader.expectedTotalBytes();
         lastAsrDownloadPercent = -1;
-        speakNative("开始下载本地语音识别模型。文件约四十二MB，请保持网络连接。");
-        sendModelDownloadProgress("准备下载本地 ASR 模型", 0L, total, false, false);
+        speakNative("开始下载 SenseVoice 本地语音识别模型。下载文件约一百五十五MB，请保持网络连接。");
+        sendModelDownloadProgress("准备下载 SenseVoice 本地 ASR 模型", 0L, total, false, false);
 
         executor.execute(() -> {
             try {
@@ -1101,7 +1111,7 @@ public class MainActivity extends Activity
                     .ensureChineseModel(this, this::sendThrottledAsrDownloadProgress);
                 runOnUiThread(() -> {
                     asrDownloadInFlight.set(false);
-                    preferences.edit().putString(KEY_ASR_RUNTIME_MODE, AsrRuntimeMode.LOCAL_VOSK.value).apply();
+                    preferences.edit().putString(KEY_ASR_RUNTIME_MODE, AsrRuntimeMode.LOCAL_SENSEVOICE.value).apply();
                     sendModelDownloadProgress("本地 ASR 模型已下载完成", result.totalBytes, result.totalBytes, true, false);
                     sendRuntimeStatus();
                     speakNative("本地语音识别模型已下载完成。ASR 已切换到本地内置识别。");
@@ -2559,10 +2569,10 @@ public class MainActivity extends Activity
     }
 
     private void startBundledLocalAsrSpeechInquiry(String imageDataUrl) {
-        startVoskLocalAsrSpeechInquiry(imageDataUrl);
+        startSenseVoiceLocalAsrSpeechInquiry(imageDataUrl);
     }
 
-    private void startVoskLocalAsrSpeechInquiry(String imageDataUrl) {
+    private void startSenseVoiceLocalAsrSpeechInquiry(String imageDataUrl) {
         stopDashScopeWavRecordingOnly();
         pendingSpeechImageDataUrl = imageDataUrl;
         DiagnosticLogger.eventPairs(
@@ -2572,7 +2582,7 @@ public class MainActivity extends Activity
 
         LocalAsrModelStatus asrStatus = localAsrStatus();
         if (!asrStatus.ready) {
-            String message = "本地内置 ASR 模型未就绪。请在设置里下载本地 ASR 模型，或切换到联网 DashScope ASR。";
+            String message = "本地 SenseVoice 模型未就绪。请在设置里下载本地 ASR 模型，或切换到联网 DashScope ASR。";
             sendError(message);
             speakIfVoiceFirst(message);
             finishSpeechRequest();
@@ -2667,7 +2677,7 @@ public class MainActivity extends Activity
             localAsrEngine.close();
         } catch (Exception ignored) {
         }
-        localAsrEngine = new VoskLocalAsrEngine();
+        localAsrEngine = new SenseVoiceLocalAsrEngine();
         if (asrExecutor != null) {
             asrExecutor.shutdownNow();
         }

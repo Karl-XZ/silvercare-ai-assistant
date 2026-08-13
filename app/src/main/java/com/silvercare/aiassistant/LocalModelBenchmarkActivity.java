@@ -149,7 +149,7 @@ public class LocalModelBenchmarkActivity extends Activity {
             return report;
         }
 
-        VoskLocalAsrEngine engine = new VoskLocalAsrEngine();
+        SenseVoiceLocalAsrEngine engine = new SenseVoiceLocalAsrEngine();
         JSONArray runs = new JSONArray();
         byte[] pcm = silencePcm(16_000, 3_000);
         runs.put(timed("cold_load_plus_3s_silence_asr", () -> engine.transcribePcm(status.modelDir, pcm)));
@@ -637,7 +637,7 @@ public class LocalModelBenchmarkActivity extends Activity {
         String transcript = "";
         JSONObject asrRun = new JSONObject();
         long asrStarted = SystemClock.elapsedRealtimeNanos();
-        VoskLocalAsrEngine asrEngine = new VoskLocalAsrEngine();
+        SenseVoiceLocalAsrEngine asrEngine = new SenseVoiceLocalAsrEngine();
         try {
             transcript = asrEngine.transcribePcm(asrStatus.modelDir, wavPcm16(audioFile));
             putQuietly(asrRun, "success", true);

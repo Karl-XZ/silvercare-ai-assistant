@@ -36,10 +36,10 @@ final class LocalAsrModelStatus {
         StringBuilder builder = new StringBuilder();
         builder.append(shortText())
             .append("\n\n模型目录：").append(pathOf(modelDir))
-            .append("\n模型来源：Vosk 中文小模型 ")
-            .append(LocalAsrModelManager.VOSK_CN_MODEL_DIR)
+            .append("\n模型来源：阿里达摩院 SenseVoiceSmall INT8")
+            .append("\n模型目录：").append(LocalAsrModelManager.SENSEVOICE_MODEL_DIR)
             .append("\n下载大小：约 ")
-            .append(LocalAsrDownloader.humanBytes(LocalAsrDownloader.VOSK_CN_ZIP_BYTES))
+            .append(LocalAsrDownloader.humanBytes(LocalAsrDownloader.SENSEVOICE_ARCHIVE_BYTES))
             .append("\n用途：端侧离线语音转文字，录音不会上传。");
         return builder.toString();
     }

@@ -27,7 +27,7 @@ SilverCareBridge (JavaScript bridge)
         v
 SilverCareProcessor
         |
-        +-- Local ASR: Vosk Chinese model
+        +-- Local ASR: Alibaba SenseVoiceSmall INT8 through sherpa-onnx
         +-- Local vision: DAMO-YOLO MNN model
         +-- Local LLM: Qwen3 text model through MNN native bridge
         +-- Local TTS: Android TTS fallback, experimental MNN TTS bridge
