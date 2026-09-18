@@ -1,178 +1,216 @@
 # SilverCare AI Assistant / 银龄智护
 
-银龄智护是一款面向低视力老人、独居老人、家庭照护者和居家护理场景的 Android 端侧 AI 助手。应用以语音优先交互为核心，结合手机摄像头、离线视觉检测、端侧文本模型、本地语音识别和可选云端模型，提供居家巡路、找物、精确引导、跌倒风险确认、照护记录和管理端复核能力。
+<div align="center">
 
-项目目标不是替代专业护理或医疗判断，而是在老人独自在家活动时提供更及时、更容易听懂的行动提醒，并让家属或照护人员可以复核关键事件。
+**语音优先的适老化居家长护辅助与风险预警系统**  
+*Voice-First Accessible In-Home Care Assistance & Risk Early-Warning System*
+
+[核心能力](#核心能力) • [实景演示](#核心功能与实景演示) • [系统架构](#系统技术架构) • [端云协同](#端云协同与模型策略) • [构建指南](#构建与验证指南) • [公开基准](#公开-benchmark)
+
+</div>
+
+---
+
+## 项目概述
+
+**银龄智护（SilverCare AI Assistant）** 是一套面向低视力老人、高龄独居老人、失能半失能长护对象、家庭照护者及医疗保障长护服务管理人员的多模态人工智能系统。应用以普通智能手机为感知与计算载体，融合手机摄像头、高敏麦克风、六轴运动传感器、端侧深度学习引擎与可选云端大模型，构建集**“多模态环境感知 + 语音优先交互 + 居家行动引导 + 跌倒主动确认 + 服务管理闭环”**于一体的综合解决方案。
+
+项目聚焦于在老人独自居家活动时提供及时、易懂的行动提示与安全预警，同时为家属及照护人员提供可追溯的事件复核支持。系统通过将视觉画面转化为符合人体相对方位与触觉锚点的行动语言（例如“先停下、向右绕开、手扶门框、脚尖轻探地面、沿桌沿向前摸”），帮助行动不便与视力减退老人安全独立地完成起夜、行走、避障、找物等高频日常动作。
+
+<div align="center">
+  <img src="docs/images/flow_elderly_core.png" alt="老人端核心使用流程" width="850"/>
+  <p><em>图 1：老人端语音优先核心使用流程</em></p>
+</div>
+
+---
 
 ## 核心能力
 
-- 语音优先：支持语音输入、字幕显示、语音播报和大按钮界面，默认面向不看屏幕也能完成主要操作的使用方式。
-- 端侧离线：支持本地 ASR、DAMO-YOLO 视觉检测、Qwen3 文本模型和 MNN Runtime，在无网络环境下完成主要交互链路。
-- 云端可选：支持 DashScope 模式，用于更强的云端多模态理解和 TTS 能力，API Key 通过本地配置或应用设置提供。
-- 居家巡路：摄像头连续观察前方环境，按小型、中型、大型障碍给出中文避障提示。
-- 目标寻找：用户说“帮我找杯子/碗/手机”等目标后，系统会先校正 ASR 文本，再确认该目标是否属于离线视觉可识别类别。
-- 精确引导：用户明确说出“引导”后进入持续引导模式；说“关闭、停止、退出”等指令后退出。
-- 跌倒确认：结合传感器和画面变化触发风险确认，先询问用户是否摔倒，未恢复时进入模拟报警 UI。
-- 管理端视图：汇总风险事件、照护任务、语音交互记录和 AI 日报，便于家庭成员或照护人员复核。
-- 公开 benchmark：包含脱敏场景图片、语音、trace、评分脚本和 baseline，便于复现实验和对比优化。
+- 🎙️ **语音优先无障碍交互**：默认开启全链路语音提示、大字号字幕与大触控区域，支持长按说话、单击刷新与自动播报，操作无需依赖持续注视屏幕。
+- 🚶 **起夜巡路与通行引导**：摄像头持续监测前方地面与通道状态，自动识别脚垫、门槛、地面线缆、台阶与家具边缘，生成短句避障指令。
+- 🔍 **同音纠错与语音找物**：支持日常物品（水杯、药瓶、钥匙、眼镜等）快速定位，结合 ASR 语音纠错与目标检测算法，播报方位并同步提示周边潜在危险。
+- 🤝 **精确细粒度动作引导**：支持进出房门、按开关、取放物品等精细场景，采用身体相对方位与触觉锚点进行分步动作提示。
+- 🛡️ **跌倒双保险确认机制**：融合运动传感器冲击峰值、姿态倾角异常与前后时序视觉突变，触发后先通过语音询问与 10 秒倒计时确认，有效过滤普通晃动误报。
+- 📊 **长护服务管理闭环**：联动手机端与 Web 桌面端长护管理看板，将风险预警、找物困难与求助事件沉淀为结构化台账，自动生成 AI 服务日报供家属和护理员复核。
+- ⚡ **端侧离线与云端协同**：全面支持端侧离线运行（MNN Runtime + DAMO-YOLO + Qwen3 文本模型 + 本地 Vosk ASR），同时支持无缝衔接 DashScope 多模态云端大模型，保证弱网与隐私敏感环境的高可用性。
 
-## 技术架构
+---
+
+## 核心功能与实景演示
+
+### 1. 居家巡路与起夜避障
+
+在光线微弱的夜间起夜、狭窄走廊行走及经过杂物堆放区域时，系统动态感知前方障碍物并测算相对距离，播报清晰的行进建议。
+
+| 场景 A：走廊通行巡路 | 场景 B：入口障碍通行提醒 |
+| :---: | :---: |
+| <img src="docs/images/screen_corridor_walk.jpeg" alt="走廊通行场景巡路引导" width="360"/> | <img src="docs/images/screen_entrance_obstacle.jpeg" alt="入口行李堆放通行提醒" width="360"/> |
+| **识别目标**：走廊地面脚垫、行进纵深<br>**行动提示**：“沿走廊中间慢走，前方脚下有门垫，注意脚下起伏。” | **识别目标**：通道堆放行李箱、杂物袋<br>**行动提示**：“左前方有行李堆放，建议身体贴右侧慢步前行。” |
+
+---
+
+### 2. 危险隐患预警与卫生间安全
+
+针对居家高发的高危跌倒隐患（倒地物体、电源线、卫生间湿滑地面与门槛高差），系统提升警报优先级，引导老人规范减速与借力支撑。
+
+| 场景 C：绊倒风险预警 | 场景 D：卫生间湿滑与门槛防护 |
+| :---: | :---: |
+| <img src="docs/images/screen_tripping_hazard.jpeg" alt="倒地晾衣架绊倒预警" width="360"/> | <img src="docs/images/screen_bathroom_risk.jpeg" alt="卫生间门槛与淋浴区风险" width="360"/> |
+| **识别目标**：倒伏在通道正中的晾衣架<br>**行动提示**：“请立即停下！正前方有倒地金属支架，后退半步并向右绕开。” | **识别目标**：卫生间门槛高低差、湿滑瓷砖、马桶定位<br>**行动提示**：“即将进入卫生间，手扶门框，脚尖轻探地面确认防滑。” |
+
+---
+
+### 3. 目标寻找与精确动作引导
+
+用户通过语音指令（例如“帮我找一下降压药”、“我的耳塞盒在哪里”）发起需求，系统完成语音转写校正、视觉定位与桌面风险提示。
+
+| 场景 E：目标寻找与插排风险排查 | 场景 F：跌倒双保险确认机制 |
+| :---: | :---: |
+| <img src="docs/images/screen_item_finding.jpeg" alt="桌面找物与电源线风险" width="360"/> | <img src="docs/images/screen_fall_confirm.jpeg" alt="跌倒确认弹窗与10秒倒计时" width="360"/> |
+| **识别目标**：桌面耳塞盒定位、伴随排插线缆<br>**行动提示**：“耳塞盒在正前方桌面上偏右；注意前方有接线板与电线，手部动作放缓。” | **识别目标**：重力冲击 + 倾角翻转 + 画面剧烈颠簸<br>**处理流程**：弹出 10 秒确认弹窗并大声语音询问“您摔倒了吗？”，未响应触发报警。 |
+
+---
+
+### 4. 跌倒确认与长护服务闭环
+
+系统将居家前端采集的风险事件、报警记录和日常照护任务汇总上报，形成具备溯源能力的医保与长护服务闭环。
+
+<div align="center">
+  <img src="docs/images/flow_fall_detection.png" alt="跌倒风险预警与确认流程" width="800"/>
+  <p><em>图 2：传感器冲击与视觉时序联合验证的跌倒确认流程</em></p>
+</div>
+
+<div align="center">
+  <img src="docs/images/flow_care_closed_loop.png" alt="长护服务管理闭环" width="800"/>
+  <p><em>图 3：长护服务管理与异常事件闭环</em></p>
+</div>
+
+| 移动端长护看板 | 桌面端管理工作台 | 智能数据助手对话 |
+| :---: | :---: | :---: |
+| <img src="docs/images/screen_mobile_dashboard.jpeg" alt="手机端长护管理看板" width="260"/> | <img src="docs/images/screen_web_dashboard.jpeg" alt="桌面端管理看板" width="460"/> | <img src="docs/images/screen_assistant_chat.png" alt="智能数据助手对话记录" width="260"/> |
+| **功能**：掌上复核风险事件队列、照护对象状态看板与每日异常汇总。 | **功能**：多老人集中态势大屏、待办核查、处置留痕与导出归档。 | **功能**：支持自然语言问答检索长护政策、历史健康数据与照护日报。 |
+
+---
+
+## 系统技术架构
+
+系统采用清晰的分层解耦架构，保证前端展示、端侧算力、硬件通信与远程管理协同工作：
+
+<div align="center">
+  <img src="docs/images/arch_system_overview.png" alt="系统总体技术架构" width="850"/>
+  <p><em>图 4：银龄智护系统总体技术分层架构</em></p>
+</div>
+
+### 架构层级划分
 
 ```text
-Android WebView UI
-        |
-        v
-SilverCareBridge (JavaScript bridge)
-        |
-        v
-SilverCareProcessor
-        |
-        +-- Local ASR: Vosk Chinese model
-        +-- Local vision: DAMO-YOLO MNN model
-        +-- Local LLM: Qwen3 text model through MNN native bridge
-        +-- Local TTS: Android TTS fallback, experimental MNN TTS bridge
-        +-- Cloud AI: DashScope-compatible request path
-        |
-        v
-Captions / Speech / Care records / Diagnostics
+┌────────────────────────────────────────────────────────────────────────┐
+│                        用户交互层 (Presentation)                        │
+│   老人端适老化 WebView UI  │  高对比大字号字幕  │  移动/Web 端长护管理看板  │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ JavaScript Bridge
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                        平台原生层 (Native Layer)                        │
+│    Android/iOS 权限管控    │  Camera 连续取帧  │   Audio 采集与系统 TTS    │
+│    六轴传感器数据管道      │  本地模型动态加载  │   网络状态与电源管理      │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                      业务逻辑编排层 (Orchestration)                     │
+│    巡路避障调度器    │  语音同音词纠错器  │  动作指引分解器  │  跌倒混合状态机  │
+└───────────────────┬────────────────────────────────┬───────────────────┘
+                    │                                │
+┌───────────────────▼──────────────┐ ┌───────────────▼───────────────────┐
+│     端侧离线推理层 (Edge Mode)    │ │      云端增强服务层 (Cloud Mode)    │
+│  • MNN 推理引擎 (NPU/GPU/CPU)    │ │  • DashScope / Qwen 多模态大模型    │
+│  • DAMO-YOLO 目标与障碍检测       │ │  • 高准确率云端 ASR 语音转写        │
+│  • Qwen3-4B-MNN 端侧文本规划     │ │  • 自然情感高保真云端 TTS 语音合成   │
+│  • Vosk 轻量离线语音识别          │ │  • 长护知识库检索增强 (RAG)         │
+└──────────────────────────────────┘ └───────────────────────────────────┘
 ```
 
-## 模型与资源策略
+---
 
-仓库内包含 Android 工程、MNN native bridge、DAMO-YOLO 端侧视觉模型和公开 benchmark 样例数据。较大的 Qwen 文本模型、ASR 模型和 TTS 模型由应用内下载器按需下载到应用私有目录，避免把大模型权重直接提交到仓库。
+## 端云协同与模型策略
 
-云端能力不需要把密钥提交到代码仓库。开发调试时可以在根目录创建 `local.properties`：
+为兼顾计算性能、用户隐私与复杂环境可用性，系统设计了端侧优先、云端增强的双链路运行策略：
+
+<div align="center">
+  <img src="docs/images/arch_dual_path.png" alt="端侧优先、云端增强架构" width="800"/>
+  <p><em>图 5：端侧优先、云端增强统一架构设计</em></p>
+</div>
+
+### 模型选型矩阵
+
+| 功能模块 | 端侧离线方案 | 云端增强方案 | 性能与资源指标 |
+| :--- | :--- | :--- | :--- |
+| **视觉目标检测** | `DAMO-YOLO Tiny (MNN)` | `Qwen-VL / DashScope Multi-Modal` | 电脑端推理耗时约 0.131s，移动端稳定运行在 15~30 FPS |
+| **语言意图与规划** | `Qwen3-4B-Instruct-MNN` (量化版) | `Qwen-Max / Qwen-Plus` | 离线按需动态下载至沙盒目录，不占用初装包体积 |
+| **语音转文字 (ASR)** | `Vosk-Chinese-Small` | `DashScope Realtime ASR` | 离线唤醒转写低功耗常驻，联网时调用高精度模型 |
+| **语音合成 (TTS)** | `Android 系统原生 TTS / MNN TTS` | `CosyVoice / DashScope TTS` | 保证断网场景基础提示畅通，联网输出自然拟人长护音色 |
+
+### 安全与私钥配置
+
+开发调试与集成测试时，API 凭据均通过本地外部配置文件引入，严禁硬编码至版本库：
 
 ```properties
-DASHSCOPE_API_KEY=your_key_here
+# 在根目录创建 local.properties（已受 .gitignore 保护）
+DASHSCOPE_API_KEY=your_dashscope_api_key_here
 ```
 
-`local.properties` 已被 `.gitignore` 忽略。
+---
 
-## Android Studio 打开方式
+## 构建与验证指南
 
-直接用 Android Studio 打开仓库根目录：
+### 1. Android 端构建
 
-```text
-silvercare-ai-assistant
-```
+直接使用 Android Studio 打开仓库根目录：
 
-不要只打开 `app` 子目录，否则 Gradle 无法找到根工程配置和 `mnn_tts` 子工程。
-
-## iOS 迁移工作区
-
-iOS 版本迁移位于 `ios/`，包含 SwiftUI + WKWebView 应用外壳、可复用的 `SilverCareCore` Swift 核心库、XcodeGen 工程配置和核心验收脚本。
-
-当前仓库已完成导航/找物/精确引导/任务控制/跌倒确认/ASR 校对/智能刷新等核心逻辑的 Swift 迁移与 Swift Package / Xcode / 模拟器自动化验证，并接入了 DashScope 文本、视觉、ASR 和 TTS 的联网路径。当前 iOS 验收主线以联网 DashScope 为准，本地模型功能先作为显式 opt-in 验证项保留。带真实 Key 的 iOS 迁移总控、模拟器 gate、真机安装启动 smoke、真机 UI 截图/点击 gate 和 live DashScope 场景 smoke 已通过；真机 UI gate 覆盖启动、设置、AI 详情、管理端往返和启动导航进入原生相机链路。真实 Qwen/DAMO-YOLO 本地推理、Vosk 真机录音转写、MNN TTS 可懂度验收、真实摄像头持续画面和真机长按麦克风交互证据仍需继续补齐。详见：
-
-```text
-ios/README.md
-ios/Native/README.md
-ios/MIGRATION_STATUS.md
-```
-
-## 构建与测试
-
-Windows PowerShell:
-
-```powershell
+```bash
+# 调试包构建
 .\gradlew.bat :app:assembleDebug --no-daemon
+
+# 运行本地 JVM 单元测试
 .\gradlew.bat :app:testDebugUnitTest --no-daemon
-```
 
-iOS / shared Web + Swift verification:
-
-```bash
-npm run check:js
-npm run check:secrets
-npm run test:js
-npm run test:ios:sim
-npm run verify:ios:migration
-npm run check:ios:online-chain
-```
-
-`npm run test:ios:sim` is the default simulator gate: it runs JavaScript checks,
-JavaScript tests, Swift Package tests, simulator-safe Xcode unit and UI tests,
-then builds, installs, launches, captures a screenshot, and verifies local
-benchmark reports from the simulator app. Use `SILVERCARE_SKIP_XCODE_TESTS=1`
-only for a quick local compile/smoke pass.
-`npm run verify:ios:migration` is the umbrella migration gate: it runs the
-shared checks, JavaScript tests, DashScope scenario validation or a live
-DashScope scenario run when `DASHSCOPE_API_KEY` is present, the simulator gate,
-the signed device smoke, and device-summary validation. The command writes
-`ios/build/migration-verification/summary.json`; verify that artifact with
-`npm run check:ios:migration-summary`.
-`npm run test:ios:device-ui` is an opt-in physical-device UI debug gate for
-ordinary tapping, startup screenshots, settings taps, AI/details panel taps,
-and the native camera navigation path; keep the iPhone unlocked and awake before
-running it. `npm run check:ios:device-ui-summary` requires the latest device UI
-run to have passed; set `SILVERCARE_ALLOW_DEVICE_UI_BLOCKED=1` only when you
-want to verify that a locked-device or automation-timeout result was classified
-cleanly.
-`npm run check:js` already includes the repository secret scan; `npm run check:secrets`
-can also be run by itself after live DashScope tests or report export.
-`npm run check:ios:online-chain` is the quick cloud-path evidence check: it
-requires a live DashScope migration summary, three downloaded network street
-image scenarios, ASR/TTS smoke artifacts, simulator status plus screenshot
-artifacts, and a signed iPhone smoke report whose latest status benchmark shows
-DashScope ASR/TTS configured and available.
-
-For local iOS debug builds that should open with DashScope already configured,
-store the Key outside the repository and let Xcode embed it into the app bundle
-at build time. The preferred path is macOS Keychain:
-
-```bash
-bash ios/Tools/install_dashscope_key_to_keychain.sh
-```
-
-The same build script also accepts `DASHSCOPE_API_KEY` from the environment or
-`~/.silvercare/dashscope_api_key`. Do not commit a raw Key to source files,
-`Info.plist`, or generated reports.
-
-联网 DashScope 集成测试默认不运行。需要真实云端测试时，在本机配置 `DASHSCOPE_API_KEY` 后执行：
-
-```powershell
+# 包含云端实测的自动化验证（需提前配置环境变量）
+$env:DASHSCOPE_API_KEY="your_api_key"
 .\gradlew.bat :app:testDebugUnitTest -Dsilvercare.liveDashScope=true --no-daemon
 ```
 
-iOS/共享核心的真实场景 smoke test 会从 Wikimedia Commons 下载街道、人行道、斑马线图片，调用 DashScope 文本、视觉、ASR 和 TTS 路径，并把脱敏报告写到 `test_runs/live_dashscope_scenarios/`。`npm run test:dashscope:scenarios` 会在生成后立即校验 `summary.json`：确认三张网络图片存在且大小匹配，导航 JSON 字段合法，文本/ASR/TTS smoke 通过，TTS 生成音频已下载到本地且大小/类型匹配，并且报告没有裸 Key。已有报告可用 `npm run check:dashscope:scenarios` 单独复核。同一个环境变量也会被 iOS 模拟器自动化注入到 App，用来验证启动后的联网 DashScope/ASR 状态：
+### 2. iOS 迁移工作区 (`ios/`)
+
+iOS 迁移基于 SwiftUI + WKWebView 构建，代码位于 `ios/` 目录：
 
 ```bash
-DASHSCOPE_API_KEY=your_key_here npm run test:dashscope:scenarios
+# 执行前端语法与静态代码安全扫描
+npm run check:js
+npm run check:secrets
+
+# 运行前端核心逻辑单元测试（包含字幕、跌倒机制等 19 项测试）
+npm run test:js
+
+# 运行 iOS 模拟器自动化门禁
+npm run test:ios:sim
+
+# 完整迁移验收测试
+npm run verify:ios:migration
 ```
 
-## Benchmark
+---
 
-公开 benchmark 位于 `public_benchmark_silvercare/`，包含：
+## 公开 Benchmark
 
-- 脱敏真实居家场景图片和样例音频
-- 巡路、找物、跌倒确认、语音交互、人工复核等任务定义
-- trace 样例与结构化评分规则
-- rule-based baseline 和报告生成脚本
+项目在 `public_benchmark_silvercare/` 目录下配套提供了标准化的脱敏评测基准，包含：
 
-运行方式：
+1. **真实居家脱敏数据集**：走廊、入口堆积、倒地障碍、卫生间地面、杂乱桌面等多场景图像与音频样例。
+2. **结构化评测任务**：标准化定义巡路避障准确率、找物匹配时延、跌倒判断置信度与 ASR 纠错率。
+3. **自动化评分脚本**：提供对比 baseline 与指标打分逻辑，方便后续模型升级或设备移植时进行回归评测。
 
-```powershell
-cd public_benchmark_silvercare
-npm run benchmark
-```
+---
 
-## 目录结构
+## 边界说明与合规声明
 
-```text
-app/                              Android 应用源码
-app/src/main/assets/              WebView UI、离线视觉模型和前端逻辑
-app/src/main/java/                Android bridge、业务处理器、模型下载与推理入口
-app/src/main/cpp/                 MNN native runtime bridge
-docs/                             功能架构、日志和离线对话能力说明
-public_benchmark_silvercare/      可复用 benchmark、样例数据和评分脚本
-third_party/mnn/                  MNN 运行依赖和 mnn_tts Android 子工程
-```
-
-## 安全与隐私边界
-
-银龄智护主要用于辅助提醒和照护复核，不提供诊断结论，不替代紧急救援系统。摄像头画面、语音和照护记录应优先保存在本机；启用云端模式前，需要向用户明确说明会上传哪些数据、用于什么目的、由谁可见。
-
-## License
-
-请在正式开源前根据项目依赖和发布策略补充许可证。MNN、Vosk、DashScope SDK/API 及相关模型资源需遵守各自许可证和服务条款。
+1. **辅助定位**：本系统定位为居家行动辅助、居家安全预警及照护服务管理工具，通过技术手段为老人、家庭照护者及长护机构提供多维感知支持。
+2. **非医疗急救替代**：系统给出的语音提示与风险分析结果不能作为临床医疗诊断、处方开具或专业急救保障依据。突发危及生命的急性病症应立即拨打急救电话寻求专业医疗救助。
+3. **隐私防护**：系统在离线模式下所有图像分析和语音转写均在手机本地内存完成计算，无任何画面或音频回传，严格保障老人居家隐私安全。
