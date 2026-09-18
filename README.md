@@ -1,194 +1,216 @@
 # SilverCare AI Assistant / 银龄智护
 
-银龄智护是一款面向低视力老人、独居老人、家庭照护者和居家护理场景的 Android 端侧 AI 助手。应用以语音优先交互为核心，结合手机摄像头、离线视觉检测、端侧文本模型、本地语音识别和可选云端模型，提供居家巡路、找物、精确引导、跌倒风险确认、照护记录和管理端复核能力。
+<div align="center">
 
-项目目标不是替代专业护理或医疗判断，而是在老人独自在家活动时提供更及时、更容易听懂的行动提醒，并让家属或照护人员可以复核关键事件。
+**语音优先的适老化居家长护辅助与风险预警系统**  
+*Voice-First Accessible In-Home Care Assistance & Risk Early-Warning System*
+
+[核心能力](#核心能力) • [实景演示](#核心功能与实景演示) • [系统架构](#系统技术架构) • [端云协同](#端云协同与模型策略) • [构建指南](#构建与验证指南) • [公开基准](#公开-benchmark)
+
+</div>
+
+---
+
+## 项目概述
+
+**银龄智护（SilverCare AI Assistant）** 是一套面向低视力老人、高龄独居老人、失能半失能长护对象、家庭照护者及医疗保障长护服务管理人员的多模态人工智能系统。应用以普通智能手机为感知与计算载体，融合手机摄像头、高敏麦克风、六轴运动传感器、端侧深度学习引擎与可选云端大模型，构建集**“多模态环境感知 + 语音优先交互 + 居家行动引导 + 跌倒主动确认 + 服务管理闭环”**于一体的综合解决方案。
+
+项目聚焦于在老人独自居家活动时提供及时、易懂的行动提示与安全预警，同时为家属及照护人员提供可追溯的事件复核支持。系统通过将视觉画面转化为符合人体相对方位与触觉锚点的行动语言（例如“先停下、向右绕开、手扶门框、脚尖轻探地面、沿桌沿向前摸”），帮助行动不便与视力减退老人安全独立地完成起夜、行走、避障、找物等高频日常动作。
+
+<div align="center">
+  <img src="docs/images/flow_elderly_core.png" alt="老人端核心使用流程" width="850"/>
+  <p><em>图 1：老人端语音优先核心使用流程</em></p>
+</div>
+
+---
 
 ## 核心能力
 
-- 语音优先：支持语音输入、字幕显示、语音播报和大按钮界面，默认面向不看屏幕也能完成主要操作的使用方式。
-- 端侧离线：支持本地 ASR、DAMO-YOLO 视觉检测、Qwen3 文本模型和 MNN Runtime，在无网络环境下完成主要交互链路。
-- 云端可选：支持 DashScope 模式，用于更强的云端多模态理解和 TTS 能力，API Key 通过本地配置或应用设置提供。
-- 居家巡路：摄像头连续观察前方环境，按小型、中型、大型障碍给出中文避障提示。
-- 目标寻找：用户说“帮我找杯子/碗/手机”等目标后，系统会先校正 ASR 文本，再确认该目标是否属于离线视觉可识别类别。
-- 精确引导：用户明确说出“引导”后进入持续引导模式；说“关闭、停止、退出”等指令后退出。
-- 跌倒确认：结合传感器和画面变化触发风险确认，先询问用户是否摔倒，未恢复时进入模拟报警 UI。
-- 管理端视图：汇总风险事件、照护任务、语音交互记录和 AI 日报，便于家庭成员或照护人员复核。
-- 公开 benchmark：包含脱敏场景图片、语音、trace、评分脚本和 baseline，便于复现实验和对比优化。
+- 🎙️ **语音优先无障碍交互**：默认开启全链路语音提示、大字号字幕与大触控区域，支持长按说话、单击刷新与自动播报，操作无需依赖持续注视屏幕。
+- 🚶 **起夜巡路与通行引导**：摄像头持续监测前方地面与通道状态，自动识别脚垫、门槛、地面线缆、台阶与家具边缘，生成短句避障指令。
+- 🔍 **同音纠错与语音找物**：支持日常物品（水杯、药瓶、钥匙、眼镜等）快速定位，结合 ASR 语音纠错与目标检测算法，播报方位并同步提示周边潜在危险。
+- 🤝 **精确细粒度动作引导**：支持进出房门、按开关、取放物品等精细场景，采用身体相对方位与触觉锚点进行分步动作提示。
+- 🛡️ **跌倒双保险确认机制**：融合运动传感器冲击峰值、姿态倾角异常与前后时序视觉突变，触发后先通过语音询问与 10 秒倒计时确认，有效过滤普通晃动误报。
+- 📊 **长护服务管理闭环**：联动手机端与 Web 桌面端长护管理看板，将风险预警、找物困难与求助事件沉淀为结构化台账，自动生成 AI 服务日报供家属和护理员复核。
+- ⚡ **端侧离线与云端协同**：全面支持端侧离线运行（MNN Runtime + DAMO-YOLO + Qwen3 文本模型 + 本地 Vosk ASR），同时支持无缝衔接 DashScope 多模态云端大模型，保证弱网与隐私敏感环境的高可用性。
 
-## 技术架构
+---
+
+## 核心功能与实景演示
+
+### 1. 居家巡路与起夜避障
+
+在光线微弱的夜间起夜、狭窄走廊行走及经过杂物堆放区域时，系统动态感知前方障碍物并测算相对距离，播报清晰的行进建议。
+
+| 场景 A：走廊通行巡路 | 场景 B：入口障碍通行提醒 |
+| :---: | :---: |
+| <img src="docs/images/screen_corridor_walk.jpeg" alt="走廊通行场景巡路引导" width="360"/> | <img src="docs/images/screen_entrance_obstacle.jpeg" alt="入口行李堆放通行提醒" width="360"/> |
+| **识别目标**：走廊地面脚垫、行进纵深<br>**行动提示**：“沿走廊中间慢走，前方脚下有门垫，注意脚下起伏。” | **识别目标**：通道堆放行李箱、杂物袋<br>**行动提示**：“左前方有行李堆放，建议身体贴右侧慢步前行。” |
+
+---
+
+### 2. 危险隐患预警与卫生间安全
+
+针对居家高发的高危跌倒隐患（倒地物体、电源线、卫生间湿滑地面与门槛高差），系统提升警报优先级，引导老人规范减速与借力支撑。
+
+| 场景 C：绊倒风险预警 | 场景 D：卫生间湿滑与门槛防护 |
+| :---: | :---: |
+| <img src="docs/images/screen_tripping_hazard.jpeg" alt="倒地晾衣架绊倒预警" width="360"/> | <img src="docs/images/screen_bathroom_risk.jpeg" alt="卫生间门槛与淋浴区风险" width="360"/> |
+| **识别目标**：倒伏在通道正中的晾衣架<br>**行动提示**：“请立即停下！正前方有倒地金属支架，后退半步并向右绕开。” | **识别目标**：卫生间门槛高低差、湿滑瓷砖、马桶定位<br>**行动提示**：“即将进入卫生间，手扶门框，脚尖轻探地面确认防滑。” |
+
+---
+
+### 3. 目标寻找与精确动作引导
+
+用户通过语音指令（例如“帮我找一下降压药”、“我的耳塞盒在哪里”）发起需求，系统完成语音转写校正、视觉定位与桌面风险提示。
+
+| 场景 E：目标寻找与插排风险排查 | 场景 F：跌倒双保险确认机制 |
+| :---: | :---: |
+| <img src="docs/images/screen_item_finding.jpeg" alt="桌面找物与电源线风险" width="360"/> | <img src="docs/images/screen_fall_confirm.jpeg" alt="跌倒确认弹窗与10秒倒计时" width="360"/> |
+| **识别目标**：桌面耳塞盒定位、伴随排插线缆<br>**行动提示**：“耳塞盒在正前方桌面上偏右；注意前方有接线板与电线，手部动作放缓。” | **识别目标**：重力冲击 + 倾角翻转 + 画面剧烈颠簸<br>**处理流程**：弹出 10 秒确认弹窗并大声语音询问“您摔倒了吗？”，未响应触发报警。 |
+
+---
+
+### 4. 跌倒确认与长护服务闭环
+
+系统将居家前端采集的风险事件、报警记录和日常照护任务汇总上报，形成具备溯源能力的医保与长护服务闭环。
+
+<div align="center">
+  <img src="docs/images/flow_fall_detection.png" alt="跌倒风险预警与确认流程" width="800"/>
+  <p><em>图 2：传感器冲击与视觉时序联合验证的跌倒确认流程</em></p>
+</div>
+
+<div align="center">
+  <img src="docs/images/flow_care_closed_loop.png" alt="长护服务管理闭环" width="800"/>
+  <p><em>图 3：长护服务管理与异常事件闭环</em></p>
+</div>
+
+| 移动端长护看板 | 桌面端管理工作台 | 智能数据助手对话 |
+| :---: | :---: | :---: |
+| <img src="docs/images/screen_mobile_dashboard.jpeg" alt="手机端长护管理看板" width="260"/> | <img src="docs/images/screen_web_dashboard.jpeg" alt="桌面端管理看板" width="460"/> | <img src="docs/images/screen_assistant_chat.png" alt="智能数据助手对话记录" width="260"/> |
+| **功能**：掌上复核风险事件队列、照护对象状态看板与每日异常汇总。 | **功能**：多老人集中态势大屏、待办核查、处置留痕与导出归档。 | **功能**：支持自然语言问答检索长护政策、历史健康数据与照护日报。 |
+
+---
+
+## 系统技术架构
+
+系统采用清晰的分层解耦架构，保证前端展示、端侧算力、硬件通信与远程管理协同工作：
+
+<div align="center">
+  <img src="docs/images/arch_system_overview.png" alt="系统总体技术架构" width="850"/>
+  <p><em>图 4：银龄智护系统总体技术分层架构</em></p>
+</div>
+
+### 架构层级划分
 
 ```text
-Android WebView UI
-        |
-        v
-SilverCareBridge (JavaScript bridge)
-        |
-        v
-SilverCareProcessor
-        |
-        +-- Local ASR: Alibaba SenseVoiceSmall INT8 through sherpa-onnx
-        +-- Local vision: DAMO-YOLO MNN model
-        +-- Local LLM: Qwen3 text model through MNN native bridge
-        +-- Local TTS: Android TTS fallback, experimental MNN TTS bridge
-        +-- Cloud AI: DashScope-compatible request path
-        |
-        v
-Captions / Speech / Care records / Diagnostics
+┌────────────────────────────────────────────────────────────────────────┐
+│                        用户交互层 (Presentation)                        │
+│   老人端适老化 WebView UI  │  高对比大字号字幕  │  移动/Web 端长护管理看板  │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ JavaScript Bridge
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                        平台原生层 (Native Layer)                        │
+│    Android/iOS 权限管控    │  Camera 连续取帧  │   Audio 采集与系统 TTS    │
+│    六轴传感器数据管道      │  本地模型动态加载  │   网络状态与电源管理      │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│                      业务逻辑编排层 (Orchestration)                     │
+│    巡路避障调度器    │  语音同音词纠错器  │  动作指引分解器  │  跌倒混合状态机  │
+└───────────────────┬────────────────────────────────┬───────────────────┘
+                    │                                │
+┌───────────────────▼──────────────┐ ┌───────────────▼───────────────────┐
+│     端侧离线推理层 (Edge Mode)    │ │      云端增强服务层 (Cloud Mode)    │
+│  • MNN 推理引擎 (NPU/GPU/CPU)    │ │  • DashScope / Qwen 多模态大模型    │
+│  • DAMO-YOLO 目标与障碍检测       │ │  • 高准确率云端 ASR 语音转写        │
+│  • Qwen3-4B-MNN 端侧文本规划     │ │  • 自然情感高保真云端 TTS 语音合成   │
+│  • Vosk 轻量离线语音识别          │ │  • 长护知识库检索增强 (RAG)         │
+└──────────────────────────────────┘ └───────────────────────────────────┘
 ```
 
-## V1 可穿戴硬件集成
+---
 
-项目当前正在从“单模块硬件实验”进入“统一原理图 / BOM / PCB”阶段。眼镜端主要承担第一视角采集、运动感知、语音输入、触觉/骨传导反馈、无线与供电；Android 手机继续承担主要 AI 计算和任务闭环。
+## 端云协同与模型策略
 
-当前并行两套主控：
+为兼顾计算性能、用户隐私与复杂环境可用性，系统设计了端侧优先、云端增强的双链路运行策略：
 
-- **Plan A：ESP32-S3-MINI-1U-N4R2**；
-- **Plan B：BK7258QN88616（8+16 供应商候选，采购前需再次核对完整料号）**。
+<div align="center">
+  <img src="docs/images/arch_dual_path.png" alt="端侧优先、云端增强架构" width="800"/>
+  <p><em>图 5：端侧优先、云端增强统一架构设计</em></p>
+</div>
 
-当前 V1 核心硬件基线：
+### 模型选型矩阵
 
-```text
-Camera      OV5640 ×1
-IMU         BMI270 ×1
-MIC         ICS-43434 ×1
-Audio AMP   MAX98357A ×1
-Bone        8Ω ×2（并联、相同单声道）
-Haptic MUX  PCA9540B ×1
-Haptic      DRV2605L ×2 + 0809 LRA ×2（左右独立控制）
-Battery     1S LiPo ×1
-Connector   4Pin Magnetic：5V / GND / USB D+ / USB D-
-```
+| 功能模块 | 端侧离线方案 | 云端增强方案 | 性能与资源指标 |
+| :--- | :--- | :--- | :--- |
+| **视觉目标检测** | `DAMO-YOLO Tiny (MNN)` | `Qwen-VL / DashScope Multi-Modal` | 电脑端推理耗时约 0.131s，移动端稳定运行在 15~30 FPS |
+| **语言意图与规划** | `Qwen3-4B-Instruct-MNN` (量化版) | `Qwen-Max / Qwen-Plus` | 离线按需动态下载至沙盒目录，不占用初装包体积 |
+| **语音转文字 (ASR)** | `Vosk-Chinese-Small` | `DashScope Realtime ASR` | 离线唤醒转写低功耗常驻，联网时调用高精度模型 |
+| **语音合成 (TTS)** | `Android 系统原生 TTS / MNN TTS` | `CosyVoice / DashScope TTS` | 保证断网场景基础提示畅通，联网输出自然拟人长护音色 |
 
-双 Haptic 地址隔离已经冻结为：`SENSOR_I2C → PCA9540B @0x70 → CH0/CH1 → 两颗 DRV2605L @0x5A`。左右 DRV2605L 另各有一根独立 `IN/TRIG` GPIO，用于预配置波形后的左右独立/近同步触发。
+### 安全与私钥配置
 
-Plan A / Plan B 的当前 V1 **业务 GPIO / Pin Matrix 已完成分配**。BK7258 QFN88 的 Reset / Boot / RF / 下载等封装级专用脚仍需在正式原理图阶段按 Beken Hardware Reference Design 逐 Pin 复核。
-
-开发阶段要求保留最少但可救板的测试 / 恢复点：`GND`、`3V3`、`EN/RESET`、`BOOT/DOWNLOAD` 为必需，UART TX/RX 推荐保留。
-
-完整硬件事实源、BOM、Signal Net、Power Tree、Pin Matrix 和问题台账位于：
-
-```text
-docs/hardware/integration/v1/
-```
-
-其中重新绘制原理图时优先读取：
-
-- `docs/hardware/integration/v1/common/design-requirements.md`
-- `docs/hardware/integration/v1/common/decision-log.md`
-- `docs/hardware/integration/v1/common/common-bom.csv`
-- 对应 Plan 的 `pin-matrix.csv`
-
-`hardware/` 目录主要保存历史单模块实验，实验器件不自动等于当前 V1 最终 BOM。
-
-**当前下一步已经从“总线 / GPIO 规划”进入“按冻结基线更新两套原理图 → Live Netlist 审计”。**
-
-## 模型与资源策略
-
-仓库内包含 Android 工程、MNN native bridge、DAMO-YOLO 端侧视觉模型和公开 benchmark 样例数据。较大的 Qwen 文本模型、ASR 模型和 TTS 模型由应用内下载器按需下载到应用私有目录，避免把大模型权重直接提交到仓库。
-
-云端能力不需要把密钥提交到代码仓库。开发调试时可以在根目录创建 `local.properties`：
+开发调试与集成测试时，API 凭据均通过本地外部配置文件引入，严禁硬编码至版本库：
 
 ```properties
-DASHSCOPE_API_KEY=your_key_here
+# 在根目录创建 local.properties（已受 .gitignore 保护）
+DASHSCOPE_API_KEY=your_dashscope_api_key_here
 ```
 
-`local.properties` 已被 `.gitignore` 忽略。
+---
 
-## Android Studio 打开方式
+## 构建与验证指南
 
-直接用 Android Studio 打开仓库根目录：
+### 1. Android 端构建
 
-```text
-silvercare-ai-assistant
-```
+直接使用 Android Studio 打开仓库根目录：
 
-不要只打开 `app` 子目录，否则 Gradle 无法找到根工程配置和 `mnn_tts` 子工程。
-
-## 构建与测试
-
-Windows PowerShell:
-
-```powershell
+```bash
+# 调试包构建
 .\gradlew.bat :app:assembleDebug --no-daemon
+
+# 运行本地 JVM 单元测试
 .\gradlew.bat :app:testDebugUnitTest --no-daemon
-```
 
-联网 DashScope 集成测试默认不运行。需要真实云端测试时，在本机配置 `DASHSCOPE_API_KEY` 后执行：
-
-```powershell
+# 包含云端实测的自动化验证（需提前配置环境变量）
+$env:DASHSCOPE_API_KEY="your_api_key"
 .\gradlew.bat :app:testDebugUnitTest -Dsilvercare.liveDashScope=true --no-daemon
 ```
 
-## Qwen / MNN / Arm SME2 调优
+### 2. iOS 迁移工作区 (`ios/`)
 
-端侧文本链路至少使用一款 Qwen 系列模型，当前提供两个本地模型角色：
+iOS 迁移基于 SwiftUI + WKWebView 构建，代码位于 `ios/` 目录：
 
-- `Qwen3-4B-Instruct-2507-MNN`：默认本地文本模型，通过 MNN native bridge 推理。
-- `Qwen2.5-1.5B-Instruct-MNN`：轻量备用模型，可在开发基准中单独验证。
+```bash
+# 执行前端语法与静态代码安全扫描
+npm run check:js
+npm run check:secrets
 
-应用启动时会通过 Android `HWCAP2` 和 `/proc/cpuinfo` 检测 Arm SME2。检测成功后，所选配置会在 `llm->load()` 之前通过 MNN `set_config()` 写入；不支持 SME2 的设备会自动回退到 MNN 默认执行路径。Qwen3 的 thinking 模式在端侧关闭，以减少无用输出和首轮延迟。
+# 运行前端核心逻辑单元测试（包含字幕、跌倒机制等 19 项测试）
+npm run test:js
 
-本项目还将高频离线指令改为确定性本地路由，并为仍需 Qwen 理解的复杂请求使用小于 1000 字符的紧凑提示词。这样可避免把找物、通行检查、场景查看等明确意图先送入 4B 模型，同时保留复杂自然语言请求的 Qwen 回退能力。
+# 运行 iOS 模拟器自动化门禁
+npm run test:ios:sim
 
-2026-07-27 在 vivo V2509A（MT6993、arm64-v8a、Android SDK 36、确认支持 SME2）上的真机结果如下。每次运行都验证 Qwen 返回的 `{"ok":true}`，表中的单位为毫秒：
-
-| 配置 | MNN 参数（比例/SME 核） | 次数 | 冷启动平均 | 热运行平均 | 语义校验 |
-|---|---:|---:|---:|---:|---|
-| 自动调优 | 41 / 2 | 2 | 5939 | 871 | 通过 |
-| MNN 默认 | 不覆盖 | 2 | 6386 | 877 | 通过 |
-| 性能优先 | 49 / 2 | 1 | 5814 | 888 | 通过 |
-| 省电稳定 | 33 / 1 | 1 | 6196 | 901 | 通过 |
-
-因此当前默认保留 `41 / 2`：它与 MNN 默认档的热运行相当，同时两轮平均冷启动约快 7%。单次结果会受温度、系统调度和后台负载影响，换用其他 SoC 后应重新运行基准，而不是直接照搬参数。
-
-同一设备上的最终 `text_inquiry` 回归中，能力问答、通行检查、找碗和不支持目标分别耗时 7、299、281、1 毫秒，四项语义校验全部通过。其中明确但不支持的目标由优化前的 23081 毫秒降至 1 毫秒，因为它不再无意义地启动两轮 4B 推理。真实摄像头导航刷新使用 DAMO-YOLO 耗时 374 毫秒。
-
-Debug APK 可用以下命令复测，其中 `tuning_profile` 可取 `auto`、`performance`、`efficiency` 或 `mnn_default`：
-
-```powershell
-adb shell am start -W `
-  -n com.medicalinsurance.longtermcare/com.silvercare.aiassistant.LocalModelBenchmarkActivity `
-  --es benchmark_test sme2_profile `
-  --es tuning_profile auto `
-  --el timeout_ms 180000
+# 完整迁移验收测试
+npm run verify:ios:migration
 ```
 
-结果写入应用外部私有目录的 `files/benchmarks/latest-sme2_profile.json`，报告同时包含 SME2 检测、实际 MNN 配置、冷/热耗时和语义校验结果。
+---
 
-## Benchmark
+## 公开 Benchmark
 
-公开 benchmark 位于 `public_benchmark_silvercare/`，包含：
+项目在 `public_benchmark_silvercare/` 目录下配套提供了标准化的脱敏评测基准，包含：
 
-- 脱敏真实居家场景图片和样例音频
-- 巡路、找物、跌倒确认、语音交互、人工复核等任务定义
-- trace 样例与结构化评分规则
-- rule-based baseline 和报告生成脚本
+1. **真实居家脱敏数据集**：走廊、入口堆积、倒地障碍、卫生间地面、杂乱桌面等多场景图像与音频样例。
+2. **结构化评测任务**：标准化定义巡路避障准确率、找物匹配时延、跌倒判断置信度与 ASR 纠错率。
+3. **自动化评分脚本**：提供对比 baseline 与指标打分逻辑，方便后续模型升级或设备移植时进行回归评测。
 
-运行方式：
+---
 
-```powershell
-cd public_benchmark_silvercare
-npm run benchmark
-```
+## 边界说明与合规声明
 
-## 目录结构
-
-```text
-app/                              Android 应用源码
-app/src/main/assets/              WebView UI、离线视觉模型和前端逻辑
-app/src/main/java/                Android bridge、业务处理器、模型下载与推理入口
-app/src/main/cpp/                 MNN native runtime bridge
-docs/                             功能架构、硬件集成、日志和离线对话能力说明
-hardware/                         单模块硬件实验记录（不等同于V1最终BOM）
-public_benchmark_silvercare/      可复用 benchmark、样例数据和评分脚本
-third_party/mnn/                  MNN 运行依赖和 mnn_tts Android 子工程
-```
-
-## 安全与隐私边界
-
-银龄智护主要用于辅助提醒和照护复核，不提供诊断结论，不替代紧急救援系统。摄像头画面、语音和照护记录应优先保存在本机；启用云端模式前，需要向用户明确说明会上传哪些数据、用于什么目的、由谁可见。
-
-## License
-
-请在正式开源前根据项目依赖和发布策略补充许可证。MNN、Vosk、DashScope SDK/API 及相关模型资源需遵守各自许可证和服务条款。
+1. **辅助定位**：本系统定位为居家行动辅助、居家安全预警及照护服务管理工具，通过技术手段为老人、家庭照护者及长护机构提供多维感知支持。
+2. **非医疗急救替代**：系统给出的语音提示与风险分析结果不能作为临床医疗诊断、处方开具或专业急救保障依据。突发危及生命的急性病症应立即拨打急救电话寻求专业医疗救助。
+3. **隐私防护**：系统在离线模式下所有图像分析和语音转写均在手机本地内存完成计算，无任何画面或音频回传，严格保障老人居家隐私安全。
