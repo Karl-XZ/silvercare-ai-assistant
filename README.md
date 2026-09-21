@@ -1,216 +1,216 @@
-# SilverCare AI Assistant / 银龄智护
+# SilverCare AI Assistant (银龄智护)
 
 <div align="center">
 
-**语音优先的适老化居家长护辅助与风险预警系统**  
-*Voice-First Accessible In-Home Care Assistance & Risk Early-Warning System*
+**Voice-First Accessible In-Home Care Assistance & Risk Early-Warning System**  
+*A multimodal AI assistive system for low-vision seniors, solitary elders, and long-term care scenarios*
 
-[核心能力](#核心能力) • [实景演示](#核心功能与实景演示) • [系统架构](#系统技术架构) • [端云协同](#端云协同与模型策略) • [构建指南](#构建与验证指南) • [公开基准](#公开-benchmark)
+[Key Capabilities](#key-capabilities) • [Live Scenarios & Demos](#live-scenarios--demos) • [System Architecture](#system-architecture) • [Edge-Cloud Strategy](#edge-cloud-coordination--model-strategy) • [Build Guide](#build--verification-guide) • [Public Benchmark](#public-benchmark) • [Compliance & Disclaimer](#compliance--disclaimer)
 
 </div>
 
 ---
 
-## 项目概述
+## Overview
 
-**银龄智护（SilverCare AI Assistant）** 是一套面向低视力老人、高龄独居老人、失能半失能长护对象、家庭照护者及医疗保障长护服务管理人员的多模态人工智能系统。应用以普通智能手机为感知与计算载体，融合手机摄像头、高敏麦克风、六轴运动传感器、端侧深度学习引擎与可选云端大模型，构建集**“多模态环境感知 + 语音优先交互 + 居家行动引导 + 跌倒主动确认 + 服务管理闭环”**于一体的综合解决方案。
+**SilverCare AI Assistant (银龄智护)** is a multimodal artificial intelligence system tailored for low-vision seniors, solitary elderly individuals, semi-disabled care recipients, family caregivers, and long-term care management professionals. Running directly on standard commodity smartphones as perception and computing terminals, the system integrates smartphone cameras, high-sensitivity microphones, 6-axis IMU sensors, edge deep-learning engines, and optional cloud LLM services. It delivers a comprehensive solution combining **"Multimodal Environmental Perception + Voice-First Interaction + In-Home Mobility Guidance + Active Fall Verification + Closed-Loop Care Management"**.
 
-项目聚焦于在老人独自居家活动时提供及时、易懂的行动提示与安全预警，同时为家属及照护人员提供可追溯的事件复核支持。系统通过将视觉画面转化为符合人体相对方位与触觉锚点的行动语言（例如“先停下、向右绕开、手扶门框、脚尖轻探地面、沿桌沿向前摸”），帮助行动不便与视力减退老人安全独立地完成起夜、行走、避障、找物等高频日常动作。
+The system delivers actionable, clear verbal mobility guidance and proactive hazard alerts while elderly individuals move around their homes independently. Simultaneously, it provides an auditable event review trail for family members and professional caregivers. By translating continuous camera streams into tactile anchors and body-relative spatial directions (such as *"Pause immediately; step right; hold the door frame; gently probe the floor with your toes; slide your hand forward along the table edge"*), the system enables individuals with mobility limitations or declining eyesight to complete essential daily tasks—including nighttime bathroom visits, corridor walking, obstacle navigation, and item retrieval—with safety and autonomy.
 
 <div align="center">
-  <img src="docs/images/flow_elderly_core.png" alt="老人端核心使用流程" width="850"/>
-  <p><em>图 1：老人端语音优先核心使用流程</em></p>
+  <img src="docs/images/flow_elderly_core.png" alt="Voice-First Elderly Core Interaction Flow" width="850"/>
+  <p><em>Figure 1: Voice-First Elderly Core Interaction Flow</em></p>
 </div>
 
 ---
 
-## 核心能力
+## Key Capabilities
 
-- 🎙️ **语音优先无障碍交互**：默认开启全链路语音提示、大字号字幕与大触控区域，支持长按说话、单击刷新与自动播报，操作无需依赖持续注视屏幕。
-- 🚶 **起夜巡路与通行引导**：摄像头持续监测前方地面与通道状态，自动识别脚垫、门槛、地面线缆、台阶与家具边缘，生成短句避障指令。
-- 🔍 **同音纠错与语音找物**：支持日常物品（水杯、药瓶、钥匙、眼镜等）快速定位，结合 ASR 语音纠错与目标检测算法，播报方位并同步提示周边潜在危险。
-- 🤝 **精确细粒度动作引导**：支持进出房门、按开关、取放物品等精细场景，采用身体相对方位与触觉锚点进行分步动作提示。
-- 🛡️ **跌倒双保险确认机制**：融合运动传感器冲击峰值、姿态倾角异常与前后时序视觉突变，触发后先通过语音询问与 10 秒倒计时确认，有效过滤普通晃动误报。
-- 📊 **长护服务管理闭环**：联动手机端与 Web 桌面端长护管理看板，将风险预警、找物困难与求助事件沉淀为结构化台账，自动生成 AI 服务日报供家属和护理员复核。
-- ⚡ **端侧离线与云端协同**：全面支持端侧离线运行（MNN Runtime + DAMO-YOLO + Qwen3 文本模型 + 本地 Vosk ASR），同时支持无缝衔接 DashScope 多模态云端大模型，保证弱网与隐私敏感环境的高可用性。
+- 🎙️ **Voice-First Accessible Interaction**: Features full-chain spoken prompts, high-contrast large subtitles, and enlarged touch areas by default. Supports press-to-speak, single-tap refresh, and hands-free automatic broadcast, allowing fluid operation without requiring sustained screen gaze.
+- 🚶 **Nighttime Patrolling & Mobility Guidance**: Continuously monitors ground paths and passageways, automatically recognizing floor mats, thresholds, power cords, stairs, and furniture edges to generate concise verbal detour guidance.
+- 🔍 **Homophone Correction & Spoken Object Finding**: Enables rapid localization of everyday essentials (water cups, medicine bottles, keys, reading glasses). Combines ASR phonetic correction with object detection to announce target positions and flag co-occurring nearby hazards.
+- 🤝 **Fine-Grained Action Guidance**: Supports delicate operations such as passing through narrow doorways, reaching wall switches, and picking up table items using body-relative directions and physical tactile anchors.
+- 🛡️ **Dual-Insurance Fall Confirmation**: Fuses IMU acceleration impact peaks, abnormal body tilt angles, and temporal visual frame disruptions. Once triggered, the system initiates an active spoken query with a 10-second countdown, filtering out false alarms caused by casual device drops or minor tremors.
+- 📊 **Closed-Loop Care Management**: Seamlessly connects mobile applications with a desktop Web management console, aggregating hazard warnings, failed item searches, and emergency queries into structured ledgers while generating automated daily AI care summaries for caregiver verification.
+- ⚡ **Edge-First Offline & Cloud Coordination**: Fully operational offline via MNN Runtime + DAMO-YOLO + Qwen3 language model + lightweight local Vosk ASR, with optional cloud fallback to DashScope multimodal models to guarantee privacy, low latency, and high availability in weak-network environments.
 
 ---
 
-## 核心功能与实景演示
+## Live Scenarios & Demos
 
-### 1. 居家巡路与起夜避障
+### 1. In-Home Patrolling & Nighttime Obstacle Avoidance
 
-在光线微弱的夜间起夜、狭窄走廊行走及经过杂物堆放区域时，系统动态感知前方障碍物并测算相对距离，播报清晰的行进建议。
+During low-light nighttime walks, narrow hallway navigation, and cluttered passage transit, the system dynamically detects upcoming obstacles, estimates relative distance, and broadcasts concise navigation instructions.
 
-| 场景 A：走廊通行巡路 | 场景 B：入口障碍通行提醒 |
+| Scenario A: Corridor Passage Navigation | Scenario B: Entrance Luggage & Obstacle Warning |
 | :---: | :---: |
-| <img src="docs/images/screen_corridor_walk.jpeg" alt="走廊通行场景巡路引导" width="360"/> | <img src="docs/images/screen_entrance_obstacle.jpeg" alt="入口行李堆放通行提醒" width="360"/> |
-| **识别目标**：走廊地面脚垫、行进纵深<br>**行动提示**：“沿走廊中间慢走，前方脚下有门垫，注意脚下起伏。” | **识别目标**：通道堆放行李箱、杂物袋<br>**行动提示**：“左前方有行李堆放，建议身体贴右侧慢步前行。” |
+| <img src="docs/images/screen_corridor_walk.jpeg" alt="Corridor Walking Navigation" width="360"/> | <img src="docs/images/screen_entrance_obstacle.jpeg" alt="Entrance Clutter Warning" width="360"/> |
+| **Detected Target**: Floor mat, corridor walking depth<br>**Spoken Guidance**: *"Walk slowly along the center of the corridor. A floor mat is ahead; watch your step."* | **Detected Target**: Stacked suitcases and bags in passageway<br>**Spoken Guidance**: *"Luggage stacked on the front-left. Keep to the right wall and move forward slowly."* |
 
 ---
 
-### 2. 危险隐患预警与卫生间安全
+### 2. Hazard Warning & Bathroom Safety
 
-针对居家高发的高危跌倒隐患（倒地物体、电源线、卫生间湿滑地面与门槛高差），系统提升警报优先级，引导老人规范减速与借力支撑。
+Focusing on common household fall triggers (fallen objects, tangled electrical wires, slippery bathroom tiles, and threshold height differentials), the system elevates warning priority and guides seniors to decelerate and use hand supports.
 
-| 场景 C：绊倒风险预警 | 场景 D：卫生间湿滑与门槛防护 |
+| Scenario C: Tripping Hazard Warning | Scenario D: Bathroom Slipping & Threshold Safety |
 | :---: | :---: |
-| <img src="docs/images/screen_tripping_hazard.jpeg" alt="倒地晾衣架绊倒预警" width="360"/> | <img src="docs/images/screen_bathroom_risk.jpeg" alt="卫生间门槛与淋浴区风险" width="360"/> |
-| **识别目标**：倒伏在通道正中的晾衣架<br>**行动提示**：“请立即停下！正前方有倒地金属支架，后退半步并向右绕开。” | **识别目标**：卫生间门槛高低差、湿滑瓷砖、马桶定位<br>**行动提示**：“即将进入卫生间，手扶门框，脚尖轻探地面确认防滑。” |
+| <img src="docs/images/screen_tripping_hazard.jpeg" alt="Fallen Clothes Rack Warning" width="360"/> | <img src="docs/images/screen_bathroom_risk.jpeg" alt="Bathroom Threshold and Wet Floor Risk" width="360"/> |
+| **Detected Target**: Fallen metal drying rack blocking path<br>**Spoken Guidance**: *"Stop immediately! A fallen metal rack is right ahead. Step back half a pace and detour to the right."* | **Detected Target**: Threshold elevation, slick bathroom tiles, toilet position<br>**Spoken Guidance**: *"Entering the bathroom now. Hold the door frame firmly and probe the floor with your toes to check for moisture."* |
 
 ---
 
-### 3. 目标寻找与精确动作引导
+### 3. Object Retrieval & Precise Action Guidance
 
-用户通过语音指令（例如“帮我找一下降压药”、“我的耳塞盒在哪里”）发起需求，系统完成语音转写校正、视觉定位与桌面风险提示。
+Users trigger retrieval requests via spoken queries (e.g., *"Help me find my blood pressure medicine"*, *"Where is my earphone case?"*). The system performs phonetic transcription correction, visual bounding box localization, and hazard analysis of the surrounding surface.
 
-| 场景 E：目标寻找与插排风险排查 | 场景 F：跌倒双保险确认机制 |
+| Scenario E: Object Finding & Power Strip Risk | Scenario F: Dual-Insurance Fall Confirmation |
 | :---: | :---: |
-| <img src="docs/images/screen_item_finding.jpeg" alt="桌面找物与电源线风险" width="360"/> | <img src="docs/images/screen_fall_confirm.jpeg" alt="跌倒确认弹窗与10秒倒计时" width="360"/> |
-| **识别目标**：桌面耳塞盒定位、伴随排插线缆<br>**行动提示**：“耳塞盒在正前方桌面上偏右；注意前方有接线板与电线，手部动作放缓。” | **识别目标**：重力冲击 + 倾角翻转 + 画面剧烈颠簸<br>**处理流程**：弹出 10 秒确认弹窗并大声语音询问“您摔倒了吗？”，未响应触发报警。 |
+| <img src="docs/images/screen_item_finding.jpeg" alt="Desktop Item Retrieval with Power Strip" width="360"/> | <img src="docs/images/screen_fall_confirm.jpeg" alt="Fall Confirmation Modal with 10s Countdown" width="360"/> |
+| **Detected Target**: Earphone case located on right side of desktop; power strip nearby<br>**Spoken Guidance**: *"The earphone case is on the desktop ahead, slightly to the right. Note the power strip and cords nearby; reach forward slowly."* | **Detected Trigger**: Gravitational impact + pitch tilt inversion + violent visual motion<br>**Workflow**: Displays a 10-second confirmation dialog with a loud voice prompt asking *"Did you fall?"*. Lack of response escalates to emergency contacts. |
 
 ---
 
-### 4. 跌倒确认与长护服务闭环
+### 4. Fall Confirmation & Closed-Loop Care Service
 
-系统将居家前端采集的风险事件、报警记录和日常照护任务汇总上报，形成具备溯源能力的医保与长护服务闭环。
+The system aggregates in-home hazard incidents, alarm logs, and routine care tasks to establish an auditable closed loop for family members and long-term care providers.
 
 <div align="center">
-  <img src="docs/images/flow_fall_detection.png" alt="跌倒风险预警与确认流程" width="800"/>
-  <p><em>图 2：传感器冲击与视觉时序联合验证的跌倒确认流程</em></p>
+  <img src="docs/images/flow_fall_detection.png" alt="Fall Verification Flow" width="800"/>
+  <p><em>Figure 2: Fall Verification Workflow with Sensor Impact and Temporal Vision Dual-Confirmation</em></p>
 </div>
 
 <div align="center">
-  <img src="docs/images/flow_care_closed_loop.png" alt="长护服务管理闭环" width="800"/>
-  <p><em>图 3：长护服务管理与异常事件闭环</em></p>
+  <img src="docs/images/flow_care_closed_loop.png" alt="Care Closed Loop" width="800"/>
+  <p><em>Figure 3: Long-Term Care Service Management & Anomaly Resolution Closed Loop</em></p>
 </div>
 
-| 移动端长护看板 | 桌面端管理工作台 | 智能数据助手对话 |
+| Mobile Care Dashboard | Desktop Management Console | Intelligent Data Assistant Chat |
 | :---: | :---: | :---: |
-| <img src="docs/images/screen_mobile_dashboard.jpeg" alt="手机端长护管理看板" width="260"/> | <img src="docs/images/screen_web_dashboard.jpeg" alt="桌面端管理看板" width="460"/> | <img src="docs/images/screen_assistant_chat.png" alt="智能数据助手对话记录" width="260"/> |
-| **功能**：掌上复核风险事件队列、照护对象状态看板与每日异常汇总。 | **功能**：多老人集中态势大屏、待办核查、处置留痕与导出归档。 | **功能**：支持自然语言问答检索长护政策、历史健康数据与照护日报。 |
+| <img src="docs/images/screen_mobile_dashboard.jpeg" alt="Mobile Care Dashboard" width="260"/> | <img src="docs/images/screen_web_dashboard.jpeg" alt="Web Management Console" width="460"/> | <img src="docs/images/screen_assistant_chat.png" alt="Data Assistant Chat History" width="260"/> |
+| **Function**: Mobile review of pending risk events, senior status indicators, and daily anomaly summaries. | **Function**: Multi-resident situation overview, pending inspection items, audit logging, and report exporting. | **Function**: Natural language QA for care policies, historical health telemetry, and daily care journals. |
 
 ---
 
-## 系统技术架构
+## System Architecture
 
-系统采用清晰的分层解耦架构，保证前端展示、端侧算力、硬件通信与远程管理协同工作：
+The system adopts a decoupled layered architecture ensuring seamless coordination among presentation interfaces, edge compute runtimes, hardware IO pipelines, and remote management services:
 
 <div align="center">
-  <img src="docs/images/arch_system_overview.png" alt="系统总体技术架构" width="850"/>
-  <p><em>图 4：银龄智护系统总体技术分层架构</em></p>
+  <img src="docs/images/arch_system_overview.png" alt="System Layered Architecture" width="850"/>
+  <p><em>Figure 4: SilverCare Overall Layered Architecture</em></p>
 </div>
 
-### 架构层级划分
+### Architectural Layers
 
 ```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        用户交互层 (Presentation)                        │
-│   老人端适老化 WebView UI  │  高对比大字号字幕  │  移动/Web 端长护管理看板  │
+│                      Presentation Layer (User Interface)                │
+│   Accessible Elderly WebView UI │ High-Contrast Subtitles │ Care Dashboards    │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │ JavaScript Bridge
 ┌───────────────────────────────────▼────────────────────────────────────┐
-│                        平台原生层 (Native Layer)                        │
-│    Android/iOS 权限管控    │  Camera 连续取帧  │   Audio 采集与系统 TTS    │
-│    六轴传感器数据管道      │  本地模型动态加载  │   网络状态与电源管理      │
+│                         Native Platform Layer                          │
+│   Android/iOS Permissions │ Continuous Camera Feed │ Audio Capture & TTS       │
+│   6-Axis IMU Pipeline     │ Dynamic Model Loading  │ Network & Power Policies  │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
 ┌───────────────────────────────────▼────────────────────────────────────┐
-│                      业务逻辑编排层 (Orchestration)                     │
-│    巡路避障调度器    │  语音同音词纠错器  │  动作指引分解器  │  跌倒混合状态机  │
+│                     Orchestration & Business Logic                     │
+│   Patrol Scheduler │ Spoken Homophone Corrector │ Action Decomposer │ Fall FSM │
 └───────────────────┬────────────────────────────────┬───────────────────┘
                     │                                │
 ┌───────────────────▼──────────────┐ ┌───────────────▼───────────────────┐
-│     端侧离线推理层 (Edge Mode)    │ │      云端增强服务层 (Cloud Mode)    │
-│  • MNN 推理引擎 (NPU/GPU/CPU)    │ │  • DashScope / Qwen 多模态大模型    │
-│  • DAMO-YOLO 目标与障碍检测       │ │  • 高准确率云端 ASR 语音转写        │
-│  • Qwen3-4B-MNN 端侧文本规划     │ │  • 自然情感高保真云端 TTS 语音合成   │
-│  • Vosk 轻量离线语音识别          │ │  • 长护知识库检索增强 (RAG)         │
+│       Edge Offline Mode          │ │      Cloud-Enhanced Services      │
+│  • MNN Inference Engine          │ │  • DashScope / Qwen Multimodal    │
+│  • DAMO-YOLO Object Detector     │ │  • High-Precision Cloud ASR       │
+│  • Qwen3-4B-Instruct-MNN Planner │ │  • High-Fidelity CosyVoice TTS    │
+│  • Lightweight Local Vosk ASR    │ │  • Care Policy Knowledgebase RAG  │
 └──────────────────────────────────┘ └───────────────────────────────────┘
 ```
 
 ---
 
-## 端云协同与模型策略
+## Edge-Cloud Coordination & Model Strategy
 
-为兼顾计算性能、用户隐私与复杂环境可用性，系统设计了端侧优先、云端增强的双链路运行策略：
+To balance low latency, user privacy, and high availability across varying network environments, the system implements an edge-first, cloud-enhanced unified operating strategy:
 
 <div align="center">
-  <img src="docs/images/arch_dual_path.png" alt="端侧优先、云端增强架构" width="800"/>
-  <p><em>图 5：端侧优先、云端增强统一架构设计</em></p>
+  <img src="docs/images/arch_dual_path.png" alt="Edge-First Cloud-Enhanced Architecture" width="800"/>
+  <p><em>Figure 5: Edge-First, Cloud-Enhanced Architecture Design</em></p>
 </div>
 
-### 模型选型矩阵
+### Model Selection Matrix
 
-| 功能模块 | 端侧离线方案 | 云端增强方案 | 性能与资源指标 |
+| Functional Module | Edge Offline Solution | Cloud-Enhanced Solution | Performance & Resource Metrics |
 | :--- | :--- | :--- | :--- |
-| **视觉目标检测** | `DAMO-YOLO Tiny (MNN)` | `Qwen-VL / DashScope Multi-Modal` | 电脑端推理耗时约 0.131s，移动端稳定运行在 15~30 FPS |
-| **语言意图与规划** | `Qwen3-4B-Instruct-MNN` (量化版) | `Qwen-Max / Qwen-Plus` | 离线按需动态下载至沙盒目录，不占用初装包体积 |
-| **语音转文字 (ASR)** | `Vosk-Chinese-Small` | `DashScope Realtime ASR` | 离线唤醒转写低功耗常驻，联网时调用高精度模型 |
-| **语音合成 (TTS)** | `Android 系统原生 TTS / MNN TTS` | `CosyVoice / DashScope TTS` | 保证断网场景基础提示畅通，联网输出自然拟人长护音色 |
+| **Visual Object Detection** | `DAMO-YOLO Tiny (MNN)` | `Qwen-VL / DashScope Multi-Modal` | Desktop benchmark inference ~0.131s; mobile sustained throughput 15–30 FPS |
+| **Language Intent & Planning** | `Qwen3-4B-Instruct-MNN` (Quantized) | `Qwen-Max / Qwen-Plus` | Downloaded on demand into app sandbox directory, maintaining minimal base APK size |
+| **Speech-to-Text (ASR)** | `Vosk-Chinese-Small` | `DashScope Realtime ASR` | Low-power always-on offline wake-word and transcription; cloud invoked for complex queries |
+| **Text-to-Speech (TTS)** | `Android System Native TTS / MNN TTS` | `CosyVoice / DashScope TTS` | Guarantees vital audio warnings offline; generates natural empathetic tone when online |
 
-### 安全与私钥配置
+### Security & Secret Management
 
-开发调试与集成测试时，API 凭据均通过本地外部配置文件引入，严禁硬编码至版本库：
+During local testing and integration, credentials must be supplied via external configuration files and never hard-coded into source control:
 
 ```properties
-# 在根目录创建 local.properties（已受 .gitignore 保护）
+# Create local.properties in project root (protected by .gitignore)
 DASHSCOPE_API_KEY=your_dashscope_api_key_here
 ```
 
 ---
 
-## 构建与验证指南
+## Build & Verification Guide
 
-### 1. Android 端构建
+### 1. Android Workspace
 
-直接使用 Android Studio 打开仓库根目录：
+Open the project root directory directly in Android Studio:
 
 ```bash
-# 调试包构建
+# Build debug APK
 .\gradlew.bat :app:assembleDebug --no-daemon
 
-# 运行本地 JVM 单元测试
+# Run local JVM unit tests
 .\gradlew.bat :app:testDebugUnitTest --no-daemon
 
-# 包含云端实测的自动化验证（需提前配置环境变量）
+# Run automated integration tests with live DashScope credentials
 $env:DASHSCOPE_API_KEY="your_api_key"
 .\gradlew.bat :app:testDebugUnitTest -Dsilvercare.liveDashScope=true --no-daemon
 ```
 
-### 2. iOS 迁移工作区 (`ios/`)
+### 2. iOS Migration Workspace (`ios/`)
 
-iOS 迁移基于 SwiftUI + WKWebView 构建，代码位于 `ios/` 目录：
+The iOS migration is built on SwiftUI and WKWebView, located in the `ios/` directory:
 
 ```bash
-# 执行前端语法与静态代码安全扫描
+# Run syntax and static security checks
 npm run check:js
 npm run check:secrets
 
-# 运行前端核心逻辑单元测试（包含字幕、跌倒机制等 19 项测试）
+# Run frontend core logic test suite (19 test cases including subtitles, fall FSM, etc.)
 npm run test:js
 
-# 运行 iOS 模拟器自动化门禁
+# Run iOS simulator automated checks
 npm run test:ios:sim
 
-# 完整迁移验收测试
+# Run full migration verification gate
 npm run verify:ios:migration
 ```
 
 ---
 
-## 公开 Benchmark
+## Public Benchmark
 
-项目在 `public_benchmark_silvercare/` 目录下配套提供了标准化的脱敏评测基准，包含：
+The repository includes a standardized de-identified evaluation benchmark under `public_benchmark_silvercare/`:
 
-1. **真实居家脱敏数据集**：走廊、入口堆积、倒地障碍、卫生间地面、杂乱桌面等多场景图像与音频样例。
-2. **结构化评测任务**：标准化定义巡路避障准确率、找物匹配时延、跌倒判断置信度与 ASR 纠错率。
-3. **自动化评分脚本**：提供对比 baseline 与指标打分逻辑，方便后续模型升级或设备移植时进行回归评测。
+1. **De-Identified In-Home Datasets**: Realistic image and audio samples across corridors, cluttered entryways, fallen barriers, wet bathroom tiles, and messy desks.
+2. **Structured Evaluation Tasks**: Standardized protocols measuring navigation obstacle accuracy, item retrieval latency, fall confirmation confidence, and ASR homophone correction rate.
+3. **Automated Scoring Scripts**: Baseline comparison scripts and metric evaluation routines for regression verification across model upgrades or hardware ports.
 
 ---
 
-## 边界说明与合规声明
+## Compliance & Disclaimer
 
-1. **辅助定位**：本系统定位为居家行动辅助、居家安全预警及照护服务管理工具，通过技术手段为老人、家庭照护者及长护机构提供多维感知支持。
-2. **非医疗急救替代**：系统给出的语音提示与风险分析结果不能作为临床医疗诊断、处方开具或专业急救保障依据。突发危及生命的急性病症应立即拨打急救电话寻求专业医疗救助。
-3. **隐私防护**：系统在离线模式下所有图像分析和语音转写均在手机本地内存完成计算，无任何画面或音频回传，严格保障老人居家隐私安全。
+1. **Assistive Positioning**: This system serves as an in-home mobility aid, environmental safety monitor, and care service tracking tool. It provides multidimensional perceptual support for seniors, family members, and caregivers.
+2. **Non-Medical Disclaimer**: Guidance prompts and hazard assessments generated by the system do not constitute clinical medical diagnosis, therapeutic prescription, or emergency rescue certification. In life-threatening emergencies, immediately contact local emergency medical services.
+3. **Privacy Protection**: In offline mode, all camera frame analysis and speech transcription are processed exclusively within local device memory without streaming images or audio to external servers, safeguarding household privacy.
