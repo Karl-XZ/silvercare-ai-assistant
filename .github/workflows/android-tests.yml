@@ -22,6 +22,8 @@ jobs:
           node-version: "22"
 
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
 
       - name: Install Android native toolchain
         run: sdkmanager "cmake;3.22.1" "ndk;27.2.12479018"
