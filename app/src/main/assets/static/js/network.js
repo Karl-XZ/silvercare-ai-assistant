@@ -1,3 +1,4 @@
+import { t, I18n } from './i18n.js';
 /**
  * 银龄智护 - Network / Native Bridge Manager
  * In Android standalone mode, frames and inquiries are sent to the Java bridge.
@@ -72,9 +73,9 @@ function handleServerMessage(data) {
         STATE.mode = data.mode;
 
         if (STATE.mode === 'micro') {
-            showFeedback('精确引导模式');
+            showFeedback(t("精确引导模式"));
             if(window.spatialAudio) window.spatialAudio.startMicroTone();
-            updateStatus('精确引导', 'active');
+            updateStatus(t("精确引导"), 'active');
             lastMicroGuidanceText = '';
             lastMicroGuidanceAt = 0;
             startMicroLoop();
@@ -82,9 +83,9 @@ function handleServerMessage(data) {
         } else {
             window.clearTimeout(pendingMicroRefreshTimer);
             pendingMicroRefreshTimer = null;
-            showFeedback(STATE.mode === 'task' ? '任务模式' : '导航模式');
+            showFeedback(STATE.mode === 'task' ? t("任务模式") : t("导航模式"));
             if(window.spatialAudio) window.spatialAudio.stopMicroTone();
-            updateStatus('扫描中', 'active', { speak: false });
+            updateStatus(t("扫描中"), 'active', { speak: false });
             startLoop();
         }
     }
@@ -97,9 +98,9 @@ function handleServerMessage(data) {
             updateAiCaption(data.speech || data.guidance_speech || data.thinking || data.scene_description);
             reportNavigationCareEvent(data);
             if (STATE.navigationRefreshMode === 'manual') {
-                updateStatus('手动刷新', 'active', { speak: false });
+                updateStatus(t("手动刷新"), 'active', { speak: false });
             } else {
-                updateStatus('自动刷新', 'active', { speak: false });
+                updateStatus(t("自动刷新"), 'active', { speak: false });
             }
             break;
         case 'micro_result':
@@ -119,10 +120,10 @@ function handleServerMessage(data) {
         case 'care_record':
             reportCareEvent({
                 type: 'care_record',
-                title: data.title || `照护助手记录：${data.record_type || '记录'}`,
+                title: data.title || t("照护助手记录：{0}", [t(data.record_type || '记录')]),
                 severity: data.severity || 'medium',
-                detail: data.record_text || data.detail || data.speech || '老人端新增照护记录。',
-                source: data.source || '老人端语音记录',
+                detail: data.record_text || data.detail || data.speech || t("老人端新增照护记录。"),
+                source: data.source || t("老人端语音记录"),
                 record_type: data.record_type || '记录',
                 record_text: data.record_text || data.detail || ''
             });
@@ -132,9 +133,9 @@ function handleServerMessage(data) {
             if (data.text) {
                 updateUserCaption(data.text);
                 markNativeTranscriptReady();
-                updateAiCaption('正在思考...');
+                updateAiCaption(t("正在思考..."));
             } else {
-                updateUserCaption('语音已提交，正在确认识别结果...');
+                updateUserCaption(t("语音已提交，正在确认识别结果..."));
             }
             break;
         case 'speech_transcript_correction':
@@ -148,23 +149,23 @@ function handleServerMessage(data) {
             }
             break;
         case 'speech_busy':
-            updateAiCaption(data.text || '上一条语音还在处理，请稍等。');
-            showFeedback(data.text || '上一条语音还在处理，请稍等。', 1600, false);
+            updateAiCaption(data.text || t("上一条语音还在处理，请稍等。"));
+            showFeedback(data.text || t("上一条语音还在处理，请稍等。"), 1600, false);
             break;
         case 'model_download_progress':
             handleModelDownloadProgress(data);
             break;
         case 'smart_refresh_skipped':
-            updateStatus(STATE.navigationRefreshMode === 'manual' ? '手动刷新' : '自动刷新', 'active', { speak: false });
-            showFeedback(data.text || '画面无明显变化', 1200, false);
+            updateStatus(STATE.navigationRefreshMode === 'manual' ? t("手动刷新") : t("自动刷新"), 'active', { speak: false });
+            showFeedback(data.text || t("画面无明显变化"), 1200, false);
             break;
         case 'speech_status':
             STATE.speechListening = Boolean(data.listening);
             setRecordingUI(STATE.speechListening);
             break;
         case 'fall_alarm':
-            updateAiCaption(data.text || '已发送报警');
-            showFallAlarm(data.text || '已发送报警', false);
+            updateAiCaption(data.text || t("已发送报警"));
+            showFallAlarm(data.text || t("已发送报警"), false);
             reportCareEvent(buildFallCareEvent(data));
             break;
         case 'speak':
@@ -177,10 +178,10 @@ function handleServerMessage(data) {
             STATE.speechListening = false;
             setRecordingUI(false);
             if (data.code === 'asr_no_speech') {
-                updateUserCaption('未识别到清晰语音，请再试一次。');
+                updateUserCaption(t("未识别到清晰语音，请再试一次。"));
             }
-            updateAiCaption(data.text || '发生错误');
-            showFeedback(data.text || '发生错误');
+            updateAiCaption(data.text || t("发生错误"));
+            showFeedback(data.text || t("发生错误"));
             break;
     }
 }
@@ -226,11 +227,11 @@ function reportNavigationCareEvent(data) {
 function reportTaskCareEvent(data) {
     if (!data || data.completed !== true) return;
     reportCareEvent(buildTaskCareEvent({
-        title: '任务指导已完成',
+        title: t("任务指导已完成"),
         severity: 'low',
-        name: '交互式照护任务',
+        name: t("交互式照护任务"),
         status: 'done',
-        detail: '老人端交互式任务指导已完成，已形成服务留痕。'
+        detail: t("老人端交互式任务指导已完成，已形成服务留痕。")
     }));
 }
 
@@ -239,17 +240,17 @@ function handleModelDownloadProgress(data = {}) {
     const percent = Number(data.percent);
     const percentText = Number.isFinite(percent) ? `${Math.max(0, Math.min(100, Math.round(percent)))}%` : '';
     if (data.failed) {
-        updateStatus('模型下载失败', 'error');
-        showFeedback(data.text || '模型下载失败', 2600, true);
+        updateStatus(t("模型下载失败"), 'error');
+        showFeedback(data.text || t("模型下载失败"), 2600, true);
         return;
     }
     if (data.complete) {
-        updateStatus('离线模型已就绪', 'active');
-        showFeedback(data.text || '离线模型已下载完成', 2600, true);
+        updateStatus(t("离线模型已就绪"), 'active');
+        showFeedback(data.text || t("离线模型已下载完成"), 2600, true);
         return;
     }
-    updateStatus('模型下载中', 'active');
-    showFeedback(data.text ? `${data.text} ${percentText}` : `模型下载 ${percentText}`, 1800, false);
+    updateStatus(t("模型下载中"), 'active');
+    showFeedback(data.text ? `${data.text} ${percentText}` : t("模型下载 {0}", [percentText]), 1800, false);
 }
 
 export function connectWS() {
@@ -259,35 +260,35 @@ export function connectWS() {
         STATE.nativeMode = true;
         STATE.ws = null;
         const runtimeMode = safeNativeString('aiRuntimeMode', 'dashscope');
-        const runtimeLabel = safeNativeString('runtimeDisplayName', runtimeMode === 'offline_mnn' ? '端侧离线 MNN' : '联网 DashScope');
+        const runtimeLabel = safeNativeString('runtimeDisplayName', runtimeMode === 'offline_mnn' ? t("端侧离线 MNN") : t("联网 DashScope"));
         const offlineReady = safeNativeBoolean('offlineModelReady', false);
         updateRuntimeUI({
             ai_runtime_mode: runtimeMode,
             runtime_label: runtimeLabel,
             offline_ready: offlineReady,
             asr_runtime_mode: safeNativeString('asrRuntimeMode', 'dashscope'),
-            asr_runtime_label: safeNativeString('asrRuntimeDisplayName', '联网 DashScope'),
+            asr_runtime_label: safeNativeString('asrRuntimeDisplayName', t("联网 DashScope")),
             local_asr_enabled: safeNativeBoolean('localAsrEnabled', false),
             local_asr_ready: safeNativeBoolean('localAsrReady', false),
             mnn_llm_tuning_mode: safeNativeString('mnnLlmTuningMode', 'auto'),
-            mnn_llm_tuning_label: safeNativeString('mnnLlmTuningDisplayName', 'SME2 自动调优'),
+            mnn_llm_tuning_label: safeNativeString('mnnLlmTuningDisplayName', t("SME2 自动调优")),
             mnn_sme2_supported: safeNativeBoolean('mnnSme2Supported', false),
             navigation_refresh_mode: safeNativeString('navigationRefreshMode', 'manual'),
-            navigation_refresh_label: safeNativeString('navigationRefreshDisplayName', '手动刷新'),
+            navigation_refresh_label: safeNativeString('navigationRefreshDisplayName', t("手动刷新")),
             navigation_refresh_interval_ms: safeNativeNumber('navigationRefreshIntervalMs', 3000),
             smart_navigation_refresh_enabled: safeNativeBoolean('smartNavigationRefreshEnabled', false),
             captions_enabled: safeNativeBoolean('captionsEnabled', true)
         });
-        updateStatus(runtimeMode === 'offline_mnn' ? '端侧离线' : '本机联网', 'active', { speak: false });
-        showFeedback(runtimeMode === 'offline_mnn' ? '端侧离线模式' : '联网 DashScope 模式', 1600, false);
+        updateStatus(runtimeMode === 'offline_mnn' ? t("端侧离线") : t("本机联网"), 'active', { speak: false });
+        showFeedback(runtimeMode === 'offline_mnn' ? t("端侧离线模式") : t("联网 DashScope 模式"), 1600, false);
 
         if (runtimeMode === 'offline_mnn' && !offlineReady) {
-            const text = safeNativeString('offlineStatusText', '离线模型未就绪');
+            const text = safeNativeString('offlineStatusText', t("离线模型未就绪"));
             showFeedback(text, 2200, false);
             speak(text);
         } else if (runtimeMode !== 'offline_mnn' && !window.AndroidSilverCare.hasDashScopeKey()) {
-            const text = '请先点右上角齿轮填写 DashScope Key';
-            showFeedback('需要 Key', 1600, false);
+            const text = t("请先点右上角齿轮填写 DashScope Key");
+            showFeedback(t("需要 Key"), 1600, false);
             speak(text);
         }
         startLoop();
@@ -302,7 +303,7 @@ export function connectWS() {
     STATE.ws.onopen = () => {
         console.log("WebSocket Connected");
         STATE.wsRetryCount = 0;
-        updateStatus('扫描中', 'active', { speak: false });
+        updateStatus(t("扫描中"), 'active', { speak: false });
         startLoop();
     };
 
@@ -318,7 +319,7 @@ export function connectWS() {
     STATE.ws.onclose = (e) => {
         console.warn("WebSocket Closed:", e.code);
         if (STATE.active) {
-            updateStatus('正在重连...', 'error');
+            updateStatus(t("正在重连..."), 'error');
             const retryDelay = Math.min(5000, 1000 * Math.pow(1.5, STATE.wsRetryCount));
             STATE.wsRetryCount++;
             setTimeout(connectWS, retryDelay);
@@ -381,7 +382,7 @@ function handleAudioFeedback(data) {
         if (action === 'push') {
             window.spatialAudio.stopMicroTone();
             window.spatialAudio.playSuccess();
-            showFeedback('现在按下', 1600, false);
+            showFeedback(t("现在按下"), 1600, false);
         }
         return;
     }
@@ -418,7 +419,7 @@ function speak(text) {
     if (!window.speechSynthesis) return;
     STATE.ttsSpeaking = true;
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
+    utterance.lang = I18n.locale();
     utterance.onend = () => { STATE.ttsSpeaking = false; };
     utterance.onerror = () => { STATE.ttsSpeaking = false; };
     window.speechSynthesis.speak(utterance);
@@ -454,6 +455,8 @@ export function sendInquiryData(imageBlob, audioBase64) {
     STATE.ws.send(JSON.stringify({
         type: 'inquiry',
         image: imageBlob,
-        audio: audioBase64
+        audio: audioBase64,
+        language: I18n.language(),
+        app_language: I18n.language()
     }));
 }

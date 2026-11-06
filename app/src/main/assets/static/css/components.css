@@ -254,14 +254,16 @@ body.active .scan-reticle {
 .caption-row {
     min-height: 32px;
     display: grid;
-    grid-template-columns: 54px minmax(0, 1fr);
+    grid-template-columns: max-content minmax(0, 1fr);
     align-items: start;
     gap: 8px;
     color: var(--text-main);
 }
 
 .caption-speaker {
+    min-width: 54px;
     min-height: 24px;
+    padding: 4px 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;

@@ -18,11 +18,13 @@ final class TestFakes {
     }
 
     static final class Settings implements SilverCareArtificialIntelligenceClient.SettingsProvider {
+        String appLanguage = "zh";
+        @Override public String appLanguage() { return appLanguage; }
         String apiKey = "test-key";
         String compatibleBaseUrl = "http://127.0.0.1";
         String apiBaseUrl = "http://127.0.0.1";
-        String visionModel = "qwen3-vl-flash";
-        String microModel = "qwen3-vl-flash";
+        String visionModel = "qwen3-vl-plus";
+        String microModel = "qwen3-vl-plus";
         String textModel = "qwen-plus";
         String asrModel = "qwen3-asr-flash";
         String aiRuntimeMode = AiRuntimeMode.DASHSCOPE.value;

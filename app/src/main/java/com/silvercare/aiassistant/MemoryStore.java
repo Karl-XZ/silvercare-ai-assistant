@@ -109,7 +109,9 @@ final class MemoryStore {
         }
     }
 
-    synchronized String findObjectLocation(String query) {
+    synchronized String findObjectLocation(String query) { return findObjectLocation(query, "zh"); }
+
+    synchronized String findObjectLocation(String query, String language) {
         String cleanQuery = query == null ? "" : query.trim();
         if (cleanQuery.isEmpty()) return "";
         try {
@@ -118,14 +120,21 @@ final class MemoryStore {
                 JSONObject entry = history.getJSONObject(i);
                 String name = entry.optString("name", entry.optString("object", ""));
                 if (name.isEmpty()) continue;
-                if (!cleanQuery.contains(name) && !name.contains(cleanQuery)) continue;
+                String queryIdentity = OfflineVisionInterpreter.canonicalSearchTarget(cleanQuery);
+                String nameIdentity = OfflineVisionInterpreter.canonicalSearchTarget(name);
+                boolean sameKnownObject = !queryIdentity.isEmpty() && queryIdentity.equals(nameIdentity);
+                if (!sameKnownObject && !cleanQuery.contains(name) && !name.contains(cleanQuery)) continue;
 
                 String location = entry.optString("location", "");
                 String scene = entry.optString("scene", "");
-                if (!location.isEmpty() && !scene.isEmpty()) return name + "在" + location + "，" + scene;
-                if (!location.isEmpty()) return name + "在" + location;
-                if (!scene.isEmpty()) return name + "最近出现在：" + scene;
-                return name + "最近被看见过，但没有明确位置。";
+                String historicalNote = LanguageResources.text(language, "（这是历史记录，当前位置尚未确认。）");
+                if (!location.isEmpty()) {
+                    String recalled = name + LanguageResources.text(language, "上次看到的位置是：") + location;
+                    if (!scene.isEmpty()) recalled += LanguageResources.text(language, "，") + scene;
+                    return recalled + historicalNote;
+                }
+                if (!scene.isEmpty()) return name + LanguageResources.text(language, "上次看到的场景是：") + scene + historicalNote;
+                return name + LanguageResources.text(language, "最近被看见过，但没有明确位置。") + historicalNote;
             }
         } catch (Exception ignored) {
         }

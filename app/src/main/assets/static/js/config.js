@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * 银龄智护 - Config & State
  */
@@ -18,11 +19,11 @@ export const STATE = {
     heading: 0,
     mode: 'nav',
     aiRuntimeMode: 'dashscope',
-    runtimeLabel: '联网 DashScope',
+    runtimeLabel: t("联网 DashScope"),
     asrRuntimeMode: 'dashscope',
-    asrRuntimeLabel: '联网 DashScope',
+    asrRuntimeLabel: t("联网 DashScope"),
     navigationRefreshMode: 'manual',
-    navigationRefreshLabel: '手动刷新',
+    navigationRefreshLabel: t("手动刷新"),
     navigationRefreshIntervalMs: 3000,
     smartNavigationRefreshEnabled: false,
     offlineReady: false,

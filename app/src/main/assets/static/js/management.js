@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * 银龄智护 management dashboard.
  * Provides a lightweight silvercare management view inside the Android WebView.
@@ -14,59 +15,59 @@ export const CARE_MANAGEMENT_DATA = {
     generatedAt: '',
     periods: {
         today: {
-            label: '今日',
+            label: "今日",
             residents: 1,
             taskCompletion: 0,
             responseSeconds: 0,
             serviceClosedLoop: 0,
             trend: [0, 0, 0, 0, 0, 0, 0],
-            trendLabels: ['周日', '周一', '周二', '周三', '周四', '周五', '今日'],
+            trendLabels: ["周日", "周一", "周二", "周三", "周四", "周五", "今日"],
             progress: [
-                { label: '真实事件闭环', value: 0 },
-                { label: '中高风险复核', value: 0 },
-                { label: '跌倒报警闭环', value: 0 },
-                { label: '照护记录留存', value: 0 }
+                { label: "真实事件闭环", value: 0 },
+                { label: "中高风险复核", value: 0 },
+                { label: "跌倒报警闭环", value: 0 },
+                { label: "照护记录留存", value: 0 }
             ]
         },
         week: {
-            label: '7 日',
+            label: "7 日",
             residents: 1,
             taskCompletion: 0,
             responseSeconds: 0,
             serviceClosedLoop: 0,
             trend: [0, 0, 0, 0, 0, 0, 0],
-            trendLabels: ['周日', '周一', '周二', '周三', '周四', '周五', '今日'],
+            trendLabels: ["周日", "周一", "周二", "周三", "周四", "周五", "今日"],
             progress: [
-                { label: '真实事件闭环', value: 0 },
-                { label: '中高风险复核', value: 0 },
-                { label: '跌倒报警闭环', value: 0 },
-                { label: '照护记录留存', value: 0 }
+                { label: "真实事件闭环", value: 0 },
+                { label: "中高风险复核", value: 0 },
+                { label: "跌倒报警闭环", value: 0 },
+                { label: "照护记录留存", value: 0 }
             ]
         },
         month: {
-            label: '30 日',
+            label: "30 日",
             residents: 1,
             taskCompletion: 0,
             responseSeconds: 0,
             serviceClosedLoop: 0,
             trend: [0, 0, 0, 0, 0, 0, 0],
-            trendLabels: ['第1周', '第2周', '第3周', '第4周', '第5周', '第6周', '本周'],
+            trendLabels: ["第1周", "第2周", "第3周", "第4周", "第5周", "第6周", "本周"],
             progress: [
-                { label: '真实事件闭环', value: 0 },
-                { label: '中高风险复核', value: 0 },
-                { label: '跌倒报警闭环', value: 0 },
-                { label: '照护记录留存', value: 0 }
+                { label: "真实事件闭环", value: 0 },
+                { label: "中高风险复核", value: 0 },
+                { label: "跌倒报警闭环", value: 0 },
+                { label: "照护记录留存", value: 0 }
             ]
         }
     },
     residents: [
-        { id: 'current-user', name: '当前长护对象', level: '未填写', risk: 'low', status: '等待老人端真实数据', tasks: '0/0', location: '居家环境' }
+        { id: 'current-user', name: "当前长护对象", level: "未填写", risk: 'low', status: "等待老人端真实数据", tasks: '0/0', location: "居家环境" }
     ],
     events: [],
     tasks: [],
     careProfile: {
-        resident: '当前长护对象',
-        longTermCareLevel: '未填写',
+        resident: "当前长护对象",
+        longTermCareLevel: "未填写",
         chronicConditions: [],
         monthlyCareBudget: 0,
         usedCareBudget: 0,
@@ -80,15 +81,15 @@ export const CARE_MANAGEMENT_DATA = {
 };
 
 const severityText = {
-    high: '高风险',
-    medium: '中风险',
-    low: '低风险'
+    high: "高风险",
+    medium: "中风险",
+    low: "低风险"
 };
 
 const taskStatusText = {
-    done: '已完成',
-    pending: '待执行',
-    missed: '未确认'
+    done: "已完成",
+    pending: "待执行",
+    missed: "未确认"
 };
 
 const metricIcons = {
@@ -100,6 +101,10 @@ const metricIcons = {
 
 function cloneCareData(data) {
     return JSON.parse(JSON.stringify(data));
+}
+
+function displayPlaceholder(value) {
+    return ['当前长护对象', '未填写', '等待老人端真实数据', '居家环境'].includes(value) ? t(value) : value;
 }
 
 function escapeHtml(value) {
@@ -135,7 +140,7 @@ export function calculateCareSummary(data = CARE_MANAGEMENT_DATA, periodKey = 't
     trend[trend.length - 1] = events.length;
 
     return {
-        periodLabel: period.label || '今日',
+        periodLabel: t(CARE_MANAGEMENT_DATA.periods[periodKey]?.label || '今日'),
         residents: residentCountForData(data),
         taskCompletion,
         responseSeconds: Number(period.responseSeconds || 0),
@@ -145,12 +150,12 @@ export function calculateCareSummary(data = CARE_MANAGEMENT_DATA, periodKey = 't
         mediumRiskOpen,
         handledEvents,
         trend,
-        trendLabels: Array.isArray(period.trendLabels) ? period.trendLabels : [],
+        trendLabels: Array.isArray(period.trendLabels) ? period.trendLabels.map(label => t(label)) : [],
         progress: [
-            { label: '真实事件闭环', value: serviceClosedLoop },
-            { label: '中高风险复核', value: highAndMediumClosedLoop },
-            { label: '跌倒报警闭环', value: fallClosedLoop },
-            { label: '照护记录留存', value: recordRetention || (records.length ? 100 : 0) }
+            { label: t("真实事件闭环"), value: serviceClosedLoop },
+            { label: t("中高风险复核"), value: highAndMediumClosedLoop },
+            { label: t("跌倒报警闭环"), value: fallClosedLoop },
+            { label: t("照护记录留存"), value: recordRetention || (records.length ? 100 : 0) }
         ],
         highAndMediumOpen
     };
@@ -174,29 +179,29 @@ export function buildDailyReport(data = CARE_MANAGEMENT_DATA, periodKey = 'today
     const summary = calculateCareSummary(data, periodKey);
     const openNames = data.events
         .filter((event) => event.status !== 'handled')
-        .map((event) => `${event.resident}：${event.title}`);
+        .map((event) => `${displayPlaceholder(event.resident)}: ${event.title}`);
     const missedTasks = data.tasks
         .filter((task) => task.status === 'missed')
-        .map((task) => `${task.resident} ${task.name}`);
+        .map((task) => `${displayPlaceholder(task.resident)} ${task.name}`);
     const records = Array.isArray(data.careProfile?.records) ? data.careProfile.records : [];
 
     if (!data.events.length && !data.tasks.length && !records.length) {
         return [
-            `${summary.periodLabel}照护摘要：当前还没有老人端上报的真实事件。`,
-            '风险情况：暂无跌倒报警、照护记录、巡路或找物事件。',
-            '待处理重点：请等待老人端完成一次巡路、找物、用药记录或跌倒报警后再复核。',
-            'AI 建议：当前不生成照护判断；后续只根据真实上报记录给出建议。'
+            t("{0}照护摘要：当前还没有老人端上报的真实事件。", [summary.periodLabel]),
+            t("风险情况：暂无跌倒报警、照护记录、巡路或找物事件。"),
+            t("待处理重点：请等待老人端完成一次巡路、找物、用药记录或跌倒报警后再复核。"),
+            t("AI 建议：当前不生成照护判断；后续只根据真实上报记录给出建议。")
         ].join('\n');
     }
 
     return [
-        `${summary.periodLabel}照护摘要：当前管理 ${summary.residents} 名长护对象，真实事件 ${data.events.length} 条，照护任务完成率 ${summary.taskCompletion}%，服务闭环率 ${summary.serviceClosedLoop}%。`,
-        `风险情况：待复核事件 ${summary.openEvents} 条，其中高风险 ${summary.highRiskOpen} 条，中风险 ${summary.mediumRiskOpen} 条，平均响应 ${summary.responseSeconds} 秒。`,
-        openNames.length ? `待处理重点：${openNames.join('；')}。` : '待处理重点：暂无未闭环风险事件。',
-        missedTasks.length ? `任务缺口：${missedTasks.join('；')} 需要照护者复核。` : '任务缺口：今日暂无未确认任务。',
+        t("{0}照护摘要：当前管理 {1} 名长护对象，真实事件 {2} 条，照护任务完成率 {3}%，服务闭环率 {4}%。", [summary.periodLabel, summary.residents, data.events.length, summary.taskCompletion, summary.serviceClosedLoop]),
+        t("风险情况：待复核事件 {0} 条，其中高风险 {1} 条，中风险 {2} 条，平均响应 {3} 秒。", [summary.openEvents, summary.highRiskOpen, summary.mediumRiskOpen, summary.responseSeconds]),
+        openNames.length ? t("待处理重点：{0}。", [openNames.join('；')]) : t("待处理重点：暂无未闭环风险事件。"),
+        missedTasks.length ? t("任务缺口：{0} 需要照护者复核。", [missedTasks.join('；')]) : t("任务缺口：今日暂无未确认任务。"),
         summary.highRiskOpen > 0
-            ? 'AI 建议：优先处理高风险跌倒报警事件；其他低风险巡路和找物记录可作为服务留痕复核。'
-            : 'AI 建议：当前没有未处理跌倒报警；低风险巡路和找物记录主要用于服务留痕，中风险照护记录请照护者复核。'
+            ? t("AI 建议：优先处理高风险跌倒报警事件；其他低风险巡路和找物记录可作为服务留痕复核。")
+            : t("AI 建议：当前没有未处理跌倒报警；低风险巡路和找物记录主要用于服务留痕，中风险照护记录请照护者复核。")
     ].join('\n');
 }
 
@@ -204,8 +209,8 @@ export function buildCareAgentContext(profile = CARE_MANAGEMENT_DATA.careProfile
     const budgetLeft = Math.max(0, Number(profile.monthlyCareBudget || 0) - Number(profile.usedCareBudget || 0));
     const budgetRatio = profile.monthlyCareBudget ? Math.round((budgetLeft / profile.monthlyCareBudget) * 100) : 0;
     return {
-        resident: profile.resident || '当前长护对象',
-        longTermCareLevel: profile.longTermCareLevel || '未填写',
+        resident: profile.resident || t("当前长护对象"),
+        longTermCareLevel: profile.longTermCareLevel || t("未填写"),
         chronicConditions: profile.chronicConditions || [],
         budgetLeft,
         budgetRatio,
@@ -228,11 +233,11 @@ export function buildCareAgentReply(data = CARE_MANAGEMENT_DATA, message = '') {
     const mediumRisks = openRisks.filter((event) => event.severity === 'medium');
     const records = Array.isArray(profile.records) ? profile.records : [];
 
-    if (/记录|记一下|已吃|吃过|头晕|疼|不舒服|复核/.test(text)) {
-        const recordType = /药|已吃|吃过|服药|降压/.test(text) ? '用药' : /头晕|疼|不舒服|症状/.test(text) ? '症状' : '复核';
+    if (/记录|记一下|已吃|吃过|头晕|疼|不舒服|复核|\brecord\b|\blog\b|\btook\b|記録|飲んだ|服用した|めまい|痛い|具合が悪い/i.test(text)) {
+        const recordType = /药|已吃|吃过|服药|降压|medication|medicine|pill|薬|服薬/i.test(text) ? '用药' : /头晕|疼|不舒服|症状|dizzy|pain|unwell|symptom|めまい|痛い|具合|症状/i.test(text) ? '症状' : '复核';
         return {
             intent: 'record',
-            speech: `已记录：${text}。这是一条${recordType}记录，会作为中风险照护事件进入管理端复核。`,
+            speech: t("已记录：{0}。这是一条{1}记录，会作为中风险照护事件进入管理端复核。", [text, t(recordType)]),
             action: {
                 type: 'append_record',
                 recordType,
@@ -241,50 +246,50 @@ export function buildCareAgentReply(data = CARE_MANAGEMENT_DATA, message = '') {
         };
     }
 
-    if (/费用|药费|护理费|开销|剩余|够不够/.test(text) || normalized.includes('budget')) {
+    if (/费用|药费|护理费|开销|剩余|够不够|budget|cost|expense|remaining|予算|残額|費用|足り/i.test(text) || normalized.includes('budget')) {
         if (!Number(profile.monthlyCareBudget || 0)) {
             return {
                 intent: 'budget_advice',
-                speech: '当前没有录入真实长护服务额度或费用数据，暂时不能给出费用建议。请先录入真实额度、已用额度或服务记录。'
+                speech: t("当前没有录入真实长护服务额度或费用数据，暂时不能给出费用建议。请先录入真实额度、已用额度或服务记录。")
             };
         }
         return {
             intent: 'budget_advice',
-            speech: `${context.resident}本月长护服务额度剩余 ${context.budgetLeft} 元，约占 ${context.budgetRatio}%。建议优先安排高风险复核、上门照护和康复训练，普通服务可排到下周。`
+            speech: t("{0}本月长护服务额度剩余 {1} 元，约占 {2}%。建议优先安排高风险复核、上门照护和康复训练，普通服务可排到下周。", [displayPlaceholder(context.resident), context.budgetLeft, context.budgetRatio])
         };
     }
 
-    if (/药|用药|降压|吃药/.test(text)) {
+    if (/药|用药|降压|吃药|medication|medicine|pill|薬|服薬/i.test(text)) {
         const medicationRecords = records.filter((record) => record.type === '用药');
         const missed = openMissedTasks.map((task) => `${task.name} ${task.time}`).join('、');
         return {
             intent: 'medication_advice',
             speech: missed
-                ? `当前有未确认用药任务：${missed}。建议照护者优先复核。`
+                ? t("当前有未确认用药任务：{0}。建议照护者优先复核。", [missed])
                 : medicationRecords.length
-                    ? `当前已有 ${medicationRecords.length} 条真实用药记录，最近一条是：${medicationRecords[0].text}。`
-                    : '当前还没有真实用药记录。请通过老人端说“记录我吃了某某药”来新增记录。'
+                    ? t("当前已有 {0} 条真实用药记录，最近一条是：{1}。", [medicationRecords.length, medicationRecords[0].text])
+                    : t("当前还没有真实用药记录。请通过老人端说“记录我吃了某某药”来新增记录。")
         };
     }
 
-    if (/风险|摔|跌倒|夜间|起身|卫生间|怎么处理/.test(text)) {
-        const highRiskText = highRisks.length ? `当前有 ${highRisks.length} 条高风险待复核。` : '当前没有未处理高风险事件。';
+    if (/风险|摔|跌倒|夜间|起身|卫生间|怎么处理|risk|fall|night|リスク|転倒|夜中|夜間/i.test(text)) {
+        const highRiskText = highRisks.length ? t("当前有 {0} 条高风险待复核。", [highRisks.length]) : t("当前没有未处理高风险事件。");
         return {
             intent: 'risk_advice',
-            speech: `${highRiskText}中风险照护记录 ${mediumRisks.length} 条，普通巡路和找物记录为低风险。请优先复核跌倒报警，其次复核用药、症状等照护记录。`
+            speech: t("{0}中风险照护记录 {1} 条，普通巡路和找物记录为低风险。请优先复核跌倒报警，其次复核用药、症状等照护记录。", [highRiskText, mediumRisks.length])
         };
     }
 
     if (!openRisks.length && !records.length && !(data.tasks || []).length) {
         return {
             intent: 'daily_advice',
-            speech: '当前还没有真实老人端数据；请先完成一次巡路、找物、用药记录或跌倒报警测试。'
+            speech: t("当前还没有真实老人端数据；请先完成一次巡路、找物、用药记录或跌倒报警测试。")
         };
     }
 
     return {
         intent: 'daily_advice',
-        speech: `当前有 ${openRisks.length} 条待复核事件，其中高风险 ${highRisks.length} 条、中风险 ${mediumRisks.length} 条。请按高风险跌倒报警、中风险照护记录、低风险巡路找物记录的顺序处理。`
+        speech: t("当前有 {0} 条待复核事件，其中高风险 {1} 条、中风险 {2} 条。请按高风险跌倒报警、中风险照护记录、低风险巡路找物记录的顺序处理。", [openRisks.length, highRisks.length, mediumRisks.length])
     };
 }
 
@@ -299,17 +304,17 @@ export function applyCareAgentAction(data = CARE_MANAGEMENT_DATA, reply, now = n
     next.careProfile.records.unshift({
         time,
         type: action.recordType || '记录',
-        text: action.text || reply.speech || '新增对话记录'
+        text: action.text || reply.speech || t("新增对话记录")
     });
     next.events.unshift({
         id: `agent-${now.getTime()}`,
         resident: next.careProfile.resident,
-        title: `照护助手记录：${action.recordType || '记录'}`,
-        detail: action.text || reply.speech || '新增对话记录',
+        title: t("照护助手记录：{0}", [t(action.recordType || '记录')]),
+        detail: action.text || reply.speech || t("新增对话记录"),
         severity: 'medium',
         time,
         status: 'open',
-        source: '照护数据智能助手'
+        source: t("照护数据智能助手")
     });
     return next;
 }
@@ -326,30 +331,30 @@ function renderMetricGrid(root, summary) {
     const metrics = [
         {
             key: 'residents',
-            label: '长护对象',
+            label: t("长护对象"),
             value: summary.residents,
-            change: `${summary.periodLabel}在管人数`,
+            change: t("{0}在管人数", [summary.periodLabel]),
             tone: ''
         },
         {
             key: 'completion',
-            label: '任务完成率',
+            label: t("任务完成率"),
             value: `${summary.taskCompletion}%`,
-            change: `闭环率 ${summary.serviceClosedLoop}%`,
+            change: t("闭环率 {0}%", [summary.serviceClosedLoop]),
             tone: ''
         },
         {
             key: 'risk',
-            label: '高风险待办',
+            label: t("高风险待办"),
             value: summary.highRiskOpen,
-            change: summary.openEvents > 0 ? `待复核 ${summary.openEvents} 条` : '全部已处理',
+            change: summary.openEvents > 0 ? t("待复核 {0} 条", [summary.openEvents]) : t("全部已处理"),
             tone: summary.highRiskOpen > 0 ? 'danger' : ''
         },
         {
             key: 'response',
-            label: '平均响应',
+            label: t("平均响应"),
             value: `${summary.responseSeconds}s`,
-            change: summary.responseSeconds <= 45 ? '响应良好' : '需要提速',
+            change: summary.responseSeconds <= 45 ? t("响应良好") : t("需要提速"),
             tone: summary.responseSeconds <= 45 ? '' : 'warn'
         }
     ];
@@ -389,7 +394,7 @@ function renderTrend(elements, summary) {
     if (elements.trendArea) elements.trendArea.setAttribute('d', area);
     setHtml(elements.trendPoints, points.map((point) => `
         <circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="6">
-            <title>${escapeHtml(point.value)} 条风险事件</title>
+            <title>${t("{0} 条风险事件", [escapeHtml(point.value)])}</title>
         </circle>
     `).join(''));
     setHtml(elements.chartLabels, labels.map((label) => `<span>${escapeHtml(label)}</span>`).join(''));
@@ -416,7 +421,7 @@ function renderProgress(root, progress) {
 
 function renderEvents(root, events) {
     if (!events.length) {
-        setHtml(root, '<article class="care-event"><div><h3>暂无真实事件</h3><p>老人端完成巡路、找物、照护记录或跌倒报警后会自动同步到这里。</p></div></article>');
+        setHtml(root, t("<article class=\"care-event\"><div><h3>暂无真实事件</h3><p>老人端完成巡路、找物、照护记录或跌倒报警后会自动同步到这里。</p></div></article>"));
         return;
     }
     const sorted = [...events].sort((a, b) => Number(a.status === 'handled') - Number(b.status === 'handled'));
@@ -424,16 +429,16 @@ function renderEvents(root, events) {
         <article class="care-event">
             <div>
                 <h3>${escapeHtml(event.title)}</h3>
-                <p>${escapeHtml(event.time)} · ${escapeHtml(event.resident)} · ${escapeHtml(event.detail)}</p>
+                <p>${escapeHtml(event.time)} · ${escapeHtml(displayPlaceholder(event.resident))} · ${escapeHtml(event.detail)}</p>
             </div>
             <div class="care-event-actions">
-                <span class="care-severity ${escapeHtml(event.severity)}">${escapeHtml(severityText[event.severity] || '风险')}</span>
+                <span class="care-severity ${escapeHtml(event.severity)}">${escapeHtml(t(severityText[event.severity] || "风险"))}</span>
                 <button
                     class="care-mini-button"
                     type="button"
                     data-handle-event="${escapeHtml(event.id)}"
                     ${event.status === 'handled' ? 'disabled' : ''}
-                >${event.status === 'handled' ? '已处理' : '标记处理'}</button>
+                >${event.status === 'handled' ? t("已处理") : t("标记处理")}</button>
             </div>
         </article>
     `).join(''));
@@ -441,33 +446,33 @@ function renderEvents(root, events) {
 
 function renderResidents(root, residents) {
     if (!residents.length) {
-        setHtml(root, '<article class="care-resident"><div class="care-avatar" aria-hidden="true">当</div><div><h3>当前长护对象 · 未填写</h3><p>等待老人端真实数据 · 任务 0/0</p></div><span class="care-severity low">低风险</span></article>');
+        setHtml(root, t("<article class=\"care-resident\"><div class=\"care-avatar\" aria-hidden=\"true\">当</div><div><h3>当前长护对象 · 未填写</h3><p>等待老人端真实数据 · 任务 0/0</p></div><span class=\"care-severity low\">低风险</span></article>"));
         return;
     }
     setHtml(root, residents.map((resident) => `
         <article class="care-resident">
-            <div class="care-avatar" aria-hidden="true">${escapeHtml(resident.name.slice(0, 1))}</div>
+            <div class="care-avatar" aria-hidden="true">${escapeHtml(displayPlaceholder(resident.name).slice(0, 1))}</div>
             <div>
-                <h3>${escapeHtml(resident.name)} · ${escapeHtml(resident.level)}</h3>
-                <p>${escapeHtml(resident.location)} · ${escapeHtml(resident.status)} · 任务 ${escapeHtml(resident.tasks)}</p>
+                <h3>${escapeHtml(displayPlaceholder(resident.name))} · ${escapeHtml(displayPlaceholder(resident.level))}</h3>
+                <p>${t("{0} · {1} · 任务 {2}", [escapeHtml(displayPlaceholder(resident.location)), escapeHtml(displayPlaceholder(resident.status)), escapeHtml(resident.tasks)])}</p>
             </div>
-            <span class="care-severity ${escapeHtml(resident.risk)}">${escapeHtml(severityText[resident.risk] || '风险')}</span>
+            <span class="care-severity ${escapeHtml(resident.risk)}">${t("{0}", [escapeHtml(t(severityText[resident.risk] || "风险"))])}</span>
         </article>
     `).join(''));
 }
 
 function renderTasks(root, tasks) {
     if (!tasks.length) {
-        setHtml(root, '<article class="care-task"><div><h3>暂无真实任务</h3><p>任务指导完成后会形成服务留痕。</p></div><span class="care-status pending">待产生</span></article>');
+        setHtml(root, t("<article class=\"care-task\"><div><h3>暂无真实任务</h3><p>任务指导完成后会形成服务留痕。</p></div><span class=\"care-status pending\">待产生</span></article>"));
         return;
     }
     setHtml(root, tasks.map((task) => `
         <article class="care-task">
             <div>
                 <h3>${escapeHtml(task.name)}</h3>
-                <p>${escapeHtml(task.time)} · ${escapeHtml(task.resident)}</p>
+                <p>${escapeHtml(task.time)} · ${escapeHtml(displayPlaceholder(task.resident))}</p>
             </div>
-            <span class="care-status ${escapeHtml(task.status)}">${escapeHtml(taskStatusText[task.status] || '待处理')}</span>
+            <span class="care-status ${escapeHtml(task.status)}">${escapeHtml(t(taskStatusText[task.status] || "待处理"))}</span>
         </article>
     `).join(''));
 }
@@ -477,20 +482,20 @@ function renderCareAgentProfile(root, profile) {
     const context = buildCareAgentContext(profile);
     setHtml(root, `
         <div class="care-agent-profile-card">
-            <span>长护对象</span>
-            <strong>${escapeHtml(context.resident)} · ${escapeHtml(context.longTermCareLevel)}</strong>
+            <span>${t("长护对象")}</span>
+            <strong>${escapeHtml(displayPlaceholder(context.resident))} · ${escapeHtml(displayPlaceholder(context.longTermCareLevel))}</strong>
         </div>
         <div class="care-agent-profile-card">
-            <span>本月剩余额度</span>
-            <strong>${escapeHtml(context.budgetLeft)} 元 · ${escapeHtml(context.budgetRatio)}%</strong>
+            <span>${t("本月剩余额度")}</span>
+            <strong>${t("{0} 元 · {1}%", [escapeHtml(context.budgetLeft), escapeHtml(context.budgetRatio)])}</strong>
         </div>
         <div class="care-agent-profile-card">
-            <span>用药确认率</span>
+            <span>${t("用药确认率")}</span>
             <strong>${escapeHtml(context.medicationAdherence)}%</strong>
         </div>
         <div class="care-agent-profile-card">
-            <span>剩余服务次数</span>
-            <strong>${escapeHtml(context.remainingVisits)} 次</strong>
+            <span>${t("剩余服务次数")}</span>
+            <strong>${t("{0} 次", [escapeHtml(context.remainingVisits)])}</strong>
         </div>
     `);
 }
@@ -498,18 +503,18 @@ function renderCareAgentProfile(root, profile) {
 function renderCareAgentInsights(root, profile) {
     if (!root || !profile) return;
     const context = buildCareAgentContext(profile);
-    const reminders = context.proactiveReminders.length ? context.proactiveReminders : ['今日暂无主动提醒。'];
+    const reminders = context.proactiveReminders.length ? context.proactiveReminders : [t("今日暂无主动提醒。")];
     const records = context.records.slice(0, 3);
     const recordHtml = records.length
-        ? records.map((item) => `<p><b>${escapeHtml(item.time)} · ${escapeHtml(item.type)}</b> ${escapeHtml(item.text)}</p>`).join('')
-        : '<p>暂无真实照护记录。</p>';
+        ? records.map((item) => `<p><b>${escapeHtml(item.time)} · ${escapeHtml(t(item.type))}</b> ${escapeHtml(item.text)}</p>`).join('')
+        : t("<p>暂无真实照护记录。</p>");
     setHtml(root, `
         <div class="care-agent-block">
-            <h3>主动提醒</h3>
+            <h3>${t("主动提醒")}</h3>
             ${reminders.map((item) => `<p>${escapeHtml(item)}</p>`).join('')}
         </div>
         <div class="care-agent-block">
-            <h3>最近记录</h3>
+            <h3>${t("最近记录")}</h3>
             ${recordHtml}
         </div>
     `);
@@ -519,7 +524,7 @@ function renderCareAgentMessages(root, messages = []) {
     if (!root) return;
     setHtml(root, messages.map((message) => `
         <div class="care-agent-message ${escapeHtml(message.role)}">
-            <span>${message.role === 'user' ? '我说' : '照护助手'}</span>
+            <span>${message.role === 'user' ? t("我说") : t("照护助手")}</span>
             <p>${escapeHtml(message.text)}</p>
         </div>
     `).join(''));
@@ -584,7 +589,7 @@ export function setupManagementDashboard(doc = document) {
     let agentMessages = [
         {
             role: 'assistant',
-            text: '当前只使用老人端真实上报数据。完成巡路、找物、用药记录或跌倒报警后，我会基于这些记录给出建议。'
+            text: t("当前只使用老人端真实上报数据。完成巡路、找物、用药记录或跌倒报警后，我会基于这些记录给出建议。")
         }
     ];
 
@@ -624,13 +629,13 @@ export function setupManagementDashboard(doc = document) {
         dashboard.classList.add('visible');
         dashboard.setAttribute('aria-hidden', 'false');
         render();
-        speak('长护管理端已打开。这里可以查看风险队列、长护对象、任务完成率和照护日报。');
+        speak(t("长护管理端已打开。这里可以查看风险队列、长护对象、任务完成率和照护日报。"));
     }
 
     function closeDashboard() {
         dashboard.classList.remove('visible');
         dashboard.setAttribute('aria-hidden', 'true');
-        speak('已返回老人端。');
+        speak(t("已返回老人端。"));
     }
 
     function setPeriod(nextPeriod) {
@@ -645,7 +650,7 @@ export function setupManagementDashboard(doc = document) {
         data = markRiskEventHandled(data, eventId);
         saveCareManagementData(data);
         render();
-        speak('风险事件已标记处理。');
+        speak(t("风险事件已标记处理。"));
     }
 
     openButton.addEventListener('click', (event) => {
@@ -658,11 +663,11 @@ export function setupManagementDashboard(doc = document) {
     elements.generateButton?.addEventListener('click', () => {
         currentReport = buildDailyReport(data, periodKey);
         setText(elements.reportText, currentReport);
-        speak('AI 照护日报已重新生成。');
+        speak(t("AI 照护日报已重新生成。"));
     });
     elements.exportButton?.addEventListener('click', () => {
-        downloadReport(`# 银龄智护 照护日报\n\n${currentReport}\n`);
-        speak('照护日报已导出。');
+        downloadReport(t("# 银龄智护 照护日报\n\n{0}\n", [currentReport]));
+        speak(t("照护日报已导出。"));
     });
     elements.careAgentSendButton?.addEventListener('click', () => {
         const value = elements.careAgentInput?.value || '';

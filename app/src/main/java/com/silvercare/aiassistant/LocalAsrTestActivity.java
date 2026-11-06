@@ -24,6 +24,8 @@ import java.util.concurrent.Executors;
 
 /** A manual, visible test surface for the same local SenseVoice recognizer used by the main app. */
 public final class LocalAsrTestActivity extends android.app.Activity {
+    private String language() { return AppLanguage.normalize(getSharedPreferences("silvercare", MODE_PRIVATE).getString("app_language", "zh")); }
+    private String t(String text) { return LanguageResources.text(language(), text); }
     private static final int REQUEST_RECORD_AUDIO = 7101;
     private static final int SAMPLE_RATE = SenseVoiceLocalAsrEngine.SAMPLE_RATE;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -35,7 +37,7 @@ public final class LocalAsrTestActivity extends android.app.Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
-        setTitle("本地语音转文字测试");
+        setTitle(t("本地语音转文字测试"));
         setContentView(buildContent());
         refreshStatus();
     }
@@ -48,15 +50,15 @@ public final class LocalAsrTestActivity extends android.app.Activity {
         root.setPadding(padding, padding, padding, padding);
         root.setBackgroundColor(Color.rgb(15, 22, 28));
 
-        TextView title = text("本地语音转文字测试", 25, Color.WHITE);
+        TextView title = text(t("本地语音转文字测试"), 25, Color.WHITE);
         root.addView(title, fullWidth());
-        TextView description = text("使用手机端 SenseVoice 模型。按住下方按钮说话，松开后自动转成文字；录音不会上传。", 16, Color.rgb(194, 211, 218));
+        TextView description = text(t("使用手机端 SenseVoice 模型。按住下方按钮说话，松开后自动转成文字；录音不会上传。"), 16, Color.rgb(194, 211, 218));
         description.setPadding(0, dp(10), 0, dp(22));
         root.addView(description, fullWidth());
 
-        status = text("正在检查模型…", 16, Color.rgb(44, 214, 168));
+        status = text(t("正在检查模型…"), 16, Color.rgb(44, 214, 168));
         root.addView(status, fullWidth());
-        transcript = text("识别结果会显示在这里。", 20, Color.WHITE);
+        transcript = text(t("识别结果会显示在这里。"), 20, Color.WHITE);
         transcript.setGravity(Gravity.CENTER_VERTICAL);
         transcript.setPadding(dp(16), dp(16), dp(16), dp(16));
         transcript.setBackgroundColor(Color.rgb(28, 39, 47));
@@ -66,7 +68,7 @@ public final class LocalAsrTestActivity extends android.app.Activity {
         root.addView(transcript, transcriptParams);
 
         recordButton = new Button(this);
-        recordButton.setText("按住说话");
+        recordButton.setText(t("按住说话"));
         recordButton.setTextSize(20);
         recordButton.setTextColor(Color.rgb(5, 30, 27));
         recordButton.setBackgroundColor(Color.rgb(28, 216, 166));
@@ -93,10 +95,10 @@ public final class LocalAsrTestActivity extends android.app.Activity {
     private void refreshStatus() {
         LocalAsrModelStatus model = new LocalAsrModelManager().inspect(this);
         if (model.ready) {
-            status.setText("SenseVoice 已就绪，模型运行在本机。\n" + model.modelDir.getAbsolutePath());
+            status.setText(t("SenseVoice 已就绪，模型运行在本机。\n") + model.modelDir.getAbsolutePath());
             recordButton.setEnabled(true);
         } else {
-            status.setText("SenseVoice 模型未下载。请返回设置，选择“语音识别方案”，下载本地模型后再测试。");
+            status.setText(t("SenseVoice 模型未下载。请返回设置，选择“语音识别方案”，下载本地模型后再测试。"));
             recordButton.setEnabled(false);
         }
     }
@@ -112,14 +114,14 @@ public final class LocalAsrTestActivity extends android.app.Activity {
         recorder = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, SAMPLE_RATE,
             AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, buffer);
         if (recorder.getState() != AudioRecord.STATE_INITIALIZED) {
-            status.setText("麦克风初始化失败，请检查麦克风权限。");
+            status.setText(t("麦克风初始化失败，请检查麦克风权限。"));
             recorder.release();
             recorder = null;
             return;
         }
         recording = true;
-        recordButton.setText("正在录音，松开结束");
-        transcript.setText("正在听您说话…");
+        recordButton.setText(t("正在录音，松开结束"));
+        transcript.setText(t("正在听您说话…"));
         executor.execute(() -> captureLoop(buffer));
     }
 
@@ -135,7 +137,7 @@ public final class LocalAsrTestActivity extends android.app.Activity {
                 if (read > 0) output.write(buffer, 0, read);
             }
         } catch (Exception error) {
-            runOnUiThread(() -> status.setText("录音失败：" + error.getMessage()));
+            runOnUiThread(() -> status.setText(t("录音失败：") + t(error.getMessage())));
         } finally {
             try { active.stop(); } catch (Exception ignored) { }
             active.release();
@@ -150,8 +152,8 @@ public final class LocalAsrTestActivity extends android.app.Activity {
         recording = false;
         runOnUiThread(() -> {
             recordButton.setEnabled(false);
-            recordButton.setText("正在识别…");
-            status.setText("SenseVoice 正在本地识别…");
+            recordButton.setText(t("正在识别…"));
+            status.setText(t("SenseVoice 正在本地识别…"));
         });
     }
 
@@ -159,23 +161,23 @@ public final class LocalAsrTestActivity extends android.app.Activity {
         long startedAt = SystemClock.elapsedRealtime();
         try (SenseVoiceLocalAsrEngine engine = new SenseVoiceLocalAsrEngine()) {
             LocalAsrModelStatus model = new LocalAsrModelManager().inspect(this);
-            String result = engine.transcribePcm(model.modelDir, pcm);
+            String result = engine.transcribePcm(model.modelDir, pcm, language());
             long elapsed = SystemClock.elapsedRealtime() - startedAt;
             runOnUiThread(() -> {
                 transcript.setText(result);
-                status.setText("本地识别完成，用时 " + String.format(java.util.Locale.CHINA, "%.2f", elapsed / 1000.0) + " 秒。");
+                status.setText(t("本地识别完成，用时 ") + String.format(AppLanguage.locale(language()), "%.2f", elapsed / 1000.0) + t(" 秒。"));
                 resetRecordButton();
             });
         } catch (Exception error) {
             runOnUiThread(() -> {
-                transcript.setText("未得到有效文字。");
-                status.setText("本地识别失败：" + error.getMessage());
+                transcript.setText(t("未得到有效文字。"));
+                status.setText(t("本地识别失败：") + t(error.getMessage()));
                 resetRecordButton();
             });
         }
     }
 
-    private void resetRecordButton() { recordButton.setEnabled(true); recordButton.setText("按住说话"); }
+    private void resetRecordButton() { recordButton.setEnabled(true); recordButton.setText(t("按住说话")); }
     private TextView text(String value, int size, int color) { TextView view = new TextView(this); view.setText(value); view.setTextSize(size); view.setTextColor(color); return view; }
     private LinearLayout.LayoutParams fullWidth() { return new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT); }
     private int dp(int value) { return (int) (value * getResources().getDisplayMetrics().density + 0.5f); }

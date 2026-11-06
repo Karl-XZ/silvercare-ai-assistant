@@ -162,6 +162,19 @@ final class OfflineVisionInterpreter {
     private OfflineVisionInterpreter() {
     }
 
+    static String localizeObjectName(String name, String language) {
+        return LanguageResources.text(language, localizeObjectName(name));
+    }
+
+    private static JSONObject localizedResult(JSONObject result, String prompt) throws Exception {
+        String language = prompt != null && prompt.contains("Output language: Japanese") ? "ja"
+            : prompt != null && prompt.contains("Output language: English") ? "en" : "zh";
+        for (String key : new String[]{"speech", "guidance_speech", "scene_description", "thinking", "subject"}) {
+            if (result.has(key)) result.put(key, LanguageResources.text(language, result.optString(key)));
+        }
+        return result;
+    }
+
     static String interpret(String prompt, String rawJson, String role) throws Exception {
         JSONObject raw = parseObject(rawJson);
         if (looksHighLevel(raw)) return raw.toString();
@@ -176,9 +189,9 @@ final class OfflineVisionInterpreter {
 
         String target = extractTarget(prompt);
         if (isMicroRole(role, prompt)) {
-            return microResult(target, detections).toString();
+            return localizedResult(microResult(target, detections), prompt).toString();
         }
-        return navigationOrSearchResult(target, detections).toString();
+        return localizedResult(navigationOrSearchResult(target, detections), prompt).toString();
     }
 
     private static boolean looksHighLevel(JSONObject raw) {
@@ -303,7 +316,8 @@ final class OfflineVisionInterpreter {
     }
 
     private static Detection bestTarget(String target, List<Detection> detections) {
-        String normalizedTarget = normalize(target);
+        String canonical = canonicalSearchTarget(target);
+        String normalizedTarget = normalize(canonical.isEmpty() ? target : canonical);
         String[] aliases = TARGET_ALIASES.getOrDefault(normalizedTarget, new String[] { normalizedTarget });
         for (Detection detection : detections) {
             for (String alias : aliases) {
@@ -320,6 +334,9 @@ final class OfflineVisionInterpreter {
     static String canonicalSearchTarget(String target) {
         String normalized = normalize(target);
         if (normalized.isEmpty()) return "";
+        if (normalized.equals("mug") || normalized.equals("teacup")) return "杯子";
+        if (normalized.equals("phone") || normalized.equals("mobile phone") || normalized.equals("スマホ") || normalized.equals("スマートフォン")) return "手机";
+        if (normalized.equals("お椀") || normalized.equals("ボウル")) return "碗";
         String[] aliases = TARGET_ALIASES.get(normalized);
         if (aliases != null && aliases.length > 0) {
             String label = firstDetectorLabel(aliases);
@@ -328,7 +345,7 @@ final class OfflineVisionInterpreter {
         for (Map.Entry<String, String> entry : ZH_NAMES.entrySet()) {
             String label = entry.getKey();
             String zh = entry.getValue();
-            if (normalize(label).equals(normalized) || normalize(zh).equals(normalized)) {
+            if (normalize(label).equals(normalized) || normalize(zh).equals(normalized) || normalize(LanguageResources.text("ja", zh)).equals(normalized)) {
                 return zh;
             }
         }
@@ -363,7 +380,7 @@ final class OfflineVisionInterpreter {
     }
 
     private static boolean isMicroRole(String role, String prompt) {
-        return "micro".equals(role) || (prompt != null && prompt.contains("多模态长护精确引导模式"));
+        return "micro".equals(role) || (prompt != null && (prompt.contains("多模态长护精确引导模式") || java.util.regex.Pattern.compile("(?m)^\\s*Role: micro\\s*$").matcher(prompt).find()));
     }
 
     private static String extractTarget(String prompt) {

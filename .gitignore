@@ -15,6 +15,12 @@ app/.cxx/
 
 node_modules/
 coverage/
+*.log
+.playwright-cli/
+output/playwright/
+deliverables/
+reports/i18n-20261105/
+WORK_STATUS.md
 dist/
 __pycache__/
 *.py[cod]

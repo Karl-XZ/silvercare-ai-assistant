@@ -41,21 +41,23 @@ final class LocalTtsModelStatus {
         return "本地 MNN TTS 未就绪：" + String.join("、", missing);
     }
 
-    String detailText() {
+    String detailText() { return detailText("zh"); }
+
+    String detailText(String language) {
         StringBuilder builder = new StringBuilder();
-        builder.append(shortText())
-            .append("\n\n模型目录：").append(pathOf(modelDir))
-            .append("\n模型来源：").append(LocalTtsDownloader.MODEL_NAME)
-            .append("\n下载大小：约 ")
+        builder.append(LanguageResources.text(language, shortText()))
+            .append(LanguageResources.text(language, "\n\n模型目录：")).append(pathOf(modelDir, language))
+            .append(LanguageResources.text(language, "\n模型来源：")).append(LocalTtsDownloader.MODEL_NAME)
+            .append(LanguageResources.text(language, "\n下载大小：约 "))
             .append(LocalTtsDownloader.humanBytes(LocalTtsDownloader.expectedTotalBytes()))
             .append("\nNative Runtime：")
-            .append(runtimeAvailable ? "已就绪，" : "不可用，")
-            .append(runtimeSummary == null || runtimeSummary.isEmpty() ? "无运行时信息" : runtimeSummary)
-            .append("\n用途：端侧离线文字转语音，朗读内容不上云。");
+            .append(runtimeAvailable ? LanguageResources.text(language, "已就绪，") : LanguageResources.text(language, "不可用，"))
+            .append(runtimeSummary == null || runtimeSummary.isEmpty() ? LanguageResources.text(language, "无运行时信息") : LanguageResources.text(language, runtimeSummary))
+            .append(LanguageResources.text(language, "\n用途：端侧离线文字转语音，朗读内容不上云。"));
         return builder.toString();
     }
 
-    private static String pathOf(File file) {
-        return file == null ? "未设置" : file.getAbsolutePath();
+    private static String pathOf(File file, String language) {
+        return file == null ? LanguageResources.text(language, "未设置") : file.getAbsolutePath();
     }
 }

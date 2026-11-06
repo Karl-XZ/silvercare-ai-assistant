@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * 银龄智护 - Main Entry Point
  * Orchestrates the modules.
@@ -45,15 +46,15 @@ async function startSystem() {
         STATE.active = true;
         UI.body.classList.add('active');
 
-        showFeedback('银龄智护 已启动');
-        updateStatus('连接中...', 'active');
+        showFeedback(t("银龄智护 已启动"));
+        updateStatus(t("连接中..."), 'active');
 
         connectWS();
 
     } catch (e) {
         console.error("Camera Error:", e);
-        showFeedback('摄像头错误');
-        updateStatus('摄像头错误', 'error');
+        showFeedback(t("摄像头错误"));
+        updateStatus(t("摄像头错误"), 'error');
     }
 }
 
@@ -81,8 +82,8 @@ function stopSystem() {
         UI.cam.srcObject = null;
     }
 
-    showFeedback('已停止');
-    updateStatus('就绪', '');
+    showFeedback(t("已停止"));
+    updateStatus(t("就绪"), '');
 }
 
 // --- Loop Logic ---
@@ -91,11 +92,11 @@ export function startLoop() {
     if (STATE.loop) clearInterval(STATE.loop);
     STATE.loop = null;
     if (manualFrameRefreshEnabled()) {
-        updateStatus('手动刷新', 'active', { speak: false });
-        showFeedback('手动模式：单击屏幕刷新', 1600, false);
+        updateStatus(t("手动刷新"), 'active', { speak: false });
+        showFeedback(t("手动模式：单击屏幕刷新"), 1600, false);
         return;
     }
-    updateStatus('自动刷新', 'active', { speak: false });
+    updateStatus(t("自动刷新"), 'active', { speak: false });
     STATE.loop = setInterval(() => tick({ auto: true }), CONFIG.scanInterval);
 }
 
@@ -103,11 +104,11 @@ export function startMicroLoop() {
     if (STATE.loop) clearInterval(STATE.loop);
     STATE.loop = null;
     if (manualFrameRefreshEnabled()) {
-        updateStatus('手动引导', 'active', { speak: false });
-        showFeedback('手动模式：单击屏幕刷新精确引导', 1600, false);
+        updateStatus(t("手动引导"), 'active', { speak: false });
+        showFeedback(t("手动模式：单击屏幕刷新精确引导"), 1600, false);
         return;
     }
-    updateStatus('精确引导', 'active', { speak: false });
+    updateStatus(t("精确引导"), 'active', { speak: false });
     STATE.loop = setInterval(() => tick({ auto: true }), CONFIG.scanInterval);
 }
 
@@ -118,17 +119,17 @@ function stopLoop() {
 
 export function refreshNavigationOnce() {
     if (!STATE.active) {
-        showFeedback('请先启动导航');
+        showFeedback(t("请先启动导航"));
         return;
     }
     if (STATE.mode === 'micro') {
-        showFeedback('正在刷新精确引导...', 900, false);
-        updateStatus('刷新引导', 'active', { speak: false });
+        showFeedback(t("正在刷新精确引导..."), 900, false);
+        updateStatus(t("刷新引导"), 'active', { speak: false });
         tick({ force: true });
         return;
     }
-    showFeedback('正在刷新导航...', 900, false);
-    updateStatus('刷新中', 'active', { speak: false });
+    showFeedback(t("正在刷新导航..."), 900, false);
+    updateStatus(t("刷新中"), 'active', { speak: false });
     tick({ force: true });
 }
 
@@ -188,7 +189,7 @@ export function checkDebugOverlay() {
 
 window.LONG_TERM_CARE_REFRESH_MODE_CHANGED = (mode) => {
     STATE.navigationRefreshMode = mode === 'manual' ? 'manual' : 'auto';
-    STATE.navigationRefreshLabel = STATE.navigationRefreshMode === 'manual' ? '手动刷新' : '自动刷新';
+    STATE.navigationRefreshLabel = STATE.navigationRefreshMode === 'manual' ? t("手动刷新") : t("自动刷新");
     if (STATE.active) {
         if (STATE.mode === 'micro') startMicroLoop();
         else startLoop();
@@ -199,7 +200,7 @@ window.LONG_TERM_CARE_REFRESH_MODE_CHANGED = (mode) => {
 
 window.LONG_TERM_CARE_REFRESH_SETTINGS_CHANGED = (mode, intervalMs, smartRefresh) => {
     STATE.navigationRefreshMode = mode === 'manual' ? 'manual' : 'auto';
-    STATE.navigationRefreshLabel = STATE.navigationRefreshMode === 'manual' ? '手动刷新' : '自动刷新';
+    STATE.navigationRefreshLabel = STATE.navigationRefreshMode === 'manual' ? t("手动刷新") : t("自动刷新");
     const nextInterval = Number(intervalMs);
     if (Number.isFinite(nextInterval)) {
         CONFIG.scanInterval = Math.max(1000, Math.min(10000, nextInterval));

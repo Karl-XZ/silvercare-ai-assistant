@@ -98,14 +98,14 @@ final class DashScopeClient implements SilverCareArtificialIntelligenceClient {
                     .put(new JSONObject()
                     .put("role", "system")
                     .put("content", new JSONArray()
-                            .put(new JSONObject().put("text", ASR_CONTEXT_PROMPT))))
+                            .put(new JSONObject().put("text", asrContextPrompt(settings.appLanguage())))))
                     .put(new JSONObject()
                         .put("role", "user")
                         .put("content", new JSONArray()
                             .put(new JSONObject().put("audio", audioDataUrl))))))
             .put("parameters", new JSONObject()
                 .put("asr_options", new JSONObject()
-                    .put("language", "zh")
+                    .put("language", AppLanguage.asrCode(settings.appLanguage()))
                     .put("enable_itn", false)));
 
         JSONObject response = postJson(settings.apiBaseUrl() + "/services/aigc/multimodal-generation/generation", payload);
@@ -119,6 +119,10 @@ final class DashScopeClient implements SilverCareArtificialIntelligenceClient {
             .put("elapsed_ms", DiagnosticLogger.elapsed(diagnosticStarted))
             .put("text", DiagnosticLogger.excerpt(output)));
         return output;
+    }
+
+    private static String asrContextPrompt(String language) {
+        return LanguageResources.text(language, ASR_CONTEXT_PROMPT);
     }
 
     private static String transcriptFromContent(JSONArray content) {
@@ -139,7 +143,8 @@ final class DashScopeClient implements SilverCareArtificialIntelligenceClient {
     private static String stripAsrContextPromptLeak(String text) {
         String clean = text == null ? "" : text.trim();
         if (clean.isEmpty()) return "";
-        clean = clean.replace(ASR_CONTEXT_PROMPT, " ");
+        clean = clean.replace(ASR_CONTEXT_PROMPT, " ")
+            .replace(asrContextPrompt("en"), " ").replace(asrContextPrompt("ja"), " ");
 
         int start = clean.indexOf("银龄智护");
         int common = clean.indexOf("常见词");
@@ -181,8 +186,8 @@ final class DashScopeClient implements SilverCareArtificialIntelligenceClient {
             .put("model", "qwen3-tts-flash")
             .put("input", new JSONObject()
                 .put("text", clean)
-                .put("voice", "Cherry")
-                .put("language_type", "Chinese"));
+                .put("voice", AppLanguage.cloudVoice(settings.appLanguage()))
+                .put("language_type", AppLanguage.cloudLanguage(settings.appLanguage())));
 
         JSONObject response = postJson(settings.apiBaseUrl() + "/services/aigc/multimodal-generation/generation", payload);
         JSONObject output = response.optJSONObject("output");

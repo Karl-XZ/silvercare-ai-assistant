@@ -18,6 +18,7 @@ interface SilverCareArtificialIntelligenceClient {
     String transcribe(String audioDataUrl) throws Exception;
 
     interface SettingsProvider {
+        default String appLanguage() { return "zh"; }
         String aiRuntimeMode();
         String offlineModelDir();
         String apiKey();

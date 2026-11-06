@@ -14,8 +14,11 @@ final class SenseVoiceLocalAsrEngine implements AutoCloseable {
     private final Object lock = new Object();
     private OfflineRecognizer recognizer;
     private String modelPath;
+    private String modelLanguage;
 
-    String transcribePcm(File modelDir, byte[] pcm) {
+    String transcribePcm(File modelDir, byte[] pcm) { return transcribePcm(modelDir, pcm, "zh"); }
+
+    String transcribePcm(File modelDir, byte[] pcm, String language) {
         if (modelDir == null || !modelDir.isDirectory()) {
             throw new IllegalStateException("本地 SenseVoice 模型目录不存在。");
         }
@@ -25,7 +28,7 @@ final class SenseVoiceLocalAsrEngine implements AutoCloseable {
         synchronized (lock) {
             OfflineStream stream = null;
             try {
-                stream = recognizerFor(modelDir).createStream();
+                stream = recognizerFor(modelDir, language).createStream();
                 stream.acceptWaveform(pcm16ToFloat(pcm), SAMPLE_RATE);
                 recognizer.decode(stream);
                 String transcript = normalizeTranscript(recognizer.getResult(stream).getText());
@@ -39,13 +42,14 @@ final class SenseVoiceLocalAsrEngine implements AutoCloseable {
         }
     }
 
-    private OfflineRecognizer recognizerFor(File modelDir) {
+    private OfflineRecognizer recognizerFor(File modelDir, String language) {
+        String code = AppLanguage.asrCode(language);
         String path = modelDir.getAbsolutePath();
-        if (recognizer != null && path.equals(modelPath)) return recognizer;
+        if (recognizer != null && path.equals(modelPath) && code.equals(modelLanguage)) return recognizer;
         closeRecognizer();
         OfflineSenseVoiceModelConfig senseVoice = new OfflineSenseVoiceModelConfig();
         senseVoice.setModel(new File(modelDir, "model.int8.onnx").getAbsolutePath());
-        senseVoice.setLanguage("zh");
+        senseVoice.setLanguage(code);
         senseVoice.setUseInverseTextNormalization(true);
         OfflineModelConfig model = new OfflineModelConfig();
         model.setSenseVoice(senseVoice);
@@ -58,6 +62,7 @@ final class SenseVoiceLocalAsrEngine implements AutoCloseable {
         // model stays in app storage rather than being bundled into the APK assets.
         recognizer = new OfflineRecognizer(null, config);
         modelPath = path;
+        modelLanguage = code;
         return recognizer;
     }
 
@@ -83,5 +88,6 @@ final class SenseVoiceLocalAsrEngine implements AutoCloseable {
         if (recognizer != null) recognizer.release();
         recognizer = null;
         modelPath = null;
+        modelLanguage = null;
     }
 }

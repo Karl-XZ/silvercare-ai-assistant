@@ -71,18 +71,20 @@ final class OfflineModelStatus {
         return "端侧离线模型未就绪：" + String.join("、", missing);
     }
 
-    String detailText() {
+    String detailText() { return detailText("zh"); }
+
+    String detailText(String language) {
         StringBuilder builder = new StringBuilder();
-        builder.append(shortText())
-            .append("\n\n模型目录：").append(modelDir == null || modelDir.isEmpty() ? "未设置" : modelDir)
-            .append("\n离线文本模型：").append(OfflineAiClient.textModelLabel(textModel))
-            .append("\n文本模型文件：").append(textReady ? pathOf(textConfig) : "未找到 config.json")
-            .append("\nDAMO-YOLO：").append(yoloReady ? pathOf(yoloModel) : "未找到 .mnn 模型")
-            .append("\nMNN Native Runtime：").append(nativeRuntimeAvailable ? "已加载" : "未加载 silvercare_mnn_runtime");
+        builder.append(LanguageResources.text(language, shortText()))
+            .append(LanguageResources.text(language, "\n\n模型目录：")).append(modelDir == null || modelDir.isEmpty() ? LanguageResources.text(language, "未设置") : modelDir)
+            .append(LanguageResources.text(language, "\n离线文本模型：")).append(LanguageResources.text(language, OfflineAiClient.textModelLabel(textModel)))
+            .append(LanguageResources.text(language, "\n文本模型文件：")).append(textReady ? pathOf(textConfig, language) : LanguageResources.text(language, "未找到 config.json"))
+            .append("\nDAMO-YOLO：").append(yoloReady ? pathOf(yoloModel, language) : LanguageResources.text(language, "未找到 .mnn 模型"))
+            .append("\nMNN Native Runtime：").append(nativeRuntimeAvailable ? LanguageResources.text(language, "已加载") : LanguageResources.text(language, "未加载 silvercare_mnn_runtime"));
         return builder.toString();
     }
 
-    private static String pathOf(File file) {
-        return file == null ? "未找到" : file.getAbsolutePath();
+    private static String pathOf(File file, String language) {
+        return file == null ? LanguageResources.text(language, "未找到") : file.getAbsolutePath();
     }
 }

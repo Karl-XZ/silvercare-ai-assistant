@@ -1,5 +1,7 @@
 # SilverCare AI Assistant（银龄智护）
 
+当前版本支持简体中文、English、日本語三语模式：在设置中切换语言后，界面、语音识别、语音合成和模型回答同步切换。详见[三语版使用与测试说明](docs/TRILINGUAL.md)。
+
 <div align="center">
 
 **语音优先的无障碍居家照护辅助与风险预警系统**  

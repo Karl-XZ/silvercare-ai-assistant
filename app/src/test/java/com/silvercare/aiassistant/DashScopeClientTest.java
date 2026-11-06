@@ -158,6 +158,25 @@ public class DashScopeClientTest {
                         .put("content", content))));
     }
 
+    @Test public void speechRequestsFollowAllThreeSelectedLanguages() throws Exception {
+        String[] languages = {"zh", "en", "ja"};
+        String[] expected = {"Chinese", "English", "Japanese"};
+        for (int index = 0; index < languages.length; index++) {
+            TestFakes.Settings settings = new TestFakes.Settings();
+            settings.appLanguage = languages[index];
+            RecordingTransport asr = new RecordingTransport(new JSONObject("{\"output\":{\"choices\":[{\"message\":{\"content\":[{\"text\":\"hello\"}]}}]}}"));
+            new DashScopeClient(settings, asr).transcribe("data:audio/wav;base64,test");
+            assertThat(asr.payload.getJSONObject("parameters").getJSONObject("asr_options").getString("language"), equalTo(languages[index]));
+            String context = asr.payload.getJSONObject("input").getJSONArray("messages").getJSONObject(0).getJSONArray("content").getJSONObject(0).getString("text");
+            if (index == 1) assertThat(context, containsString("navigation assistant"));
+            if (index == 2) assertThat(context, containsString("視覚支援"));
+            RecordingTransport tts = new RecordingTransport(new JSONObject("{\"output\":{\"audio\":{\"url\":\"https://example.test/audio.wav\"}}}"));
+            new DashScopeClient(settings, tts).synthesizeSpeechUrl("test speech");
+            assertThat(tts.payload.getJSONObject("input").getString("language_type"), equalTo(expected[index]));
+            assertThat(tts.payload.getJSONObject("input").getString("voice"), equalTo("Cherry"));
+        }
+    }
+
     private static final class RecordingTransport implements DashScopeClient.JsonTransport {
         private final JSONObject response;
         String endpoint;

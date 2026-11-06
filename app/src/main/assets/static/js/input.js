@@ -1,3 +1,4 @@
+import { t, I18n } from './i18n.js';
 /**
  * 银龄智护 - Input Handlers
  * Android gestures, command buttons, device sensors, audio capture, and fall detection.
@@ -67,8 +68,8 @@ function notifyNativeSpeechBusy() {
         pending_result: nativeSpeechPendingResult,
         transcript_received: nativeSpeechTranscriptReceived
     });
-    showFeedback('上一条语音还在处理，请稍等。', 1600, false);
-    updateAiCaption('上一条语音还在处理，请稍等。');
+    showFeedback(t("上一条语音还在处理，请稍等。"), 1600, false);
+    updateAiCaption(t("上一条语音还在处理，请稍等。"));
 }
 let fallAlertEvidence = null;
 let fallCountdownTimer = null;
@@ -92,7 +93,7 @@ export function setupInputs() {
     window.setInterval(sampleVideoFrame, FALL_DEFAULTS.sampleIntervalMs);
     window.setTimeout(() => {
         speakIfVoiceFirst(
-            '银龄智护 已就绪。双击屏幕启动或停止导航。长按屏幕提问。点右上角设置可以切换联网或端侧离线方案，并修改语音优先模式和跌倒检测。',
+            t("银龄智护 已就绪。双击屏幕启动或停止导航。长按屏幕提问。点右上角设置可以切换联网或端侧离线方案，并修改语音优先模式和跌倒检测。"),
             { minGapMs: 10000 }
         );
     }, 1200);
@@ -159,13 +160,13 @@ function setupFallActions() {
             hideFallAlert();
             return;
         }
-        cancelFallAlert('已取消报警');
+        cancelFallAlert(t("已取消报警"));
     });
 
     UI.fallAlarmButton?.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        triggerFallAlarm('用户主动发送报警');
+        triggerFallAlarm(t("用户主动发送报警"));
     });
 }
 
@@ -184,7 +185,7 @@ function openSettings() {
         window.AndroidSilverCare.openKeySettings();
         return;
     }
-    showFeedback('请在系统菜单中设置');
+    I18n.openSettings();
 }
 
 function isInteractiveTarget(target) {
@@ -414,11 +415,11 @@ function triggerFallAlert(evidence) {
     fallCountdownLeft = config.countdownSeconds;
     fallRecoveryStableSince = 0;
 
-    const message = `检测到手机冲击和最近 ${Math.round(config.bufferWindowMs / 1000)} 秒画面剧烈变化。若你没事，请点击“我没事”。`;
+    const message = t("检测到手机冲击和最近 {0} 秒画面剧烈变化。若你没事，请点击“我没事”。", [Math.round(config.bufferWindowMs / 1000)]);
     showFallAlert(
         fallCountdownLeft,
         message,
-        '摔倒报警触发，请问您摔倒了吗？'
+        t("摔倒报警触发，请问您摔倒了吗？")
     );
 
     window.clearInterval(fallCountdownTimer);
@@ -426,7 +427,7 @@ function triggerFallAlert(evidence) {
         fallCountdownLeft -= 1;
         updateFallCountdown(fallCountdownLeft);
         if (fallCountdownLeft <= 0) {
-            triggerFallAlarm('10 秒内未取消，已发送报警');
+            triggerFallAlarm(t("10 秒内未取消，已发送报警"));
         }
     }, 1000);
 }
@@ -450,7 +451,7 @@ function monitorFallRecovery(sensor) {
     const stableLongEnough = Date.now() - fallRecoveryStableSince >= config.recoveryHoldMs;
     const alertVisibleLongEnough = Date.now() - fallAlertStartedAt >= 2200;
     if (stableLongEnough && alertVisibleLongEnough) {
-        cancelFallAlert('检测到姿态恢复，已取消报警');
+        cancelFallAlert(t("检测到姿态恢复，已取消报警"));
     }
 }
 
@@ -464,10 +465,10 @@ function cancelFallAlert(text) {
 }
 
 function triggerFallAlarm(reason) {
-    if (!fallAlertActive && reason !== '用户主动发送报警') return;
+    if (!fallAlertActive && reason !== t("用户主动发送报警")) return;
     fallAlertActive = false;
     window.clearInterval(fallCountdownTimer);
-    showFallAlarm('已发送报警', false);
+    showFallAlarm(t("已发送报警"), false);
 
     const payload = JSON.stringify({
         reason,
@@ -496,7 +497,7 @@ function speak(text) {
     }
     if (!window.speechSynthesis) return;
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
+    utterance.lang = I18n.locale();
     window.speechSynthesis.speak(utterance);
 }
 
@@ -513,7 +514,7 @@ function preferredAudioType() {
 
 async function startRecording() {
     if (!STATE.active) {
-        showFeedback('请先启动导航');
+        showFeedback(t("请先启动导航"));
         return;
     }
 
@@ -529,13 +530,13 @@ async function startRecording() {
     }
 
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-        showFeedback('当前 WebView 不支持录音');
+        showFeedback(t("当前 WebView 不支持录音"));
         return;
     }
 
-    showFeedback('正在聆听...');
-    updateUserCaption('正在聆听...');
-    updateAiCaption('等待 AI 回复...');
+    showFeedback(t("正在聆听..."));
+    updateUserCaption(t("正在聆听..."));
+    updateAiCaption(t("等待 AI 回复..."));
     setRecordingUI(true);
     recordingIntent = true;
     window.speechSynthesis?.cancel?.();
@@ -558,7 +559,7 @@ async function startRecording() {
         };
         mediaRecorder.onstop = handleRecordingStop;
         mediaRecorder.onerror = () => {
-            showFeedback('录音失败');
+            showFeedback(t("录音失败"));
             setRecordingUI(false);
             stream.getTracks().forEach((track) => track.stop());
         };
@@ -566,7 +567,7 @@ async function startRecording() {
         mediaRecorder.start();
     } catch (error) {
         console.error('Microphone Error:', error);
-        showFeedback('麦克风被阻止');
+        showFeedback(t("麦克风被阻止"));
         recordingIntent = false;
         setRecordingUI(false);
     }
@@ -576,7 +577,7 @@ function stopRecording() {
     if (nativeSpeechActive) {
         const elapsed = Date.now() - nativeSpeechStartedAt;
         if (elapsed < MIN_NATIVE_SPEECH_MS) {
-            showFeedback('正在收尾...', 700, false);
+            showFeedback(t("正在收尾..."), 700, false);
             window.clearTimeout(nativeSpeechStopTimer);
             nativeSpeechStopTimer = window.setTimeout(stopNativeSpeechInquiry, MIN_NATIVE_SPEECH_MS - elapsed);
         } else {
@@ -591,9 +592,9 @@ function stopRecording() {
         return;
     }
 
-    showFeedback('正在思考...');
-    updateUserCaption('语音已提交，正在识别...');
-    updateAiCaption('正在思考...');
+    showFeedback(t("正在思考..."));
+    updateUserCaption(t("语音已提交，正在识别..."));
+    updateAiCaption(t("正在思考..."));
     if (window.spatialAudio) window.spatialAudio.playTone(440, 'sine', 0.1);
     mediaRecorder.stop();
 }
@@ -619,9 +620,9 @@ function stopNativeSpeechInquiry() {
     nativeSpeechStopTimer = null;
     nativeSpeechMaxTimer = null;
     startNativeResponseWatchdog();
-    showFeedback('正在思考...');
-    updateUserCaption('语音已提交，正在识别...');
-    updateAiCaption('正在思考...');
+    showFeedback(t("正在思考..."));
+    updateUserCaption(t("语音已提交，正在识别..."));
+    updateAiCaption(t("正在思考..."));
     setRecordingUI(false);
     if (window.AndroidSilverCare && typeof window.AndroidSilverCare.stopSpeechInquiry === 'function') {
         window.AndroidSilverCare.stopSpeechInquiry();
@@ -637,7 +638,7 @@ function handleRecordingStop() {
     recorder?.stream?.getTracks().forEach((track) => track.stop());
 
     if (!audioChunks.length) {
-        showFeedback('没有录到声音');
+        showFeedback(t("没有录到声音"));
         return;
     }
 
@@ -648,7 +649,7 @@ function handleRecordingStop() {
     reader.onloadend = () => {
         const imageData = captureCurrentFrame();
         if (!imageData) {
-            showFeedback('画面捕获失败');
+            showFeedback(t("画面捕获失败"));
             return;
         }
         sendInquiryData(imageData, reader.result);
@@ -670,7 +671,7 @@ function startNativeSpeechInquiry() {
     }
     const imageData = captureCurrentFrame();
     if (!imageData) {
-        showFeedback('画面捕获失败');
+        showFeedback(t("画面捕获失败"));
         return;
     }
 
@@ -693,13 +694,13 @@ function startNativeSpeechInquiry() {
             logDiagnostic('native_speech_max_recording', {
                 elapsed_ms: Date.now() - nativeSpeechStartedAt
             });
-            showFeedback('录音已到最长时间，正在处理...', 1200, false);
+            showFeedback(t("录音已到最长时间，正在处理..."), 1200, false);
             stopNativeSpeechInquiry();
         }
     }, MAX_NATIVE_SPEECH_MS);
-    showFeedback('正在聆听...');
-    updateUserCaption('正在聆听...');
-    updateAiCaption('等待 AI 回复...');
+    showFeedback(t("正在聆听..."));
+    updateUserCaption(t("正在聆听..."));
+    updateAiCaption(t("等待 AI 回复..."));
     setRecordingUI(true);
     window.speechSynthesis?.cancel?.();
     if (window.spatialAudio) window.spatialAudio.playTone(880, 'sine', 0.1);
@@ -751,9 +752,9 @@ function startNativeResponseWatchdog() {
         nativeSpeechPendingResult = false;
         nativeSpeechTranscriptReceived = false;
         setRecordingUI(false);
-        updateUserCaption('语音识别等待超时，请再试一次。');
-        updateAiCaption('语音识别超时，请再试一次，或在设置里切换到联网 ASR。');
-        showFeedback('语音识别超时', 2600, true);
+        updateUserCaption(t("语音识别等待超时，请再试一次。"));
+        updateAiCaption(t("语音识别超时，请再试一次，或在设置里切换到联网 ASR。"));
+        showFeedback(t("语音识别超时"), 2600, true);
         if (window.AndroidSilverCare && typeof window.AndroidSilverCare.stopSpeechInquiry === 'function') {
             window.AndroidSilverCare.stopSpeechInquiry();
         }
@@ -775,8 +776,8 @@ function markNativeSpeechTranscriptReady() {
         nativeSpeechPendingResult = false;
         nativeSpeechTranscriptReceived = false;
         setRecordingUI(false);
-        updateAiCaption('AI 回复超时。语音已经识别成功，但本地模型回复时间过长，请再试一次。');
-        showFeedback('AI 回复超时', 2600, true);
+        updateAiCaption(t("AI 回复超时。语音已经识别成功，但本地模型回复时间过长，请再试一次。"));
+        showFeedback(t("AI 回复超时"), 2600, true);
     }, NATIVE_AI_RESPONSE_TIMEOUT_MS);
 }
 

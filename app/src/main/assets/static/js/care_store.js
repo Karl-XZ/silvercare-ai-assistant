@@ -1,3 +1,4 @@
+import { t, I18n } from './i18n.js';
 export const CARE_STORAGE_KEY = 'silvercare_ai_assistant_data_v1';
 
 export function cloneCareData(data) {
@@ -120,7 +121,7 @@ export function appendCareManagementEvent(data, payload = {}) {
             text: payload.record_text || payload.recordText || event.detail
         });
     }
-    next.generatedAt = new Date().toLocaleString('zh-CN', { hour12: false });
+    next.generatedAt = new Date().toLocaleString(I18n.locale(), { hour12: false });
 
     const today = next.periods?.today;
     if (today && Array.isArray(today.trend) && today.trend.length) {
@@ -134,17 +135,17 @@ export function normalizeCareEvent(payload = {}) {
     const type = String(payload.type || payload.event_type || '').trim();
     const severity = normalizeSeverity(severityForPayload(payload, type));
     const title = String(payload.title || titleFromType(type)).trim();
-    const detail = String(payload.detail || payload.reason || payload.description || '老人端上报了一条需要复核的长护服务事件。').trim();
+    const detail = String(payload.detail || payload.reason || payload.description || t("老人端上报了一条需要复核的长护服务事件。")).trim();
 
     return {
         id: payload.id || `event-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        resident: payload.resident || payload.person || '当前长护对象',
+        resident: payload.resident || payload.person || t("当前长护对象"),
         title,
         detail,
         severity,
-        time: payload.time || new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+        time: payload.time || new Date().toLocaleTimeString(I18n.locale(), { hour: '2-digit', minute: '2-digit' }),
         status: payload.status || 'open',
-        source: payload.source || '老人端',
+        source: payload.source || t("老人端"),
         evidence: payload.evidence || null
     };
 }
@@ -162,40 +163,40 @@ function severityForPayload(payload, type) {
 export function buildNavigationCareEvent(data = {}) {
     const environment = data.environment || {};
     const markers = Array.isArray(environment.markers) ? environment.markers : [];
-    const subject = data.subject || markers[0] || environment.risk || data.scene || '老人端导航';
-    const taskText = data.target_detected ? '找物结果' : '巡路记录';
+    const subject = data.subject || markers[0] || environment.risk || data.scene || t("老人端导航");
+    const taskText = data.target_detected ? t("找物结果") : t("巡路记录");
 
     return {
         type: 'navigation_risk',
-        title: `老人端${taskText}`,
+        title: t("老人端{0}", [taskText]),
         severity: 'low',
         detail: [
-            data.speech || data.thinking || `识别到${subject}`,
-            data.direction ? `方向：${data.direction}` : '',
-            Number.isFinite(Number(data.distance)) ? `距离：${Number(data.distance).toFixed(1)}米` : ''
+            data.speech || data.thinking || t("识别到{0}", [subject]),
+            data.direction ? t("方向：{0}", [data.direction]) : '',
+            Number.isFinite(Number(data.distance)) ? t("距离：{0}米", [Number(data.distance).toFixed(1)]) : ''
         ].filter(Boolean).join('；'),
-        source: '老人端导航'
+        source: t("老人端导航")
     };
 }
 
 export function buildFallCareEvent(payload = {}) {
     return {
         type: 'fall_alarm',
-        title: '疑似跌倒报警',
+        title: t("疑似跌倒报警"),
         severity: 'high',
-        detail: payload.detail || payload.reason || '检测到手机冲击和过去数秒画面剧烈变化，倒计时内未取消，已发送报警。',
+        detail: payload.detail || payload.reason || t("检测到手机冲击和过去数秒画面剧烈变化，倒计时内未取消，已发送报警。"),
         evidence: payload.evidence || null,
-        source: '跌倒风险预警'
+        source: t("跌倒风险预警")
     };
 }
 
 export function buildTaskCareEvent(task = {}) {
     return {
         type: 'care_task',
-        title: task.title || '照护任务状态更新',
+        title: task.title || t("照护任务状态更新"),
         severity: task.severity || (task.status === 'missed' ? 'medium' : 'low'),
-        detail: task.detail || `${task.name || '照护任务'}：${task.status || '已记录'}`,
-        source: '照护任务'
+        detail: task.detail || `${task.name || t("照护任务")}：${task.status || t("已记录")}`,
+        source: t("照护任务")
     };
 }
 
@@ -211,8 +212,8 @@ function severityFromType(type) {
 }
 
 function titleFromType(type) {
-    if (type.includes('fall')) return '疑似跌倒事件';
-    if (type.includes('navigation')) return '居家环境风险提醒';
-    if (type.includes('task')) return '照护任务状态更新';
-    return '长护服务事件';
+    if (type.includes('fall')) return t("疑似跌倒事件");
+    if (type.includes('navigation')) return t("居家环境风险提醒");
+    if (type.includes('task')) return t("照护任务状态更新");
+    return t("长护服务事件");
 }
